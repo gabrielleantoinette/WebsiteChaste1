@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    <a href="{{ url('/admin/login') }}">Admin Login</a>
+
 </body>
 
 </html>
