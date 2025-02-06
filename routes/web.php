@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
@@ -29,5 +30,15 @@ Route::prefix('admin')->group(function () {
 
         Route::get('/detail/{id}', [ProductController::class, 'detail']);
         Route::post('/detail/{id}', [ProductController::class, 'detailAction']);
+    });
+
+    Route::prefix('employees')->group(function () {
+        Route::get('/', [EmployeeController::class, 'view']);
+
+        Route::get('/create', [EmployeeController::class, 'create']);
+        Route::post('/create', [EmployeeController::class, 'createAction']);
+
+        Route::get('/detail/{id}', [EmployeeController::class, 'detail']);
+        Route::post('/detail/{id}', [EmployeeController::class, 'detailAction']);
     });
 });
