@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -18,4 +19,15 @@ Route::prefix('admin')->group(function () {
         return view('admin.login');
     });
     Route::post('/login', [LoginController::class, 'login']);
+
+
+    Route::prefix('products')->group(function () {
+        Route::get('/', [ProductController::class, 'view']);
+
+        Route::get('/create', [ProductController::class, 'create']);
+        Route::post('/create', [ProductController::class, 'createAction']);
+
+        Route::get('/detail/{id}', [ProductController::class, 'detail']);
+        Route::post('/detail/{id}', [ProductController::class, 'detailAction']);
+    });
 });
