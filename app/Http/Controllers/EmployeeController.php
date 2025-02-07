@@ -19,7 +19,7 @@ class EmployeeController extends Controller
         return view('admin.employees.create');
     }
 
-    public function createAction(Request $request)
+    public function createEmployeeAction(Request $request)
     {
         $name = $request->input('name');
         $username = $request->input('username');
@@ -43,5 +43,9 @@ class EmployeeController extends Controller
         return view('admin.employees.detail', [
             'product' => Employee::find($id)
         ]);
+    }
+
+    public function updateProductAction(Request $request) {
+
     }
 }

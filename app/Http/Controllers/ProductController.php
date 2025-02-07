@@ -19,7 +19,7 @@ class ProductController extends Controller
         return view('admin.products.create');
     }
 
-    public function createAction(Request $request)
+    public function createProductAction(Request $request)
     {
         $name = $request->input('name');
         $description = $request->input('description');
@@ -50,5 +50,9 @@ class ProductController extends Controller
         return view('admin.products.detail', [
             'product' => Product::find($id)
         ]);
+    }
+
+    public function updateProductAction(Request $request) {
+        
     }
 }
