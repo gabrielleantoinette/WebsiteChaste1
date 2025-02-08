@@ -6,17 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Admin | Login</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body>
-    <form method="POST">
-        @csrf
-        <label>Username:</label>
-        <input type="text" name="username">
-        <label>Password:</label>
-        <input type="password" name="password">
-        <button>Masuk</button>
-    </form>
+    <div class="container-sm mt-5">
+        <form method="POST" class="px-5 ">
+            @csrf
+            <labe class="form-label">Username:</labe>
+            <input type="text" name="username" class="form-control">
+            <label class="form-label">Password:</label>
+            <input type="password" name="password" class="form-control">
+            <button class="btn btn-primary mt-2">Masuk</button>
+        </form>
+    </div>
+
 </body>
 
 </html>
