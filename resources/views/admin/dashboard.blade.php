@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.admin')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-</head>
-
-<body>
-
-</body>
-
-</html>
+@section('content')
+    <div class="p-3">
+        <a href="{{ url('/admin/products') }}">Products</a>
+        <a href="{{ url('/admin/employees') }}">Employees</a>
+    </div>
+@endsection

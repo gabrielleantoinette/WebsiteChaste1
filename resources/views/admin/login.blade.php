@@ -1,26 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.admin')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Admin | Login</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-
-<body>
-    <div class="container-sm mt-5">
-        <form method="POST" class="px-5 ">
-            @csrf
-            <labe class="form-label">Username:</labe>
-            <input type="text" name="username" class="form-control">
-            <label class="form-label">Password:</label>
-            <input type="password" name="password" class="form-control">
-            <button class="btn btn-primary mt-2">Masuk</button>
-        </form>
+@section('content')
+    <div class="d-flex justify-content-center align-items-center vw100 vh100 bg-body-secondary" style="height: 100vh">
+        <div class="w-50 border px-5 py-5 rounded-4 bg-white">
+            <h3 class="text-center">Login Admin</h3>
+            <form method="POST">
+                @csrf
+                <labe class="form-label">Username:</labe>
+                <input type="text" name="username" class="form-control">
+                <label class="form-label">Password:</label>
+                <input type="password" name="password" class="form-control">
+                <button class="btn btn-primary mt-2">Masuk</button>
+            </form>
+        </div>
     </div>
-
-</body>
-
-</html>
+@endsection
