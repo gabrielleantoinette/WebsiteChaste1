@@ -10,10 +10,10 @@ class LoginController extends Controller
 
     public function index()
     {
-        return view('admin.login');
+        return view('admin.loginadmin');
     }
 
-    public function login(Request $request)
+    public function loginadmin(Request $request)
     {
         return redirect('/admin/dashboard');
     }

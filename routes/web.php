@@ -8,18 +8,18 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/admin/login', function () {
-    return view('admin.login');
+Route::get('login', function () {
+    return view('login');
 });
 
 Route::prefix('admin')->group(function () {
     Route::get('/dashboard', function () {
         return view('admin.dashboard');
     });
-    Route::get('/login', function () {
-        return view('admin.login');
+    Route::get('/loginadmin', function () {
+        return view('admin.loginadmin');
     });
-    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/login', [LoginController::class, 'loginadmin']);
 
 
     Route::prefix('products')->group(function () {
