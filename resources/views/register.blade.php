@@ -17,7 +17,7 @@
         </div>
 
         <div class="col-md-6 col-lg-4 border p-4 rounded-4 bg-white shadow-lg">
-            <a href="{{ url()->previous() }}" class="btn btn-danger">Kembali</a>
+            <a href="{{ url('/') }}" class="btn btn-danger">Kembali</a>
             <h3 class="text-center mb-4 fw-bold">Daftar</h3>
             <form method="POST">
                 @csrf

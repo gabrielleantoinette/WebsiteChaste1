@@ -24,7 +24,7 @@ Route::post('register', function () {
 });
 
 Route::prefix('admin')->group(function () {
-    Route::get('/dashboard', function () {
+    Route::get('/', function () {
         return view('admin.dashboard');
     });
     Route::get('/loginadmin', function () {
