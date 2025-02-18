@@ -26,13 +26,17 @@
                     <input type="text" name="username" class="form-control" required>
                 </div>
                 <div class="mb-3">
+                    <label class="form-label fw-semibold">Nomor Telepon:</label>
+                    <input type="tel" name="phone" class="form-control" required pattern="[0-9]{10,15}" placeholder="Masukkan nomor telepon">
+                    <small class="text-muted">Gunakan angka saja (10-15 digit).</small>
+                </div>
+                <div class="mb-3">
                     <label class="form-label fw-semibold">Password:</label>
                     <input type="password" name="password" class="form-control" required>
                 </div>
-
-                <button type="submit" class="btn btn-primary w-100">Masuk</button>
-
+                <button type="submit" class="btn btn-primary w-100">Register</button>
             </form>
+
 
             <div class="text-center mt-4">Sudah punya akun? <a href="{{ url('/login') }}">Masuk</a></div>
         </div>
