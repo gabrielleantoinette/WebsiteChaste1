@@ -29,7 +29,7 @@
                     <td>{{ $customer->active ? 'Active' : 'Inactive' }}</td>
                     <td>
                         <a href="{{ url('/admin/customers/detail/' . $customer->id) }}"
-                            class="btn btn-xs btn-primary">Detail</a>
+                            class="btn btn-sm btn-primary">Detail</a>
                     </td>
                 </tr>
             @endforeach

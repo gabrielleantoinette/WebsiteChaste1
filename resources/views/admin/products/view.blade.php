@@ -11,10 +11,9 @@
             <tr>
                 <td>ID</td>
                 <td>Name</td>
-                <td>Email</td>
-                <td>Password</td>
-                <td>Phone</td>
-                <td>Active</td>
+                <td>Description</td>
+                <td>Image</td>
+                <td>Live</td>
                 <td>Action</td>
             </tr>
         </thead>
@@ -23,13 +22,12 @@
                 <tr>
                     <td>{{ $product->id }}</td>
                     <td>{{ $product->name }}</td>
-                    <td>{{ $product->email }}</td>
-                    <td>{{ $product->password }}</td>
-                    <td>{{ $product->phone }}</td>
-                    <td>{{ $product->active ? 'Active' : 'Inactive' }}</td>
+                    <td>{{ $product->description }}</td>
+                    <td>{{ $product->image }}</td>
+                    <td>{{ $product->live ? 'Tampil' : 'Tidak Tampil' }}</td>
                     <td>
-                        <a href="{{ url('/admin/customers/detail/' . $product->id) }}"
-                            class="btn btn-xs btn-primary">Detail</a>
+                        <a href="{{ url('/admin/products/detail/' . $product->id) }}"
+                            class="btn btn-sm btn-primary">Detail</a>
                     </td>
                 </tr>
             @endforeach

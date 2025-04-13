@@ -28,7 +28,7 @@
                     <td>{{ $product->role }}</td>
                     <td>{{ $product->active ? 'Active' : 'Inactive' }}</td>
                     <td><a href="{{ url('/admin/employees/detail/' . $product->id) }}"
-                            class="btn btn-xs btn-primary">Detail</a></td>
+                            class="btn btn-sm btn-primary">Detail</a></td>
                 </tr>
             @endforeach
         </tbody>

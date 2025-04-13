@@ -23,23 +23,14 @@ class ProductController extends Controller
     {
         $name = $request->input('name');
         $description = $request->input('description');
-        $stock = $request->input('stock');
-        $price = $request->input('price');
         $image = $request->input('image');
         $live = $request->input('live');
-
-        $isLive = true;
-        if ($live == "false") {
-            $isLive = false;
-        }
 
         $product = new Product();
         $product->name = $name;
         $product->description = $description;
-        $product->stock = $stock;
-        $product->price = $price;
         $product->image = $image;
-        $product->live = $isLive;
+        $product->live = $live == "1";
         $product->save();
 
         return redirect('/admin/products');
@@ -47,12 +38,36 @@ class ProductController extends Controller
 
     public function detail($id)
     {
+        $product = Product::find($id);
+
         return view('admin.products.detail', [
+            'product' => $product,
+        ]);
+    }
+
+    public function updateProductAction(Request $request, $id)
+    {
+        $product = Product::find($id);
+        $product->name = $request->input('name');
+        $product->description = $request->input('description');
+        $product->image = $request->input('image');
+        $product->live = $request->input('live');
+        $product->save();
+
+        return redirect('/admin/products');
+    }
+
+    public function createVariant($id)
+    {
+        return view('admin.products.create-variant', [
             'product' => Product::find($id)
         ]);
     }
 
-    public function updateProductAction(Request $request) {
-        
+    public function createVariantAction(Request $request, $id)
+    {
+        $product = Product::find($id);
+        $product->variants()->create($request->all());
+        return redirect('/admin/products/detail/' . $id);
     }
 }
