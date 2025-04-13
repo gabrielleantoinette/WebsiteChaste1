@@ -2,8 +2,8 @@
 
 @section('content')
     <div class="flex justify-between mb-5">
-        <h1 class="text-xl font-bold mb-5">Product List</h1>
-        <a href="{{ url('/admin/products/create') }}" class="btn btn-primary">Create</a>
+        <h1 class="text-xl font-bold mb-5">Customer List</h1>
+        <a href="{{ url('/admin/customers/create') }}" class="btn btn-primary">Create</a>
     </div>
 
     <table class="table table-bordered">
@@ -19,16 +19,16 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($products as $product)
+            @foreach ($customers as $customer)
                 <tr>
-                    <td>{{ $product->id }}</td>
-                    <td>{{ $product->name }}</td>
-                    <td>{{ $product->email }}</td>
-                    <td>{{ $product->password }}</td>
-                    <td>{{ $product->phone }}</td>
-                    <td>{{ $product->active ? 'Active' : 'Inactive' }}</td>
+                    <td>{{ $customer->id }}</td>
+                    <td>{{ $customer->name }}</td>
+                    <td>{{ $customer->email }}</td>
+                    <td>{{ $customer->password }}</td>
+                    <td>{{ $customer->phone }}</td>
+                    <td>{{ $customer->active ? 'Active' : 'Inactive' }}</td>
                     <td>
-                        <a href="{{ url('/admin/customers/detail/' . $product->id) }}"
+                        <a href="{{ url('/admin/customers/detail/' . $customer->id) }}"
                             class="btn btn-xs btn-primary">Detail</a>
                     </td>
                 </tr>

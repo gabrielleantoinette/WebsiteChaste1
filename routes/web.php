@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProductController;
@@ -42,5 +43,13 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/create', [EmployeeController::class, 'createEmployeeAction']);
         Route::get('/detail/{id}', [EmployeeController::class, 'detail']);
         Route::post('/detail/{id}', [EmployeeController::class, 'updateEmployeeAction']);
+    });
+
+    Route::prefix('customers')->group(function () {
+        Route::get('/', [CustomerController::class, 'view']);
+        Route::get('/create', [CustomerController::class, 'create']);
+        Route::post('/create', [CustomerController::class, 'createCustomerAction']);
+        Route::get('/detail/{id}', [CustomerController::class, 'detail']);
+        Route::post('/detail/{id}', [CustomerController::class, 'updateCustomerAction']);
     });
 });
