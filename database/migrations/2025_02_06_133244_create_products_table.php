@@ -15,8 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->bigInteger('stock')->default(0);
-            $table->bigInteger('price')->default(0);
             $table->string('image')->nullable();
             $table->boolean('live')->default(false);
             $table->timestamps();

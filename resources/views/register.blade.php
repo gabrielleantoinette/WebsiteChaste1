@@ -5,40 +5,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Daftar</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <title>Masuk</title>
+    @vite('resources/css/app.css')
 </head>
 
 <body>
-    <div class="container d-flex flex-column align-items-center justify-content-center vh-100">
-        <div class="w-100 text-start">
-
-        </div>
-
-        <div class="col-md-6 col-lg-4 border p-4 rounded-4 bg-white shadow-lg">
-            <a href="{{ url('/') }}" class="btn btn-danger">Kembali</a>
-            <h3 class="text-center mb-4 fw-bold">Daftar</h3>
+    <div class="flex flex-col items-center justify-center h-screen">
+        <div class="w-full max-w-md p-4 border border-gray-200 rounded-md shadow-lg">
+            <a href="{{ url('/') }}" class="text-blue-500">
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                    </svg>
+                    Kembali
+                </div>
+            </a>
+            <h3 class="text-center text-2xl font-bold">Daftar</h3>
             <form method="POST">
                 @csrf
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Username:</label>
-                    <input type="text" name="username" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Nomor Telepon:</label>
-                    <input type="tel" name="phone" class="form-control" required pattern="[0-9]{10,15}" placeholder="Masukkan nomor telepon">
-                    <small class="text-muted">Gunakan angka saja (10-15 digit).</small>
+                    <div class="form-label fw-semibold">Email:</div>
+                    <input type="email" name="email" class="input input-primary w-full" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Password:</label>
-                    <input type="password" name="password" class="form-control" required>
+                    <input type="password" name="password" class="input input-primary w-full" required>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Register</button>
+
+                <button type="submit" class="btn btn-primary w-full">Daftar</button>
             </form>
 
-
-            <div class="text-center mt-4">Sudah punya akun? <a href="{{ url('/login') }}">Masuk</a></div>
+            <div class="text-center mt-4">Sudah punya akun? <a href="{{ url('/login') }}"
+                    class="text-blue-500">Masuk</a>
+            </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

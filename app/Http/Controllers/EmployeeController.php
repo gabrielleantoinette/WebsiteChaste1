@@ -22,14 +22,14 @@ class EmployeeController extends Controller
     public function createEmployeeAction(Request $request)
     {
         $name = $request->input('name');
-        $username = $request->input('username');
+        $email = $request->input('email');
         $password = $request->input('password');
         $active = $request->input('active') === "1" ? true : false;
         $role = $request->input('role');
 
         $employee = new Employee();
         $employee->name = $name;
-        $employee->username = $username;
+        $employee->email = $email;
         $employee->password = $password;
         $employee->active = $active;
         $employee->role = $role;
@@ -41,11 +41,17 @@ class EmployeeController extends Controller
     public function detail($id)
     {
         return view('admin.employees.detail', [
-            'product' => Employee::find($id)
+            'employee' => Employee::find($id)
         ]);
     }
 
-    public function updateProductAction(Request $request) {
-
+    public function updateEmployeeAction(Request $request, $id)
+    {
+        $employee = Employee::find($id);
+        $employee->name = $request->name;
+        $employee->email = $request->email;
+        $employee->password = $request->password;
+        $employee->save();
+        return redirect('/admin/employees/');
     }
 }

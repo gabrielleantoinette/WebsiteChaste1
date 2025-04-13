@@ -1,1 +1,8 @@
-@import "bootstrap/dist/css/bootstrap.min.css";
+@import "tailwindcss";
+@source "../views";
+
+@theme {
+    --color-tosca: #80C0CE;
+}
+
+@plugin "daisyui";
