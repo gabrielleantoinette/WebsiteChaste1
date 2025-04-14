@@ -18,9 +18,29 @@
                 <a href="#" class="hover:text-teal-500 transition">Produk</a>
                 <a href="#" class="hover:text-teal-500 transition">Kontak</a>
             </nav>
-            <div class="space-x-4 text-xl text-gray-700">
-                <a href="#" class="hover:text-teal-500">🛒</a>
-                <a href="{{ route('login') }}" class="hover:text-teal-500">👤</a>
+            <div class="space-x-4 text-xl text-gray-700 flex items-center gap-4">
+                <a href="#" class="hover:text-teal-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                    </svg>
+                </a>
+                <a href="{{ route('login') }}" class="hover:text-teal-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                </a>
+                <span>|</span>
+                <a href="{{ route('login') }}" class="hover:text-teal-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" />
+                    </svg>
+                </a>
             </div>
 
         </header>
@@ -45,9 +65,15 @@
                     </div>
                     <div class="relative">
                         <input type="text" placeholder="Apa yang anda cari?"
-                            class="w-full py-4 px-5 pr-14 rounded-[16px] focus:outline-none placeholder:text-gray-500 bg-white">
+                            class="w-full py-5 px-5 pr-14 rounded-[16px] focus:outline-none placeholder:text-gray-500 bg-white">
                         <button
-                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-lg bg-[#D9F2F2] rounded-[16px] p-2 w-[48px] h-[48px]">🔍</button>
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-lg bg-[#D9F2F2] rounded-[16px] p-2 w-[48px] h-[48px] flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
