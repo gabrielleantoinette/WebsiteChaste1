@@ -1,47 +1,98 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Masuk</title>
+    <title>Masuk | CHASTE</title>
     @vite('resources/css/app.css')
 </head>
 
-<body>
-    <div class="flex flex-col items-center justify-center h-screen">
-        <div class="w-full max-w-md p-4 border border-gray-200 rounded-md shadow-lg">
-            <a href="{{ url('/') }}" class="text-blue-500">
-                <div class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                    </svg>
-                    Kembali
-                </div>
-            </a>
-            <h3 class="text-center text-2xl font-bold">Masuk</h3>
-            <form method="POST">
-                @csrf
-                <div class="mb-3">
-                    <div class="form-label fw-semibold">Email:</div>
-                    <input type="email" name="email" class="input input-primary w-full" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Password:</label>
-                    <input type="password" name="password" class="input input-primary w-full" required>
-                </div>
+<body class="bg-white font-sans">
+    <!-- Navbar minimal -->
+    <!-- Navbar minimal -->
+<header class="flex items-center justify-between px-6 md:px-20 py-5 border-b border-gray-200">
+    <div class="text-2xl font-bold tracking-wide">CHASTE</div>
+    <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
+        <a href="{{ url('/') }}" class="hover:text-teal-500">Beranda</a>
+        <a href="#" class="hover:text-teal-500">Produk</a>
+        <a href="#" class="hover:text-teal-500">Kontak</a>
+    </nav>
+    <div class="space-x-4 text-xl text-gray-700">
+        <a href="#">🛒</a>
+        <a href="#">👤</a>
+    </div>
+</header>
 
-                <button type="submit" class="btn btn-primary w-full">Masuk</button>
+<!-- Konten login -->
+<main class="flex items-center justify-center min-h-screen px-4 md:px-0 bg-white">
+    <div class="flex flex-col md:flex-row overflow-hidden rounded-[20px] shadow-lg border border-gray-200 max-w-5xl w-full h-[500px]">
+        <!-- Gambar -->
+        <div class="hidden md:block w-[400px] h-full">
+            <img src="{{ asset('images/terpal-login.png') }}" alt="Terpal Gulungan"
+                 class="object-cover w-full h-full">
+        </div>
+
+        <!-- Form -->
+        <div class="w-full md:w-[700px] bg-white p-8 flex flex-col justify-center">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">MASUK</h2>
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
+
+                <label class="block mb-2 text-sm font-medium text-gray-700">Email</label>
+                <input type="email" name="email" required
+                    class="w-full mb-4 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+
+                <label class="block mb-2 text-sm font-medium text-gray-700">Kata Sandi</label>
+                <input type="password" name="password" required
+                    class="w-full mb-6 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+
+                <button type="submit"
+                    class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
+                    Masuk
+                </button>
             </form>
 
-            <div class="text-center mt-4">Belum punya akun? <a href="{{ url('/register') }}"
-                    class="text-blue-500">Daftar</a>
+            <div class="text-center text-sm mt-4">
+                Belum punya akun?
+                <a href="{{ url('/register') }}" class="text-red-500 font-medium">Daftar sekarang</a>
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+</main>
 
+
+    <!-- Footer -->
+    <footer class="bg-[#D9F2F2] py-10 px-6 md:px-20 text-sm text-gray-700 mt-20">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Brand -->
+            <div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">CHASTE</h3>
+                <p class="mb-4 max-w-xs">Kami membantu anda menyediakan terpal terbaik.</p>
+                <div class="flex space-x-4 text-lg">
+                    <a href="#">📷</a>
+                    <a href="#">🐦</a>
+                    <a href="#">📘</a>
+                </div>
+            </div>
+
+            <!-- Informasi -->
+            <div class="space-y-2">
+                <h4 class="font-semibold text-gray-800 mb-2">Informasi</h4>
+                <a href="#" class="block hover:text-black">Tentang</a>
+                <a href="#" class="block hover:text-black">Produk</a>
+            </div>
+
+            <!-- Kontak -->
+            <div class="space-y-2">
+                <h4 class="font-semibold text-gray-800 mb-2">Kontak Kami</h4>
+                <p>Telp: 089123231221</p>
+                <p>E-mail: xyz@bca</p>
+            </div>
+        </div>
+
+        <div class="text-center text-xs text-gray-500 mt-8">
+            © 2025 Hak Cipta Dilindungi
+        </div>
+    </footer>
+</body>
 </html>
