@@ -23,6 +23,11 @@ Route::post('register', function () {
     // Logic register
 });
 
+Route::get('/produk', function () {
+    return view('produk');
+})->name('produk');
+
+
 // Prefix Admin untuk Management
 Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     Route::get('/', function () {

@@ -15,7 +15,7 @@
             <div class="text-2xl font-bold tracking-wide">CHASTE</div>
             <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
                 <a href="#" class="hover:text-teal-500 transition">Beranda</a>
-                <a href="#" class="hover:text-teal-500 transition">Produk</a>
+                <a href="{{ route('produk') }}" class="hover:text-teal-500 transition">Produk</a>
                 <a href="#" class="hover:text-teal-500 transition">Kontak</a>
             </nav>
             <div class="space-x-4 text-xl text-gray-700 flex items-center gap-4">
@@ -78,9 +78,8 @@
                 </div>
 
                 <!-- Image -->
-                <div class="w-[320px] h-[320px] rounded-[32px] overflow-hidden border-4 border-white shadow-xl">
-                    <img src="{{ asset('images/gulungan-terpal.png') }}" alt="Gulungan Terpal"
-                        class="object-cover w-full h-full">
+                <div class="w-100 h-100 rounded-full overflow-hidden border-4 border-white shadow-md">
+                    <img src="{{ asset('images/gulungan-terpal.png') }}" alt="Custom Terpal" class="w-full h-full object-cover">
                 </div>
             </div>
         </section>

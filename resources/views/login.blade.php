@@ -14,7 +14,7 @@
     <div class="text-2xl font-bold tracking-wide">CHASTE</div>
     <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
         <a href="{{ url('/') }}" class="hover:text-teal-500">Beranda</a>
-        <a href="#" class="hover:text-teal-500">Produk</a>
+        <a href="{{ route('produk') }}" class="hover:text-teal-500">Produk</a>
         <a href="#" class="hover:text-teal-500">Kontak</a>
     </nav>
     <div class="space-x-4 text-xl text-gray-700">
@@ -79,7 +79,7 @@
             <div class="space-y-2">
                 <h4 class="font-semibold text-gray-800 mb-2">Informasi</h4>
                 <a href="#" class="block hover:text-black">Tentang</a>
-                <a href="#" class="block hover:text-black">Produk</a>
+                <a href="{{ route('produk') }}" class="block hover:text-black">Produk</a>
             </div>
 
             <!-- Kontak -->
