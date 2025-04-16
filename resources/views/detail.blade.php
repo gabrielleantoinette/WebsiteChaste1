@@ -7,6 +7,44 @@
     @vite('resources/css/app.css')
 </head>
 
+<script>
+    function changeQty(amount) {
+        const input = document.getElementById('qtyInput');
+        let current = parseInt(input.value);
+        const min = parseInt(input.min) || 1;
+
+        if (!isNaN(current)) {
+            let newVal = current + amount;
+            if (newVal < min) newVal = min;
+            input.value = newVal;
+        }
+    }
+    let index = 0;
+    function slide(direction) {
+        const slider = document.getElementById('slider');
+        const slides = slider.children.length;
+        index += direction;
+
+        if (index < 0) index = slides - 1;
+        if (index >= slides) index = 0;
+
+        slider.style.transform = `translateX(-${index * 100}%)`;
+    }
+</script>
+
+<style>
+    /* Hilangkan spinner untuk input type number di semua browser */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+    }
+</style>
+
+
 <body class="bg-white font-sans text-gray-800">
 <!-- Header -->
 <header class="flex items-center justify-between px-6 md:px-20 py-5 border-b border-gray-200">
@@ -27,23 +65,20 @@
 <section class="px-6 md:px-20 py-16 bg-white">
     <div class="flex flex-col md:flex-row gap-10">
         <!-- Gambar Produk -->
-        <div class="w-full md:w-1/2">
-            <div class="relative rounded-xl border border-gray-200 overflow-hidden p-4">
-                <img src="{{ asset('images/terpal-ayam.png') }}" alt="Terpal A5"
-                     class="w-full h-[400px] object-cover rounded-lg">
-
-                <!-- Tombol panah kiri-kanan dummy -->
-                <button class="absolute left-4 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow text-xl">❮</button>
-                <button class="absolute right-4 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow text-xl">❯</button>
+        <div class="relative w-full overflow-hidden rounded-xl border border-gray-200">
+            <div id="slider" class="flex transition-transform duration-300 ease-in-out w-[300%]">
+                <img src="{{ asset('images/terpal-ayam.png') }}" class="w-full object-cover h-[400px]">
+                <img src="{{ asset('images/terpal-gajah.png') }}" class="w-full object-cover h-[400px]">
+                <img src="{{ asset('images/terpal-lumba.png') }}" class="w-full object-cover h-[400px]">
             </div>
 
-            <!-- Thumbnail kecil -->
-            <div class="flex gap-4 mt-4">
-                <img src="{{ asset('images/terpal-ayam.png') }}" class="w-16 h-16 object-cover rounded shadow-sm border">
-                <img src="{{ asset('images/terpal-gajah.png') }}" class="w-16 h-16 object-cover rounded shadow-sm border">
-                <img src="{{ asset('images/terpal-lumba.png') }}" class="w-16 h-16 object-cover rounded shadow-sm border">
-            </div>
+            <!-- Panah -->
+            <button onclick="slide(-1)"
+                class="absolute left-4 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow text-xl z-10">❮</button>
+            <button onclick="slide(1)"
+                class="absolute right-4 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow text-xl z-10">❯</button>
         </div>
+
 
         <!-- Info Produk -->
         <div class="w-full md:w-1/2 space-y-6">
@@ -67,11 +102,14 @@
             <div>
                 <label class="block text-sm font-medium mb-1">Jumlah</label>
                 <div class="flex items-center border border-gray-300 w-max rounded-md overflow-hidden">
-                    <button type="button" class="px-3 py-2 text-lg hover:bg-gray-100">-</button>
-                    <input type="number" value="1" min="1"
-                           class="w-12 text-center border-l border-r border-gray-300 outline-none text-sm py-2">
-                    <button type="button" class="px-3 py-2 text-lg hover:bg-gray-100">+</button>
+                    <button type="button" class="px-3 py-2 text-lg hover:bg-gray-100" onclick="changeQty(-1)">-</button>
+                    
+                    <input type="number" id="qtyInput" value="1" min="1"
+                        class="w-12 text-center border-l border-r border-gray-300 outline-none text-sm py-2">
+
+                    <button type="button" class="px-3 py-2 text-lg hover:bg-gray-100" onclick="changeQty(1)">+</button>
                 </div>
+
             </div>
 
             <!-- Tombol -->

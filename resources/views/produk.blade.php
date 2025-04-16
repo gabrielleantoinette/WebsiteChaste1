@@ -117,7 +117,7 @@
                             class="w-full h-full object-cover rounded-t-[20px]">
 
                         <!-- Tombol Lihat Detail di tengah -->
-                        <a href="#"
+                        <a href="{{ url('/produk/1') }}"
                         class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
                         bg-white text-teal-600 font-medium text-sm px-4 py-2 rounded-full 
                         shadow-md opacity-0 group-hover:opacity-100 transition duration-300 ease-in-out">
