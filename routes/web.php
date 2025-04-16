@@ -26,6 +26,9 @@ Route::post('register', function () {
 Route::get('/produk', function () {
     return view('produk');
 })->name('produk');
+Route::get('/produk/{id}', function ($id) {
+    return view('detail');
+})->name('produk.detail');
 
 
 // Prefix Admin untuk Management
