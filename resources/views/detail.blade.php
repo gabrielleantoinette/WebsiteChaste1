@@ -60,7 +60,7 @@
                 <a href="#" class="hover:text-teal-500 transition">Kontak</a>
             </nav>
             <div class="space-x-4 text-xl text-gray-700 flex items-center gap-4">
-                <a href="#" class="hover:text-teal-500">
+                <a href="{{ route('keranjang') }}" class="hover:text-teal-500">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="size-6">
                         <path stroke-linecap="round" stroke-linejoin="round"

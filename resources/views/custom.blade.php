@@ -56,7 +56,7 @@
     <a href="#" class="hover:text-teal-500">Kontak</a>
   </nav>
   <div class="space-x-4 text-xl text-gray-700">
-    <a href="#">🛒</a>
+    <a href="{{ route('keranjang') }}">🛒</a>
     <a href="#">👤</a>
     <a href="#">☰</a>
   </div>

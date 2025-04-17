@@ -32,6 +32,9 @@ Route::get('/produk/{id}', function ($id) {
 Route::get('/custom-terpal', function () {
     return view('custom');
 })->name('custom.terpal');
+Route::get('/keranjang', function () {
+    return view('keranjang');
+})->name('keranjang');
 
 
 
