@@ -86,7 +86,7 @@
           <label class="text-sm font-medium text-gray-700">Ukuran yang Dipesan <span class="text-red-500">*</span></label>
           <div class="flex items-center gap-2 mb-2">
             <input type="checkbox" id="isVolumeCheckbox" onclick="toggleTinggi()"> 
-            <span class="text-sm">Terpal Bervolume. (klik jika butuh)</span>
+            <span class="text-sm">Terpal Bervolume (Klik jika butuh)</span>
           </div>
           <div class="space-y-2">
             <input type="text" placeholder="Masukkan Panjang (dalam meter)*" class="w-full border border-gray-300 rounded-md p-2 text-sm">

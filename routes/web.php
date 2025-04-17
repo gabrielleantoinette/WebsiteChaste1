@@ -35,6 +35,10 @@ Route::get('/custom-terpal', function () {
 Route::get('/keranjang', function () {
     return view('keranjang');
 })->name('keranjang');
+Route::get('/checkout', function () {
+    return view('checkout');
+})->name('checkout');
+
 
 
 

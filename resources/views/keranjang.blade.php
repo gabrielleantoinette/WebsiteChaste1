@@ -78,6 +78,12 @@
       <a href="#" class="text-sm text-red-500 hover:underline">Hapus</a>
     </div>
   </div>
+  <div class="flex justify-end mt-8">
+    <a href="{{ route('checkout') }}"
+      class="bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold px-6 py-3 rounded-md transition">
+      Lanjut Bayar
+    </a>
+  </div>
 </section>
 
 <!-- Footer -->
