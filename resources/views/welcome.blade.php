@@ -79,7 +79,8 @@
 
                 <!-- Image -->
                 <div class="w-100 h-100 rounded-full overflow-hidden border-4 border-white shadow-md">
-                    <img src="{{ asset('images/gulungan-terpal.png') }}" alt="Custom Terpal" class="w-full h-full object-cover">
+                    <img src="{{ asset('images/gulungan-terpal.png') }}" alt="Custom Terpal"
+                        class="w-full h-full object-cover">
                 </div>
             </div>
         </section>
@@ -199,7 +200,7 @@
             </div>
         </section>
         <!-- Testimoni -->
-        <section class="py-20 px-6 md:px-20 bg-white">
+        <section class="py-20 bg-white">
             <h2 class="text-2xl md:text-3xl font-bold text-gray-900 text-left mb-10 max-w-3xl leading-snug">
                 Apa yang dikatakan pelanggan tentang <br class="hidden md:block">
                 PT. Chaste Gemilang Mandiri?
@@ -216,7 +217,7 @@
                     </p>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <img src="{{ asset('images/avatar1.png') }}" alt="John Doe"
+                            <img src="{{ asset('images/avatar1.jpeg') }}" alt="John Doe"
                                 class="w-10 h-10 rounded-full object-cover">
                             <div class="text-sm">
                                 <p class="font-semibold text-gray-800">John Doe</p>
@@ -239,7 +240,7 @@
                     </p>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <img src="{{ asset('images/avatar2.png') }}" alt="John Doe"
+                            <img src="{{ asset('images/avatar2.jpeg') }}" alt="John Doe"
                                 class="w-10 h-10 rounded-full object-cover">
                             <div class="text-sm">
                                 <p class="font-semibold text-gray-800">John Doe</p>
@@ -253,44 +254,40 @@
                 </div>
             </div>
         </section>
-
-
-        <!-- Footer -->
-        <!-- Footer -->
-        <footer class="bg-[#D9F2F2] py-10 px-6 md:px-20 text-sm text-gray-700">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Brand -->
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">CHASTE</h3>
-                    <p class="mb-4 max-w-xs">Kami membantu anda menyediakan terpal terbaik.</p>
-                    <div class="flex space-x-4 text-lg">
-                        <a href="#" class="hover:text-black">Instagram</a>
-                        <a href="#" class="hover:text-black">Facebook</a>
-                        <a href="#" class="hover:text-black">Twitter</a>
-                    </div>
-                </div>
-
-                <!-- Informasi -->
-                <div class="space-y-2">
-                    <h4 class="font-semibold text-gray-800 mb-2">Informasi</h4>
-                    <a href="#" class="block hover:text-black">Tentang</a>
-                    <a href="#" class="block hover:text-black">Produk</a>
-                </div>
-
-                <!-- Kontak -->
-                <div class="space-y-2">
-                    <h4 class="font-semibold text-gray-800 mb-2">Kontak Kami</h4>
-                    <p>Telp: 089123231221</p>
-                    <p>E-mail: xyz@abc.a</p>
+    </div>
+    <!-- Footer -->
+    <footer class="bg-[#D9F2F2] py-10 px-[100px] text-sm text-gray-700">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Brand -->
+            <div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">CHASTE</h3>
+                <p class="mb-4 max-w-xs">Kami membantu anda menyediakan terpal terbaik.</p>
+                <div class="flex space-x-4 text-lg">
+                    <a href="#" class="hover:text-black">Instagram</a>
+                    <a href="#" class="hover:text-black">Facebook</a>
+                    <a href="#" class="hover:text-black">Twitter</a>
                 </div>
             </div>
 
-            <div class="text-center text-xs text-gray-500 mt-8">
-                © {{ date('Y') }} Hak Cipta Dilindungi
+            <!-- Informasi -->
+            <div class="space-y-2">
+                <h4 class="font-semibold text-gray-800 mb-2">Informasi</h4>
+                <a href="#" class="block hover:text-black">Tentang</a>
+                <a href="#" class="block hover:text-black">Produk</a>
             </div>
-        </footer>
 
+            <!-- Kontak -->
+            <div class="space-y-2">
+                <h4 class="font-semibold text-gray-800 mb-2">Kontak Kami</h4>
+                <p>Telp: 089123231221</p>
+                <p>E-mail: xyz@abc.a</p>
+            </div>
+        </div>
 
+        <div class="text-center text-xs text-gray-500 mt-8">
+            © {{ date('Y') }} Hak Cipta Dilindungi
+        </div>
+    </footer>
 </body>
 
 </html>
