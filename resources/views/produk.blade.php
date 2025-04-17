@@ -52,7 +52,7 @@
                     <h1 class="text-5xl font-extrabold text-gray-900 leading-snug tracking-tight">
                         Butuh terpal tapi ukuran tidak sesuai keinginan?
                     </h1>
-                    <a href="#"
+                    <a href="{{ route('custom.terpal') }}"
                         class="inline-block bg-white text-gray-800 font-semibold px-6 py-3 rounded-md border border-gray-300 hover:bg-gray-100 transition">
                         Custom Terpalmu Disini!
                     </a>

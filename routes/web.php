@@ -29,6 +29,10 @@ Route::get('/produk', function () {
 Route::get('/produk/{id}', function ($id) {
     return view('detail');
 })->name('produk.detail');
+Route::get('/custom-terpal', function () {
+    return view('custom');
+})->name('custom.terpal');
+
 
 
 // Prefix Admin untuk Management
