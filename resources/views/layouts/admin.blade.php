@@ -26,6 +26,9 @@
                 <a href="{{ url('/admin/customers') }}">
                     <div class="btn btn-primary">Customers</div>
                 </a>
+                <a href="{{ url('/admin/invoices') }}">
+                    <div class="btn btn-primary">Penjualan</div>
+                </a>
             </div>
             <div class="flex items-center gap-2">
                 <div>{{ Session::get('user')->name }}</div>

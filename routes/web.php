@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProductController;
 use App\Http\Middleware\LoggedIn;
@@ -72,5 +73,15 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/create', [CustomerController::class, 'createCustomerAction']);
         Route::get('/detail/{id}', [CustomerController::class, 'detail']);
         Route::post('/detail/{id}', [CustomerController::class, 'updateCustomerAction']);
+    });
+
+    Route::prefix('invoices')->group(function () {
+        Route::get('/', [InvoiceController::class, 'view']);
+        Route::get('/create-customer', [InvoiceController::class, 'createCustomer']);
+        Route::post('/create-customer', [InvoiceController::class, 'createCustomerAction']);
+        Route::get('/create-product', [InvoiceController::class, 'createProduct']);
+        Route::post('/create-product', [InvoiceController::class, 'createProductAction']);
+        Route::get('/create-confirmation', [InvoiceController::class, 'createConfirmation']);
+        Route::post('/create-confirmation', [InvoiceController::class, 'createConfirmationAction']);
     });
 });

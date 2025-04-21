@@ -13,6 +13,8 @@
                 <td>Name</td>
                 <td>Description</td>
                 <td>Image</td>
+                <td>Price</td>
+                <td>Size</td>
                 <td>Live</td>
                 <td>Action</td>
             </tr>
@@ -24,6 +26,8 @@
                     <td>{{ $product->name }}</td>
                     <td>{{ $product->description }}</td>
                     <td>{{ $product->image }}</td>
+                    <td>Rp {{ number_format($product->price) }}</td>
+                    <td>{{ $product->size }}</td>
                     <td>{{ $product->live ? 'Tampil' : 'Tidak Tampil' }}</td>
                     <td>
                         <a href="{{ url('/admin/products/detail/' . $product->id) }}"

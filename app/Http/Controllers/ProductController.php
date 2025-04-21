@@ -21,16 +21,13 @@ class ProductController extends Controller
 
     public function createProductAction(Request $request)
     {
-        $name = $request->input('name');
-        $description = $request->input('description');
-        $image = $request->input('image');
-        $live = $request->input('live');
-
         $product = new Product();
-        $product->name = $name;
-        $product->description = $description;
-        $product->image = $image;
-        $product->live = $live == "1";
+        $product->name = $request->input('name');
+        $product->description = $request->input('description');
+        $product->image = $request->input('image');
+        $product->price = $request->input('price');
+        $product->size = $request->input('size');
+        $product->live = $request->input('live') == "1";
         $product->save();
 
         return redirect('/admin/products');
@@ -51,6 +48,8 @@ class ProductController extends Controller
         $product->name = $request->input('name');
         $product->description = $request->input('description');
         $product->image = $request->input('image');
+        $product->price = $request->input('price');
+        $product->size = $request->input('size');
         $product->live = $request->input('live');
         $product->save();
 
@@ -67,7 +66,10 @@ class ProductController extends Controller
     public function createVariantAction(Request $request, $id)
     {
         $product = Product::find($id);
-        $product->variants()->create($request->all());
+        $product->variants()->create([
+            'color' => $request->input('color'),
+            'stock' => $request->input('stock'),
+        ]);
         return redirect('/admin/products/detail/' . $id);
     }
 }
