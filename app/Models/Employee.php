@@ -8,12 +8,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable; // Ganti Model biasa ke 
 class Employee extends Authenticatable
 {
     use HasFactory;
-    
+
     protected $table = 'employees';
 
     protected $fillable = [
-        'username',
+        'name',
+        'email',
         'password',
+        'active',
         'role',
     ];
 
@@ -21,4 +23,3 @@ class Employee extends Authenticatable
         'password',
     ];
 }
-

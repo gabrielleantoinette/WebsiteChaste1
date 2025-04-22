@@ -180,7 +180,8 @@
 
                                     <!-- Info Produk -->
                                     <div class="p-4 text-center">
-                                        <h3 class="text-sm font-semibold text-gray-800">{{ $product->name }}</h3>
+                                        <h3 class="font-semibold text-gray-800">{{ $product->name }}</h3>
+                                        <p class="text-xs text-gray-600">Ukuran: {{ $product->size }}</p>
                                         <p class="text-sm text-gray-600 mt-1">Rp
                                             {{ number_format($product->price) }}</p>
                                     </div>

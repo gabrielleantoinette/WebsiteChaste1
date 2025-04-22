@@ -17,7 +17,7 @@ class LoggedIn
     public function handle(Request $request, Closure $next): Response
     {
         if (!Session::has('user')) {
-            return redirect('/');
+            return redirect('/login');
         }
 
         return $next($request);

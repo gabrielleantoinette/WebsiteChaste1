@@ -106,19 +106,22 @@
 
 
                 <!-- Info Produk -->
-                <div class="w-full md:w-1/2 space-y-6">
+                <form method="POST" class="w-full md:w-1/2 space-y-6">
+                    @csrf
                     <div>
                         <h2 class="text-2xl font-bold">{{ $product->name }}</h2>
-                        <p class="text-xl text-teal-600 font-semibold mt-1">Rp {{ number_format($product->price) }}</p>
+                        <p class="text-xl text-teal-600 font-semibold mt-1">Rp {{ number_format($product->price) }}
+                        </p>
                         <p class="text-sm text-gray-600 mt-2">{{ $product->description }}</p>
                     </div>
 
                     <!-- Pilih Warna -->
                     <div>
                         <label class="block text-sm font-medium mb-1">Pilihan Warna</label>
-                        <select class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-teal-300">
+                        <select class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-teal-300"
+                            name="variant_id">
                             @foreach ($variants as $variant)
-                                <option>{{ $variant->color }}</option>
+                                <option value="{{ $variant->id }}">{{ $variant->color }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -130,7 +133,7 @@
                             <button type="button" class="px-3 py-2 text-lg hover:bg-gray-100"
                                 onclick="changeQty(-1)">-</button>
 
-                            <input type="number" id="qtyInput" value="1" min="1"
+                            <input type="number" id="qtyInput" value="1" min="1" name="quantity"
                                 class="w-12 text-center border-l border-r border-gray-300 outline-none text-sm py-2">
 
                             <button type="button" class="px-3 py-2 text-lg hover:bg-gray-100"
@@ -144,7 +147,7 @@
                         class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
                         Tambah ke Keranjang
                     </button>
-                </div>
+                </form>
             </div>
         </section>
 

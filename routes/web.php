@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InvoiceController;
@@ -17,24 +18,24 @@ Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'loginadmin']);
 
-Route::get('register', function () {
-    return view('register');
-});
+Route::get('register', [LoginController::class, 'showRegisterForm'])->name('register');
 Route::post('register', [LoginController::class, 'register']);
 
-Route::get('/produk', [CustomerController::class, 'viewProducts'])->name('produk');
-Route::get('/produk/{id}', [CustomerController::class, 'detailProduct'])->name('produk.detail');
-Route::get('/custom-terpal', function () {
-    return view('custom');
-})->name('custom.terpal');
-Route::get('/keranjang', function () {
-    return view('keranjang');
-})->name('keranjang');
-Route::get('/checkout', function () {
-    return view('checkout');
-})->name('checkout');
+Route::middleware([LoggedIn::class])->group(function () {
+    Route::get('/produk', [CustomerController::class, 'viewProducts'])->name('produk');
+    Route::get('/produk/{id}', [CustomerController::class, 'detailProduct'])->name('produk.detail');
+    Route::post('/produk/{id}', [CartController::class, 'addItem'])->name('produk.add');
+    Route::get('/custom-terpal', function () {
+        return view('custom');
+    })->name('custom.terpal');
 
-
+    Route::get('/keranjang', [CartController::class, 'view'])->name('keranjang');
+    Route::post('/keranjang/add', [CartController::class, 'addItem'])->name('keranjang.add');
+    Route::post('/keranjang/delete/{id}', [CartController::class, 'deleteItem'])->name('keranjang.delete');
+    Route::get('/checkout', function () {
+        return view('checkout');
+    })->name('checkout');
+});
 
 
 // Prefix Admin untuk Management

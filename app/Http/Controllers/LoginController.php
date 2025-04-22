@@ -15,6 +15,11 @@ class LoginController extends Controller
         return view('login');
     }
 
+    public function showRegisterForm()
+    {
+        return view('register');
+    }
+
     public function loginadmin(Request $request)
     {
         $employee = Employee::where('email', $request->email)->first();
