@@ -130,7 +130,7 @@
                         </select>
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                        @for ($i = 0; $i < 9; $i++)
+                        {{-- @for ($i = 0; $i < 9; $i++)
                             <div
                                 class="relative bg-white border border-gray-200 rounded-[20px] overflow-hidden shadow-sm
                     hover:shadow-lg hover:-translate-y-1 transition duration-200 transform group">
@@ -156,7 +156,37 @@
                                     <p class="text-sm text-gray-600 mt-1">Rp 4.500,00</p>
                                 </div>
                             </div>
-                        @endfor
+                        @endfor --}}
+                        @foreach ($products as $product)
+                            <div>
+                                <div
+                                    class="relative bg-white border border-gray-200 rounded-[20px] overflow-hidden shadow-sm
+                    hover:shadow-lg hover:-translate-y-1 transition duration-200 transform group">
+
+                                    <!-- Gambar Produk -->
+                                    <div class="relative w-full h-56">
+                                        <img src="{{ asset('images/terpal-ayam.png') }}" alt="Produk"
+                                            class="w-full h-full object-cover rounded-t-[20px]">
+
+                                        <!-- Tombol Lihat Detail di tengah -->
+                                        <a href="{{ url('/produk/' . $product->id) }}"
+                                            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                        bg-white text-teal-600 font-medium text-sm px-4 py-2 rounded-full
+                        shadow-md opacity-0 group-hover:opacity-100 transition duration-300 ease-in-out">
+                                            Lihat Detail
+                                        </a>
+
+                                    </div>
+
+                                    <!-- Info Produk -->
+                                    <div class="p-4 text-center">
+                                        <h3 class="text-sm font-semibold text-gray-800">{{ $product->name }}</h3>
+                                        <p class="text-sm text-gray-600 mt-1">Rp
+                                            {{ number_format($product->price) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>

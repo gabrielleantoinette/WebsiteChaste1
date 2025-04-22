@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
@@ -44,5 +46,20 @@ class CustomerController extends Controller
         $customer->phone = $request->phone;
         $customer->save();
         return redirect('/admin/customers/detail/' . $id);
+    }
+
+
+    // PUBLIC FUNCTIONS
+    public function viewProducts()
+    {
+        $products = Product::all();
+        return view('produk', compact('products'));
+    }
+
+    public function detailProduct($id)
+    {
+        $product = Product::find($id);
+        $variants = ProductVariant::where('product_id', $id)->get();
+        return view('produk-detail', compact('product', 'variants'));
     }
 }

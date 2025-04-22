@@ -108,19 +108,18 @@
                 <!-- Info Produk -->
                 <div class="w-full md:w-1/2 space-y-6">
                     <div>
-                        <h2 class="text-2xl font-bold">Terpal A5 2x3</h2>
-                        <p class="text-xl text-teal-600 font-semibold mt-1">Rp 4.500,00</p>
-                        <p class="text-sm text-gray-600 mt-2">Terpal plastik kualitas bagus yang cocok untuk kebutuhan
-                            bertani</p>
+                        <h2 class="text-2xl font-bold">{{ $product->name }}</h2>
+                        <p class="text-xl text-teal-600 font-semibold mt-1">Rp {{ number_format($product->price) }}</p>
+                        <p class="text-sm text-gray-600 mt-2">{{ $product->description }}</p>
                     </div>
 
                     <!-- Pilih Warna -->
                     <div>
                         <label class="block text-sm font-medium mb-1">Pilihan Warna</label>
                         <select class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-teal-300">
-                            <option>Pilih...</option>
-                            <option>Biru</option>
-                            <option>Oranye</option>
+                            @foreach ($variants as $variant)
+                                <option>{{ $variant->color }}</option>
+                            @endforeach
                         </select>
                     </div>
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,11 +25,12 @@
 
     <!-- Form Daftar -->
     <main class="flex items-center justify-center min-h-screen px-4 md:px-0 bg-white">
-        <div class="flex flex-col md:flex-row overflow-hidden rounded-[20px] shadow-lg border border-gray-200 max-w-5xl w-full h-[540px]">
+        <div
+            class="flex flex-col md:flex-row overflow-hidden rounded-[20px] shadow-lg border border-gray-200 max-w-5xl w-full h-[540px]">
             <!-- Gambar -->
             <div class="hidden md:block w-[400px] h-full">
                 <img src="{{ asset('images/terpal-login.png') }}" alt="Terpal Gulungan"
-                     class="object-cover w-full h-full">
+                    class="object-cover w-full h-full">
             </div>
 
             <!-- Form -->
@@ -101,4 +103,5 @@
         </div>
     </footer>
 </body>
+
 </html>

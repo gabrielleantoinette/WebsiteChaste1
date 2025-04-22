@@ -20,16 +20,10 @@ Route::post('login', [LoginController::class, 'loginadmin']);
 Route::get('register', function () {
     return view('register');
 });
-Route::post('register', function () {
-    // Logic register
-});
+Route::post('register', [LoginController::class, 'register']);
 
-Route::get('/produk', function () {
-    return view('produk');
-})->name('produk');
-Route::get('/produk/{id}', function ($id) {
-    return view('detail');
-})->name('produk.detail');
+Route::get('/produk', [CustomerController::class, 'viewProducts'])->name('produk');
+Route::get('/produk/{id}', [CustomerController::class, 'detailProduct'])->name('produk.detail');
 Route::get('/custom-terpal', function () {
     return view('custom');
 })->name('custom.terpal');
