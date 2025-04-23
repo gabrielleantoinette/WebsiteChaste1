@@ -99,11 +99,26 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
+        Employee::create([
+            'name' => 'Owner',
+            'email' => 'owner@gmail.com',
+            'password' => '123',
+            'role' => 'owner',
+        ]);
+
+        Employee::create([
+            'name' => 'Gudang',
+            'email' => 'gudang@gmail.com',
+            'password' => '123',
+            'role' => 'gudang',
+        ]);
+
         Customer::create([
             'name' => 'Customer',
             'email' => 'customer@gmail.com',
             'phone' => '081234567890',
             'password' => '123',
+            'address' => 'Jl. Admin',
         ]);
     }
 }

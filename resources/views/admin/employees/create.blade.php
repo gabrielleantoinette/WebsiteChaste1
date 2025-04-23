@@ -9,7 +9,10 @@
         <input type="password" name="password" placeholder="Password" class="input input-primary w-full">
         <select name="role" class="select select-primary w-full">
             <option value="admin">Admin</option>
-            <option value="user">User</option>
+            <option value="gudang">Gudang</option>
+            <option value="keuangan">Keuangan</option>
+            <option value="owner">Owner</option>
+            <option value="driver">Driver</option>
         </select>
         <select name="active" class="select select-primary w-full">
             <option value="true">Active</option>

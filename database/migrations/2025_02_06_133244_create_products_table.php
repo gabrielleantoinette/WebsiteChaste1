@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->integer('price');
+            $table->integer('min_price')->nullable();
             $table->string('size')->nullable();
             $table->string('image')->nullable();
             $table->boolean('live')->default(false);

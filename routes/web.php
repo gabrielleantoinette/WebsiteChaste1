@@ -2,9 +2,12 @@
 
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DriverController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\GudangController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Support\Facades\Route;
@@ -93,5 +96,21 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/create-confirmation', [InvoiceController::class, 'createConfirmationAction']);
 
         Route::get('/detail/{id}', [InvoiceController::class, 'detail']);
+    });
+
+    Route::prefix('gudang-transaksi')->group(function () {
+        Route::get('/', [GudangController::class, 'viewTransaksiGudang']);
+        Route::get('/detail/{id}', [GudangController::class, 'detailTransaksiGudang']);
+        Route::post('/assign-gudang/{id}', [GudangController::class, 'assignGudang']);
+    });
+
+    Route::prefix('assign-driver')->group(function () {
+        Route::get('/', [OwnerController::class, 'viewAssignDriver']);
+        Route::post('/assign/{id}', [OwnerController::class, 'assignDriver']);
+    });
+
+    Route::prefix('driver-transaksi')->group(function () {
+        Route::get('/', [DriverController::class, 'viewTransaksiDriver']);
+        Route::post('/assign/{id}', [DriverController::class, 'assignDriver']);
     });
 });

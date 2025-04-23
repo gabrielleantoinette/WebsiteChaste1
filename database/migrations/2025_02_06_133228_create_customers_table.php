@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('password');
             $table->boolean('active')->default(true);
             $table->string('phone');
+            $table->string('address')->default('');
             $table->timestamps();
         });
     }

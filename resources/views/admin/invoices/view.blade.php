@@ -12,10 +12,12 @@
                 <td>ID</td>
                 <td>Code</td>
                 <td>Customer</td>
-                <td>Employee</td>
+                <td>Admin</td>
                 <td>Driver</td>
-                <td>Accountant</td>
+                <td>Gudang</td>
+                <td>Keuangan</td>
                 <td>Grand Total</td>
+                <td>Alamat Pengiriman</td>
                 <td>Status</td>
                 <td>Action</td>
             </tr>
@@ -28,8 +30,10 @@
                     <td>{{ $invoice->customer->name }}</td>
                     <td>{{ $invoice->employee->name }}</td>
                     <td>{{ $invoice->driver ? $invoice->driver->name : '-' }}</td>
+                    <td>{{ $invoice->gudang ? $invoice->gudang->name : '-' }}</td>
                     <td>{{ $invoice->accountant ? $invoice->accountant->name : '-' }}</td>
-                    <td>{{ $invoice->grand_total }}</td>
+                    <td>Rp {{ number_format($invoice->grand_total) }}</td>
+                    <td>{{ $invoice->address }}</td>
                     <td>{{ $invoice->status }}</td>
                     <td>
                         <a href="{{ url('/admin/invoices/detail/' . $invoice->id) }}" class="btn btn-sm btn-primary">

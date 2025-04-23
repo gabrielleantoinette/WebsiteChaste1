@@ -17,9 +17,11 @@ return new class extends Migration
             $table->unsignedBigInteger('customer_id');
             $table->unsignedBigInteger('employee_id');
             $table->unsignedBigInteger('driver_id')->nullable();
+            $table->unsignedBigInteger('gudang_id')->nullable();
             $table->unsignedBigInteger('accountant_id')->nullable();
             $table->bigInteger('grand_total');
             $table->string('status');
+            $table->string('address')->default('');
             $table->boolean('is_paid')->default(false);
             $table->boolean('is_dp')->default(false);
             $table->bigInteger('dp_amount')->nullable();

@@ -29,6 +29,15 @@
                 <a href="{{ url('/admin/invoices') }}">
                     <div class="btn btn-primary">Penjualan</div>
                 </a>
+                <a href="{{ url('/admin/gudang-transaksi') }}">
+                    <div class="btn btn-primary">Transaksi Gudang</div>
+                </a>
+                <a href="{{ url('/admin/assign-driver') }}">
+                    <div class="btn btn-primary">Assign Driver</div>
+                </a>
+                <a href="{{ url('/admin/driver-transaksi') }}">
+                    <div class="btn btn-primary">Transaksi Driver</div>
+                </a>
             </div>
             <div class="flex items-center gap-2">
                 <div>{{ Session::get('user')->name }}</div>

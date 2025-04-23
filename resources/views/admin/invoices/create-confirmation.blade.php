@@ -38,19 +38,27 @@
         </table>
     </div>
 
-    <div>
+    <div class="mt-5">
         <div class="text-lg font-bold">Data Invoice</div>
         <form method="POST" action="{{ url('/admin/invoices/create-confirmation') }}">
             @csrf
-            <div class="mb-5">
-                <p>Tanggal Jatuh Tempo Pembayaran</p>
-                <input type="date" name="due_date" value="{{ date('Y-m-d') }}" class="input input-primary w-full">
+            <div class="space-y-3">
+                <div>
+                    <p>Tanggal Jatuh Tempo Pembayaran</p>
+                    <input type="date" name="due_date" value="{{ date('Y-m-d') }}" class="input input-primary w-full">
+                </div>
+                <div>
+                    <p>Tanggal Penerimaan Barang</p>
+                    <input type="date" name="receive_date" value="{{ date('Y-m-d') }}"
+                        class="input input-primary w-full">
+                </div>
+                <div>
+                    <p>Alamat Pengiriman</p>
+                    <input type="text" name="address" value="{{ $customer->address }}"
+                        class="input input-primary w-full">
+                </div>
             </div>
-            <div>
-                <p>Tanggal Penerimaan Barang</p>
-                <input type="date" name="receive_date" value="{{ date('Y-m-d') }}" class="input input-primary w-full">
-            </div>
-            <button class="btn btn-primary mt-5">Buat Invoice</button>
+            <button class="btn btn-primary mt-2">Buat Invoice</button>
         </form>
     </div>
 @endsection

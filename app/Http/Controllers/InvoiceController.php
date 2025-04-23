@@ -83,6 +83,7 @@ class InvoiceController extends Controller
     {
         $due_date = $request->due_date;
         $receive_date = $request->receive_date;
+        $address = $request->address;
 
         $invoice_session = Session::get('invoice_session');
         $customer = $invoice_session->customer;
@@ -109,7 +110,8 @@ class InvoiceController extends Controller
                 'due_date' => $due_date,
                 'receive_date' => $receive_date,
                 'grand_total' => $grand_total,
-                'status' => 'inquiry',
+                'status' => 'dikemas',
+                'address' => $address,
             ]);
 
             foreach ($products as $product) {
