@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('dinvoice', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('invoice_id');
+            $table->unsignedBigInteger('hinvoice_id');
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('variant_id');
             $table->bigInteger('price');

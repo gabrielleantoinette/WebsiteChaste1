@@ -8,7 +8,7 @@ class HInvoice extends Model
 {
     //
     protected $table = 'hinvoice';
-    protected $fillable = ['code', 'customer_id', 'employee_id', 'driver_id', 'accountant_id', 'grand_total', 'status', 'is_paid', 'is_dp', 'dp_amount', 'paid_amount'];
+    protected $fillable = ['code', 'customer_id', 'employee_id', 'driver_id', 'accountant_id', 'grand_total', 'status', 'is_paid', 'is_dp', 'dp_amount', 'paid_amount', 'due_date', 'receive_date'];
 
     public function customer()
     {
@@ -32,6 +32,6 @@ class HInvoice extends Model
 
     public function details()
     {
-        return $this->hasMany(DInvoice::class);
+        return $this->hasMany(DInvoice::class, 'hinvoice_id');
     }
 }

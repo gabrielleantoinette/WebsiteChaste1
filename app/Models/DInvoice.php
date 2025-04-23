@@ -8,10 +8,20 @@ class DInvoice extends Model
 {
     //
     protected $table = 'dinvoice';
-    protected $fillable = ['invoice_id', 'product_id', 'price', 'quantity', 'subtotal'];
+    protected $fillable = ['hinvoice_id', 'product_id', 'variant_id', 'price', 'quantity', 'subtotal'];
 
     public function invoice()
     {
         return $this->belongsTo(HInvoice::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class);
     }
 }

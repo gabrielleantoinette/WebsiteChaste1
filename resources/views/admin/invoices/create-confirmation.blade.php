@@ -7,7 +7,7 @@
         <div class="text-lg font-bold">Data Pelanggan</div>
         <div>
             <div>Nama : {{ $customer->name }}</div>
-            <div>Alamat : {{ $customer->address }}</div>
+            <div>Email : {{ $customer->email }}</div>
             <div>No. HP : {{ $customer->phone }}</div>
         </div>
     </div>
@@ -20,6 +20,7 @@
                     <th>No</th>
                     <th>Nama</th>
                     <th>Harga</th>
+                    <th>Warna</th>
                     <th>Jumlah</th>
                 </tr>
             </thead>
@@ -29,6 +30,7 @@
                         <td>{{ $product->id }}</td>
                         <td>{{ $product->name }}</td>
                         <td>Rp {{ number_format($product->price) }}</td>
+                        <td>{{ $product->variant->color }}</td>
                         <td>{{ $product->quantity }}</td>
                     </tr>
                 @endforeach

@@ -20,6 +20,11 @@
                         <td>{{ $product->name }}</td>
                         <td>Rp {{ number_format($product->price) }}</td>
                         <td>
+                            <select name="variant_id[]" class="select select-primary w-min">
+                                @foreach ($product->variants as $variant)
+                                    <option value="{{ $variant->id }}">{{ $variant->color }}</option>
+                                @endforeach
+                            </select>
                             <input type="number" name="quantity[]" value="0" class="input input-primary w-min">
                             <input type="hidden" name="product_id[]" value="{{ $product->id }}">
                         </td>

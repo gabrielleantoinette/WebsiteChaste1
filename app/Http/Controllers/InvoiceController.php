@@ -7,6 +7,7 @@ use App\Models\DInvoice;
 use App\Models\Employee;
 use App\Models\HInvoice;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -41,6 +42,7 @@ class InvoiceController extends Controller
     public function createProduct()
     {
         $products = Product::all();
+
         $invoice_session = Session::get('invoice_session');
         return view('admin.invoices.create-product', compact('products', 'invoice_session'));
     }
@@ -51,12 +53,15 @@ class InvoiceController extends Controller
 
         $productQuantity = $request->quantity;
         $productId = $request->product_id;
+        $variantId = $request->variant_id;
         $lists = [];
 
         for ($i = 0; $i < count($productQuantity); $i++) {
             if ($productQuantity[$i] > 0) {
                 $product = Product::find($productId[$i]);
                 $product->quantity = $productQuantity[$i];
+                $product->variant_id = $variantId[$i];
+                $product->variant = ProductVariant::find($variantId[$i]);
                 $lists[] = $product;
             }
         }
@@ -104,30 +109,35 @@ class InvoiceController extends Controller
                 'due_date' => $due_date,
                 'receive_date' => $receive_date,
                 'grand_total' => $grand_total,
+                'status' => 'inquiry',
             ]);
 
             foreach ($products as $product) {
                 DInvoice::create([
                     'hinvoice_id' => $hinvoice->id,
                     'product_id' => $product->id,
+                    'variant_id' => $product->variant_id,
+                    'price' => $product->price,
                     'quantity' => $product->quantity,
+                    'subtotal' => $product->price * $product->quantity,
                 ]);
             }
 
-            foreach ($products as $product) {
-                $product->quantity = $product->quantity - $product->quantity;
-                $product->save();
-            }
-
             DB::commit();
-            return redirect()->back()->with('success', 'Invoice berhasil dibuat');
+            Session::forget('invoice_session');
         } catch (\Exception $e) {
             DB::rollBack();
             var_dump($e);
             return redirect()->back()->with('error', $e->getMessage());
         }
 
-        return view('admin.invoices.create-confirmation', compact('customer', 'products', 'due_date', 'receive_date'));
+        return redirect('/admin/invoices');
+    }
+
+    public function detail($id)
+    {
+        $invoice = HInvoice::find($id);
+        return view('admin.invoices.detail', compact('invoice'));
     }
 
     // create invoice code

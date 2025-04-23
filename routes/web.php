@@ -78,5 +78,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/create-product', [InvoiceController::class, 'createProductAction']);
         Route::get('/create-confirmation', [InvoiceController::class, 'createConfirmation']);
         Route::post('/create-confirmation', [InvoiceController::class, 'createConfirmationAction']);
+
+        Route::get('/detail/{id}', [InvoiceController::class, 'detail']);
     });
 });

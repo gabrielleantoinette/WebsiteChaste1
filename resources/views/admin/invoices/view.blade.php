@@ -27,8 +27,8 @@
                     <td>{{ $invoice->code }}</td>
                     <td>{{ $invoice->customer->name }}</td>
                     <td>{{ $invoice->employee->name }}</td>
-                    <td>{{ $invoice->driver->name }}</td>
-                    <td>{{ $invoice->accountant->name }}</td>
+                    <td>{{ $invoice->driver ? $invoice->driver->name : '-' }}</td>
+                    <td>{{ $invoice->accountant ? $invoice->accountant->name : '-' }}</td>
                     <td>{{ $invoice->grand_total }}</td>
                     <td>{{ $invoice->status }}</td>
                     <td>
