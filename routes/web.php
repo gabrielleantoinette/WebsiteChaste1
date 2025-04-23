@@ -35,6 +35,9 @@ Route::middleware([LoggedIn::class])->group(function () {
     Route::get('/checkout', function () {
         return view('checkout');
     })->name('checkout');
+
+    Route::get('/transaksi', [CustomerController::class, 'viewTransaction'])->name('transaksi');
+    Route::get('/transaksi/detail/{id}', [CustomerController::class, 'detailTransaction'])->name('transaksi.detail');
 });
 
 
