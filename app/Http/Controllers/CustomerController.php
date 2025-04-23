@@ -77,4 +77,11 @@ class CustomerController extends Controller
         $transaction = HInvoice::find($id);
         return view('transaction-detail', compact('transaction'));
     }
+
+    public function viewProfile()
+    {
+        $user = Session::get('user');
+        $customer = Customer::find($user->id);
+        return view('profile', compact('customer'));
+    }
 }

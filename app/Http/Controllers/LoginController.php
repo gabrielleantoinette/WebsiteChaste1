@@ -28,7 +28,7 @@ class LoginController extends Controller
                 Session::put('user', $employee);
                 return redirect('/admin');
             } else {
-                return back()->withErrors(['password' => 'Password salah.']);
+                return back()->with('error', 'Password salah.');
             }
         }
 
@@ -38,8 +38,12 @@ class LoginController extends Controller
             if ($customer->password == $request->password) {
                 Session::put('user', $customer);
                 return redirect('/');
+            } else {
+                return back()->with('error', 'Password salah.');
             }
         }
+
+        return back()->with('error', 'Email tidak ditemukan.');
     }
 
     public function logout(Request $request)

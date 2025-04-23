@@ -41,7 +41,8 @@ Route::middleware([LoggedIn::class])->group(function () {
     Route::get('/pesanan', function () {
         return view('pesanan');
     })->name('pesanan');
-    
+
+    Route::get('/profile', [CustomerController::class, 'viewProfile'])->name('profile');
 });
 
 
