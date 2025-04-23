@@ -9,19 +9,7 @@
 </head>
 
 <body class="bg-white font-sans">
-    <!-- Navbar minimal -->
-    <header class="flex items-center justify-between px-6 md:px-20 py-5 border-b border-gray-200">
-        <div class="text-2xl font-bold tracking-wide">CHASTE</div>
-        <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
-            <a href="{{ url('/') }}" class="hover:text-teal-500">Beranda</a>
-            <a href="{{ route('produk') }}" class="hover:text-teal-500">Produk</a>
-            <a href="#" class="hover:text-teal-500">Kontak</a>
-        </nav>
-        <div class="space-x-4 text-xl text-gray-700">
-            <a href="#">🛒</a>
-            <a href="#">👤</a>
-        </div>
-    </header>
+    @include('layouts.customer-nav')
 
     <!-- Form Daftar -->
     <main class="flex items-center justify-center min-h-screen px-4 md:px-0 bg-white">

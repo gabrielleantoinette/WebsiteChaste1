@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,56 +10,45 @@
 
 <body class="bg-white font-sans">
     <!-- Navbar minimal -->
-    <!-- Navbar minimal -->
-<header class="flex items-center justify-between px-6 md:px-20 py-5 border-b border-gray-200">
-    <div class="text-2xl font-bold tracking-wide">CHASTE</div>
-    <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
-        <a href="{{ url('/') }}" class="hover:text-teal-500">Beranda</a>
-        <a href="{{ route('produk') }}" class="hover:text-teal-500">Produk</a>
-        <a href="#" class="hover:text-teal-500">Kontak</a>
-    </nav>
-    <div class="space-x-4 text-xl text-gray-700">
-        <a href="#">🛒</a>
-        <a href="#">👤</a>
-    </div>
-</header>
+    @include('layouts.customer-nav')
 
-<!-- Konten login -->
-<main class="flex items-center justify-center min-h-screen px-4 md:px-0 bg-white">
-    <div class="flex flex-col md:flex-row overflow-hidden rounded-[20px] shadow-lg border border-gray-200 max-w-5xl w-full h-[500px]">
-        <!-- Gambar -->
-        <div class="hidden md:block w-[400px] h-full">
-            <img src="{{ asset('images/terpal-login.png') }}" alt="Terpal Gulungan"
-                 class="object-cover w-full h-full">
-        </div>
+    <!-- Konten login -->
+    <main class="flex items-center justify-center min-h-screen px-4 md:px-0 bg-white">
+        <div
+            class="flex flex-col md:flex-row overflow-hidden rounded-[20px] shadow-lg border border-gray-200 max-w-5xl w-full h-[500px]">
+            <!-- Gambar -->
+            <div class="hidden md:block w-[400px] h-full">
+                <img src="{{ asset('images/terpal-login.png') }}" alt="Terpal Gulungan"
+                    class="object-cover w-full h-full">
+            </div>
 
-        <!-- Form -->
-        <div class="w-full md:w-[700px] bg-white p-8 flex flex-col justify-center">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">MASUK</h2>
-            <form method="POST" action="{{ route('login') }}">
-                @csrf
+            <!-- Form -->
+            <div class="w-full md:w-[700px] bg-white p-8 flex flex-col justify-center">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">MASUK</h2>
+                <form method="POST" action="{{ route('login') }}">
+                    @csrf
 
-                <label class="block mb-2 text-sm font-medium text-gray-700">Email</label>
-                <input type="email" name="email" required
-                    class="w-full mb-4 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    <label class="block mb-2 text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="email" required
+                        class="w-full mb-4 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
 
-                <label class="block mb-2 text-sm font-medium text-gray-700">Kata Sandi</label>
-                <input type="password" name="password" required
-                    class="w-full mb-6 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    <label class="block mb-2 text-sm font-medium text-gray-700">Kata Sandi</label>
+                    <input type="password" name="password" required
+                        class="w-full mb-6 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
 
-                <button type="submit"
-                    class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
-                    Masuk
-                </button>
-            </form>
+                    <button type="submit"
+                        class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
+                        Masuk
+                    </button>
+                </form>
 
-            <div class="text-center text-sm mt-4">
-                Belum punya akun?
-                <a href="{{ url('/register') }}" class="text-red-500 font-medium">Daftar sekarang</a>
+                <div class="text-center text-sm mt-4">
+                    Belum punya akun?
+                    <a href="{{ url('/register') }}" class="text-red-500 font-medium">Daftar sekarang</a>
+                </div>
             </div>
         </div>
-    </div>
-</main>
+    </main>
 
 
     <!-- Footer -->
@@ -95,4 +85,5 @@
         </div>
     </footer>
 </body>
+
 </html>

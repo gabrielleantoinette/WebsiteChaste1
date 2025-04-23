@@ -9,24 +9,11 @@
 </head>
 
 <body class="bg-white font-sans text-gray-800">
-
-    <!-- Header -->
-    <header class="flex items-center justify-between px-6 md:px-20 py-5 border-b border-gray-200">
-        <div class="text-2xl font-bold tracking-wide">CHASTE</div>
-        <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
-            <a href="{{ url('/') }}" class="hover:text-teal-500">Beranda</a>
-            <a href="{{ url('/produk') }}" class="hover:text-teal-500">Produk</a>
-            <a href="#" class="hover:text-teal-500">Kontak</a>
-        </nav>
-        <div class="space-x-4 text-xl text-gray-700">
-            <a href="#">🛒</a>
-            <a href="#">👤</a>
-            <a href="#">☰</a>
-        </div>
-    </header>
+    {{-- Header --}}
+    @include('layouts.customer-nav')
 
     <!-- Keranjang -->
-    <section class="px-6 md:px-20 py-12">
+    <section class="px-[100px] h-screen">
         <h2 class="text-xl font-semibold mb-6 bg-[#D9F2F2] inline-block px-4 py-2 rounded-md">🛍️ Keranjang Belanja</h2>
 
         <!-- Pilih Semua -->
