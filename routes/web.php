@@ -42,10 +42,12 @@ Route::middleware([LoggedIn::class])->group(function () {
         return view('pesanan');
     })->name('pesanan');
 
+
     Route::get('/produk/{id}/negosiasi', function () {
         return view('negosiasi');
     })->name('produk.negosiasi');
     
+    Route::get('/profile', [CustomerController::class, 'viewProfile'])->name('profile');
 });
 
 

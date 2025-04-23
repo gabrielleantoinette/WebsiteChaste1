@@ -24,8 +24,13 @@
 
             <!-- Form -->
             <div class="w-full md:w-[700px] bg-white p-8 flex flex-col justify-center">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">MASUK</h2>
-                <form method="POST" action="{{ route('login') }}">
+                <h2 class="text-2xl font-bold text-gray-900 mb-3 text-center">MASUK</h2>
+                @if (session('error'))
+                    <div class="alert alert-error">
+                        {{ session('error') }}
+                    </div>
+                @endif
+                <form method="POST" action="{{ route('login') }}" class="mt-3">
                     @csrf
 
                     <label class="block mb-2 text-sm font-medium text-gray-700">Email</label>
