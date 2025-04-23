@@ -12,6 +12,10 @@ class Product extends Model
         'name',
         'description',
         'image',
+        'price',
+        'min_price',
+        'size',
+        'live',
     ];
 
     public function variants()

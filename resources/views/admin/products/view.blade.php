@@ -16,6 +16,9 @@
                 <td>Price</td>
                 <td>Size</td>
                 <td>Live</td>
+                @if (Session::get('user')->role == 'owner')
+                    <td>Harga Minimum</td>
+                @endif
                 <td>Action</td>
             </tr>
         </thead>
@@ -29,6 +32,16 @@
                     <td>Rp {{ number_format($product->price) }}</td>
                     <td>{{ $product->size }}</td>
                     <td>{{ $product->live ? 'Tampil' : 'Tidak Tampil' }}</td>
+                    @if (Session::get('user')->role == 'owner')
+                        <td>
+                            <form method="POST" action="{{ url('/admin/products/detail/' . $product->id . '/min-price') }}">
+                                @csrf
+                                <input type="number" name="min_price" class="input input-primary input-sm w-min"
+                                    value="{{ $product->min_price }}">
+                                <button class="btn btn-sm btn-primary">Update</button>
+                            </form>
+                        </td>
+                    @endif
                     <td>
                         <a href="{{ url('/admin/products/detail/' . $product->id) }}"
                             class="btn btn-sm btn-primary">Detail</a>

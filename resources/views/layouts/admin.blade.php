@@ -17,27 +17,50 @@
                 <a href="{{ url('/admin') }}">
                     <div class="btn btn-primary">Dashboard</div>
                 </a>
-                <a href="{{ url('/admin/products') }}">
-                    <div class="btn btn-primary">Products</div>
-                </a>
-                <a href="{{ url('/admin/employees') }}">
-                    <div class="btn btn-primary">Employees</div>
-                </a>
-                <a href="{{ url('/admin/customers') }}">
-                    <div class="btn btn-primary">Customers</div>
-                </a>
-                <a href="{{ url('/admin/invoices') }}">
-                    <div class="btn btn-primary">Penjualan</div>
-                </a>
-                <a href="{{ url('/admin/gudang-transaksi') }}">
-                    <div class="btn btn-primary">Transaksi Gudang</div>
-                </a>
-                <a href="{{ url('/admin/assign-driver') }}">
-                    <div class="btn btn-primary">Assign Driver</div>
-                </a>
-                <a href="{{ url('/admin/driver-transaksi') }}">
-                    <div class="btn btn-primary">Transaksi Driver</div>
-                </a>
+                @if (Session::get('user')->role == 'owner')
+                    <a href="{{ url('/admin/products') }}">
+                        <div class="btn btn-primary">Products</div>
+                    </a>
+                    <a href="{{ url('/admin/employees') }}">
+                        <div class="btn btn-primary">Employees</div>
+                    </a>
+                    <a href="{{ url('/admin/customers') }}">
+                        <div class="btn btn-primary">Customers</div>
+                    </a>
+                    <a href="{{ url('/admin/invoices') }}">
+                        <div class="btn btn-primary">Penjualan</div>
+                    </a>
+                    <a href="{{ url('/admin/assign-driver') }}">
+                        <div class="btn btn-primary">Assign Driver</div>
+                    </a>
+                    <a href="{{ url('/admin/gudang-transaksi') }}">
+                        <div class="btn btn-primary">Transaksi Gudang</div>
+                    </a>
+                    <a href="{{ url('/admin/driver-transaksi') }}">
+                        <div class="btn btn-primary">Transaksi Driver</div>
+                    </a>
+                @elseif (Session::get('user')->role == 'admin')
+                    <a href="{{ url('/admin/products') }}">
+                        <div class="btn btn-primary">Products</div>
+                    </a>
+                    <a href="{{ url('/admin/employees') }}">
+                        <div class="btn btn-primary">Employees</div>
+                    </a>
+                    <a href="{{ url('/admin/customers') }}">
+                        <div class="btn btn-primary">Customers</div>
+                    </a>
+                    <a href="{{ url('/admin/invoices') }}">
+                        <div class="btn btn-primary">Penjualan</div>
+                    </a>
+                @elseif (Session::get('user')->role == 'driver')
+                    <a href="{{ url('/admin/driver-transaksi') }}">
+                        <div class="btn btn-primary">Transaksi Driver</div>
+                    </a>
+                @elseif (Session::get('user')->role == 'gudang')
+                    <a href="{{ url('/admin/gudang-transaksi') }}">
+                        <div class="btn btn-primary">Transaksi Gudang</div>
+                    </a>
+                @endif
             </div>
             <div class="flex items-center gap-2">
                 <div>{{ Session::get('user')->name }}</div>

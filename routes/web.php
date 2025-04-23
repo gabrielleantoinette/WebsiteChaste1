@@ -68,6 +68,8 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/detail/{id}', [ProductController::class, 'updateProductAction']);
         Route::get('/detail/{id}/variants/create', [ProductController::class, 'createVariant']);
         Route::post('/detail/{id}/variants/create', [ProductController::class, 'createVariantAction']);
+
+        Route::post('/detail/{id}/min-price', [ProductController::class, 'updateMinPriceAction']);
     });
 
     Route::prefix('employees')->group(function () {

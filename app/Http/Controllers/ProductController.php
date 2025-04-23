@@ -56,6 +56,15 @@ class ProductController extends Controller
         return redirect('/admin/products');
     }
 
+    public function updateMinPriceAction(Request $request, $id)
+    {
+        $product = Product::find($id);
+        $product->min_price = $request->input('min_price');
+        $product->save();
+
+        return redirect('/admin/products');
+    }
+
     public function createVariant($id)
     {
         return view('admin.products.create-variant', [
