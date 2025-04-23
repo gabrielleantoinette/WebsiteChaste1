@@ -114,6 +114,11 @@
                         class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
                         Tambah ke Keranjang
                     </button>
+                    <a href="{{ route('produk.negosiasi', ['id' => $product->id]) }}"
+                    class="block text-center bg-gray-300 hover:bg-gray-400 text-white font-semibold py-3 rounded-md transition">
+                        Tawar Harga
+                    </a>
+
                 </form>
             </div>
         </section>

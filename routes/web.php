@@ -41,6 +41,10 @@ Route::middleware([LoggedIn::class])->group(function () {
     Route::get('/pesanan', function () {
         return view('pesanan');
     })->name('pesanan');
+
+    Route::get('/produk/{id}/negosiasi', function () {
+        return view('negosiasi');
+    })->name('produk.negosiasi');
     
 });
 
