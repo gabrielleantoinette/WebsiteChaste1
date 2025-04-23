@@ -113,6 +113,13 @@ class DatabaseSeeder extends Seeder
             'role' => 'gudang',
         ]);
 
+        Employee::create([
+            'name' => 'Driver',
+            'email' => 'driver@gmail.com',
+            'password' => '123',
+            'role' => 'driver',
+        ]);
+
         Customer::create([
             'name' => 'Customer',
             'email' => 'customer@gmail.com',

@@ -12,6 +12,9 @@
                 <td>ID</td>
                 <td>Kode</td>
                 <td>Customer</td>
+                <td>Driver</td>
+                <td>Status</td>
+                <td>Alamat</td>
                 <td>Tanggal Diterima</td>
                 <td>Action</td>
             </tr>
@@ -22,10 +25,16 @@
                     <td>{{ $invoice->id }}</td>
                     <td>{{ $invoice->code }}</td>
                     <td>{{ $invoice->customer->name }}</td>
+                    <td>{{ $invoice->driver->name }}</td>
+                    <td>{{ $invoice->status }}</td>
+                    <td>{{ $invoice->address }}</td>
                     <td>{{ $invoice->receive_date }}</td>
                     <td>
-                        <a href="{{ url('/admin/gudang-transaksi/detail/' . $invoice->id) }}"
-                            class="btn btn-sm btn-primary">Detail</a>
+                        <form method="POST" action="{{ url('/admin/driver-transaksi/finish/' . $invoice->id) }}">
+                            @csrf
+                            <button class="btn btn-sm btn-primary"
+                                disabled={{ $invoice->status == 'diterima' }}>Selesaikan</button>
+                        </form>
                     </td>
                 </tr>
             @endforeach

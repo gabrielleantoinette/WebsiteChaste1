@@ -49,7 +49,7 @@ Route::middleware([LoggedIn::class])->group(function () {
     Route::get('/produk/{id}/negosiasi', function () {
         return view('negosiasi');
     })->name('produk.negosiasi');
-    
+
     Route::get('/profile', [CustomerController::class, 'viewProfile'])->name('profile');
 });
 
@@ -111,6 +111,6 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
 
     Route::prefix('driver-transaksi')->group(function () {
         Route::get('/', [DriverController::class, 'viewTransaksiDriver']);
-        Route::post('/assign/{id}', [DriverController::class, 'assignDriver']);
+        Route::post('/finish/{id}', [DriverController::class, 'finishTransaksi']);
     });
 });
