@@ -6,7 +6,7 @@
         <a href="{{ url('/admin/products/create') }}" class="btn btn-primary">Create</a>
     </div>
 
-    <table class="table table-bordered">
+    <table class="table table-bordered data-table">
         <thead>
             <tr>
                 <td>ID</td>
