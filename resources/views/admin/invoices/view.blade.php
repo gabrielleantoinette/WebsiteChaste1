@@ -3,7 +3,9 @@
 @section('content')
     <div class="flex justify-between mb-5">
         <h1 class="text-xl font-bold mb-5">Invoices List</h1>
-        <a href="{{ url('/admin/invoices/create-customer') }}" class="btn btn-primary">Create</a>
+        @if (Session::get('user')->role !== 'owner')
+            <a href="{{ url('/admin/invoices/create-customer') }}" class="btn btn-primary">Tambah Transaksi Toko</a>
+        @endif
     </div>
 
     <table class="table table-bordered">
@@ -19,6 +21,7 @@
                 <td>Grand Total</td>
                 <td>Alamat Pengiriman</td>
                 <td>Status</td>
+                <td>Jenis Pembelian</td>
                 <td>Action</td>
             </tr>
         </thead>
@@ -35,6 +38,7 @@
                     <td>Rp {{ number_format($invoice->grand_total) }}</td>
                     <td>{{ $invoice->address }}</td>
                     <td>{{ $invoice->status }}</td>
+                    <td>{{ $invoice->is_online ? 'Offline' : 'Online' }}</td>
                     <td>
                         <a href="{{ url('/admin/invoices/detail/' . $invoice->id) }}" class="btn btn-sm btn-primary">
                             Detail

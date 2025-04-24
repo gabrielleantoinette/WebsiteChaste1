@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('address')->default('');
             $table->boolean('is_paid')->default(false);
             $table->boolean('is_dp')->default(false);
+            $table->boolean('is_online')->default(true);
             $table->bigInteger('dp_amount')->nullable();
             $table->bigInteger('paid_amount')->nullable();
             $table->date('due_date')->nullable();
