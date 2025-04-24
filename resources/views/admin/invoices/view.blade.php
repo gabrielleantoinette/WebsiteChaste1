@@ -40,7 +40,10 @@
                     <td>{{ $invoice->status }}</td>
                     <td>{{ $invoice->is_online ? 'Offline' : 'Online' }}</td>
                     <td>
-                        <a href="{{ url('/admin/invoices/detail/' . $invoice->id) }}" class="btn btn-sm btn-primary">
+                        <a href="{{ url('/admin/invoices/detail/' . $invoice->id) }}"  class="inline-flex items-center gap-2 px-3 py-1.5 border border-teal-600 text-teal-600 text-sm font-medium rounded-md hover:bg-teal-50 transition shadow-sm">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             Detail
                         </a>
                     </td>

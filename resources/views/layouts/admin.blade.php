@@ -11,42 +11,103 @@
 </head>
 
 <body>
-    <header class="bg-[#D9F2F2] py-5">
-        <div class="max-w-[90%] mx-auto flex justify-between items-center gap-10">
-            <div class="text-xl font-bold text-gray-800">Master</div>
-            <div class="flex justify-center items-center gap-3 flex-wrap mt-4">
-                <a href="{{ url('/admin') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Dashboard</a>
+<header class="bg-[#D9F2F2] py-5">
+    <div class="max-w-[90%] mx-auto flex justify-between items-center gap-10">
+        <div class="text-xl font-bold text-gray-800">Master</div>
 
-                @if (Session::get('user')->role == 'owner')
-                    <a href="{{ url('/admin/products') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Products</a>
-                    <a href="{{ url('/admin/employees') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Employees</a>
-                    <a href="{{ url('/admin/customers') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Customers</a>
-                    <a href="{{ url('/admin/invoices') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Penjualan</a>
-                    <a href="{{ url('/admin/assign-driver') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Assign Driver</a>
-                    <a href="{{ url('/admin/gudang-transaksi') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Transaksi Gudang</a>
-                    <a href="{{ url('/admin/driver-transaksi') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Transaksi Driver</a>
+        <div class="flex justify-center items-center gap-3 flex-wrap mt-4">
+            <a href="{{ url('/admin') }}"
+               class="px-4 py-2 border font-semibold rounded-md transition
+                      {{ request()->is('admin') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+               Dashboard
+            </a>
 
-                @elseif (Session::get('user')->role == 'admin')
-                    <a href="{{ url('/admin/products') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Products</a>
-                    <a href="{{ url('/admin/employees') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Employees</a>
-                    <a href="{{ url('/admin/customers') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Customers</a>
-                    <a href="{{ url('/admin/invoices') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Penjualan</a>
+            @if (Session::get('user')->role == 'owner')
+                <a href="{{ url('/admin/products') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/products*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Kelola Produk
+                </a>
 
-                @elseif (Session::get('user')->role == 'driver')
-                    <a href="{{ url('/admin/driver-transaksi') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Transaksi Driver</a>
+                <a href="{{ url('/admin/employees') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/employees*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Kelola Pegawai
+                </a>
 
-                @elseif (Session::get('user')->role == 'gudang')
-                    <a href="{{ url('/admin/gudang-transaksi') }}" class="px-4 py-2 border border-teal-600 text-teal-600 font-semibold rounded-md hover:bg-teal-50 transition">Transaksi Gudang</a>
-                @endif
-            </div>
+                <a href="{{ url('/admin/customers') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/customers*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Kelola Pembeli
+                </a>
 
-            <div class="flex items-center gap-2">
-                <div>{{ Session::get('user')->name }}</div>
-                <div>|</div>
-                <div><a href="{{ url('logout') }}" class="nav-link">Logout</a></div>
-            </div>
+                <a href="{{ url('/admin/invoices') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/invoices*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Penjualan
+                </a>
+
+                <a href="{{ url('/admin/assign-driver') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/assign-driver') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Atur Kurir
+                </a>
+
+                <a href="{{ url('/admin/gudang-transaksi') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/gudang-transaksi') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Transaksi Gudang
+                </a>
+
+                <a href="{{ url('/admin/driver-transaksi') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/driver-transaksi') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Transaksi Driver
+                </a>
+
+            @elseif (Session::get('user')->role == 'admin')
+                <a href="{{ url('/admin/products') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/products*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Kelola Produk
+                </a>
+
+                <a href="{{ url('/admin/customers') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/customers*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Kelola Pembeli
+                </a>
+
+                <a href="{{ url('/admin/invoices') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/invoices*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Kelola Penjualan
+                </a>
+
+            @elseif (Session::get('user')->role == 'driver')
+                <a href="{{ url('/admin/driver-transaksi') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/driver-transaksi') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Transaksi Kurir
+                </a>
+
+            @elseif (Session::get('user')->role == 'gudang')
+                <a href="{{ url('/admin/gudang-transaksi') }}"
+                   class="px-4 py-2 border font-semibold rounded-md transition
+                          {{ request()->is('admin/gudang-transaksi') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                   Transaksi Gudang
+                </a>
+            @endif
         </div>
-    </header>
+
+        <div class="flex items-center gap-2">
+            <div>{{ Session::get('user')->name }}</div>
+            <div>|</div>
+            <div><a href="{{ url('logout') }}" class="nav-link">Logout</a></div>
+        </div>
+    </div>
+</header>
+
     <div class="max-w-[90%] mx-auto pt-10">
         @yield('content')
     </div>

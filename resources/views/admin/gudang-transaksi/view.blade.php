@@ -25,7 +25,10 @@
                     <td>{{ $invoice->receive_date }}</td>
                     <td>
                         <a href="{{ url('/admin/gudang-transaksi/detail/' . $invoice->id) }}"
-                            class="btn btn-sm btn-primary">Detail</a>
+                        class="inline-flex items-center gap-2 px-3 py-1.5 border border-teal-600 text-teal-600 text-sm font-medium rounded-md hover:bg-teal-50 transition shadow-sm">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>Detail</a>
                     </td>
                 </tr>
             @endforeach

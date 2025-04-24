@@ -33,12 +33,15 @@
                         <form method="POST" action="{{ url('/admin/assign-driver/assign/' . $invoice->id) }}">
                             @csrf
                             <div class="flex gap-2">
-                                <select name="driver_id" class="select select-primary">
-                                    @foreach ($drivers as $driver)
-                                        <option value="{{ $driver->id }}">{{ $driver->name }}</option>
-                                    @endforeach
-                                </select>
-                                <button class="btn btn-primary">Assign</button>
+                            <select name="driver_id" 
+                                    class="w-full border border-teal-600 text-gray-800 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 transition">
+                                @foreach ($drivers as $driver)
+                                    <option value="{{ $driver->id }}">{{ $driver->name }}</option>
+                                @endforeach
+                            </select>
+                                <button class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition shadow-sm">
+                                    Assign
+                                </button>
                             </div>
                         </form>
                     </td>
