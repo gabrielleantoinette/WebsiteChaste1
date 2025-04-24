@@ -57,16 +57,23 @@
     <form class="grid md:grid-cols-2 gap-8">
       <!-- Kolom Kiri -->
       <div class="space-y-4">
-        <div>
-          <label class="text-sm font-medium text-gray-700">Apa kebutuhan anda? <span class="text-red-500">*</span></label>
-          <select class="w-full border border-gray-300 rounded-md p-2 text-sm">
-            <option>Pilih...</option>
-          </select>
-        </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">Apa kebutuhan anda? <span class="text-red-500">*</span></label>
+        <select id="kebutuhanSelect" class="w-full border border-gray-300 rounded-md p-2 text-sm">
+          <option value="">-- Pilih Kebutuhan --</option>
+          <option value="tambak">Kebutuhan tambak/kolam</option>
+          <option value="bertani">Kebutuhan bertani</option>
+          <option value="angkutan">Kebutuhan melindungi angkutan</option>
+          <option value="tenda">Kebutuhan tenda</option>
+          <option value="kebocoran">Kebutuhan kebocoran</option>
+          <option value="bangunan">Kebutuhan bangunan</option>
+          <option value="garam">Kebutuhan melindungi garam</option>
+        </select>
+      </div>
 
         <div>
           <label class="text-sm font-medium text-gray-700">Bahan yang Dipesan <span class="text-red-500">*</span></label>
-          <input type="text" placeholder="A4" class="w-full border border-gray-300 rounded-md p-2 text-sm">
+          <input type="text" placeholder="Tulis Bahan Yang Ingin Dipesan..." class="w-full border border-gray-300 rounded-md p-2 text-sm">
         </div>
 
         <div>
@@ -96,8 +103,10 @@
       <div class="space-y-4">
         <div>
           <label class="text-sm font-medium text-gray-700">Bahan yang Direkomendasikan</label>
-          <input type="text" value="A4, A5" class="w-full border border-gray-300 rounded-md p-2 text-sm bg-gray-100" disabled>
+          <input id="bahanRekomendasi" type="text" value="" 
+                class="w-full border border-gray-300 rounded-md p-2 text-sm bg-gray-100" disabled>
         </div>
+        <div id="deskripsiBahan" class="mt-2 text-sm text-gray-600 italic"></div>
 
         <div>
           <label class="text-sm font-medium text-gray-700">Ring (Rp 50/Ring)</label>
@@ -169,6 +178,83 @@
     © 2025 Hak Cipta Dilindungi
   </div>
 </footer>
+
+<script>
+  const kebutuhanSelect = document.getElementById('kebutuhanSelect');
+  const bahanRekomendasi = document.getElementById('bahanRekomendasi');
+  const deskripsiBahan = document.getElementById('deskripsiBahan');
+
+  const rekomendasiMap = {
+  tambak: {
+    bahan: 'A7, A8',
+    deskripsi: [
+      'A7 lebih ekonomis untuk tambak kecil',
+      'A8 lebih tebal dan tahan lama untuk tambak besar'
+    ]
+  },
+  bertani: {
+    bahan: 'A3, A4',
+    deskripsi: [
+      'A3 cocok untuk penutup lahan ringan',
+      'A4 sedikit lebih kuat dan tahan air'
+    ]
+  },
+  angkutan: {
+    bahan: 'Keep Jep, Ulin Orchid',
+    deskripsi: [
+      'Keep Jep cocok untuk barang kering',
+      'Ulin Orchid lebih kuat untuk beban berat dan tahan hujan'
+    ]
+  },
+  tenda: {
+    bahan: 'A4, A5',
+    deskripsi: [
+      'A4 untuk tenda indoor atau sementara',
+      'A5 lebih kuat untuk outdoor dan cuaca ekstrem'
+    ]
+  },
+  kebocoran: {
+    bahan: 'A4, A5',
+    deskripsi: [
+      'A4 cukup untuk tutup bocoran ringan',
+      'A5 lebih tahan terhadap tekanan dan tahan sobek'
+    ]
+  },
+  bangunan: {
+    bahan: 'A8, A10',
+    deskripsi: [
+      'A8 digunakan untuk pelindung proyek ringan',
+      'A10 lebih tebal untuk proyek konstruksi berat'
+    ]
+  },
+  garam: {
+    bahan: 'A12, A15',
+    deskripsi: [
+      'A12 cukup untuk tempat penyimpanan sementara',
+      'A15 tahan garam dan sinar UV'
+    ]
+  }
+};
+
+
+kebutuhanSelect.addEventListener('change', function () {
+  const value = kebutuhanSelect.value;
+  const data = rekomendasiMap[value] || { bahan: '', deskripsi: [] };
+
+  bahanRekomendasi.value = data.bahan;
+
+  // Tampilkan dalam bentuk bullet
+  if (data.deskripsi.length > 0) {
+    deskripsiBahan.innerHTML = `<ul class="list-disc pl-5 space-y-1 text-gray-600 text-sm italic">
+      ${data.deskripsi.map(item => `<li>${item}</li>`).join('')}
+    </ul>`;
+  } else {
+    deskripsiBahan.innerHTML = '';
+  }
+});
+</script>
+
+
 
 </body>
 </html>
