@@ -3,7 +3,9 @@
 @section('content')
     <div class="flex justify-between mb-5">
         <h1 class="text-xl font-bold mb-5">Invoices List</h1>
-        <a href="{{ url('/admin/invoices/create-customer') }}" class="btn btn-primary">Create</a>
+        @if (Session::get('user')->role !== 'owner')
+            <a href="{{ url('/admin/invoices/create-customer') }}" class="btn btn-primary">Tambah Transaksi Toko</a>
+        @endif
     </div>
 
     <table class="table table-bordered">
