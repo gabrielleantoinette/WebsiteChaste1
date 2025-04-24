@@ -15,12 +15,16 @@
     <div class="px-[100px]">
         <!-- Hero Section -->
         <section class="bg-[#D9F2F2] py-16 px-6 md:px-20 rounded-[24px] mt-[24px]">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-12">
-                <!-- Text -->
-                <div class="max-w-xl space-y-8">
-                    <h1 class="text-5xl font-extrabold text-gray-900 leading-snug tracking-tight">
-                        Beli terpal anda <br> Sekarang!
-                    </h1>
+  <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+    
+    <!-- Text -->
+    <div class="w-full md:w-3/5 space-y-8">
+      <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-relaxed">
+        Beli terpal anda sekarang!<br>
+        Cari terpal yang <span class="font-extrabold text-teal-600">kuat, tahan air, dan siap pakai?</span> 
+  Temukan berbagai tipe dan ukuran dengan harga terbaik di sini!
+      </h1>
+
                     <div class="flex gap-12 text-gray-700">
                         <div>
                             <p class="text-3xl font-bold">20+</p>
@@ -35,7 +39,7 @@
                         <input type="text" placeholder="Apa yang anda cari?"
                             class="w-full py-5 px-5 pr-14 rounded-[16px] focus:outline-none placeholder:text-gray-500 bg-white">
                         <button
-                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-lg bg-[#D9F2F2] rounded-[16px] p-2 w-[48px] h-[48px] flex items-center justify-center">
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-lg bg-[#D9F2F2] rounded-[16px] p-2 w-[48==px] h-[48px] flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -46,7 +50,7 @@
                 </div>
 
                 <!-- Image -->
-                <div class="w-100 h-100 rounded-full overflow-hidden border-4 border-white shadow-md">
+                <div class="w-150 h-150 rounded-full overflow-hidden border-4 border-white shadow-md">
                     <img src="{{ asset('images/gulungan-terpal.png') }}" alt="Custom Terpal"
                         class="w-full h-full object-cover">
                 </div>
