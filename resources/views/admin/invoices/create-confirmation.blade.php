@@ -9,6 +9,7 @@
             <div>Nama : {{ $customer->name }}</div>
             <div>Email : {{ $customer->email }}</div>
             <div>No. HP : {{ $customer->phone }}</div>
+            <div>Alamat : {{ $customer->address }}</div>
         </div>
     </div>
 

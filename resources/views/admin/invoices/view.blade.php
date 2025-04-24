@@ -21,6 +21,7 @@
                 <td>Grand Total</td>
                 <td>Alamat Pengiriman</td>
                 <td>Status</td>
+                <td>Jenis Pembelian</td>
                 <td>Action</td>
             </tr>
         </thead>
@@ -37,6 +38,7 @@
                     <td>Rp {{ number_format($invoice->grand_total) }}</td>
                     <td>{{ $invoice->address }}</td>
                     <td>{{ $invoice->status }}</td>
+                    <td>{{ $invoice->is_online ? 'Offline' : 'Online' }}</td>
                     <td>
                         <a href="{{ url('/admin/invoices/detail/' . $invoice->id) }}" class="btn btn-sm btn-primary">
                             Detail
