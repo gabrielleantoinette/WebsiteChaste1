@@ -25,6 +25,9 @@
                 @if (Session::get('user')->role == 'owner')
                     <td>Harga Minimum</td>
                 @endif
+                @if (Session::get('user')->role == 'owner')
+                    <td>Harga Supplier</td>
+                @endif
                 <td>Action</td>
             </tr>
         </thead>
@@ -42,11 +45,26 @@
                         <td>
                             <form method="POST" action="{{ url('/admin/products/detail/' . $product->id . '/min-price') }}">
                                 @csrf
-                                <input type="number" name="min_price" class="input input-primary input-sm w-min"
-                                    value="{{ $product->min_price }}">
-                                <button class="btn btn-sm btn-primary">Update</button>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" name="min_price"
+                                        class="px-3 py-1.5 border border-teal-600 rounded-md text-sm w-40 focus:outline-none focus:ring-2 focus:ring-teal-300 transition"
+                                        value="{{ $product->min_price }}"
+                                        placeholder="Harga Batas Tawar">
+
+                                    <button type="submit"
+                                            class="px-3 py-1.5 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 transition">
+                                        Update
+                                    </button>
+                                </div>
                             </form>
                         </td>
+                    @endif
+                    @if (Session::get('user')->role == 'owner')
+                        <td><input type="number" name="min_price"
+                                        class="px-3 py-1.5 border border-teal-600 rounded-md text-sm w-40 focus:outline-none focus:ring-2 focus:ring-teal-300 transition"
+                                        value="{{ $product->min_price }}"
+                                        placeholder="Harga Supplier">
+</td>
                     @endif
                     <td>
                         <a href="{{ url('/admin/products/detail/' . $product->id) }}"

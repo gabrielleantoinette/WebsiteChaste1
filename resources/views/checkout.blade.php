@@ -17,92 +17,86 @@
   <div class="max-w-5xl mx-auto border rounded-xl p-8">
     <h2 class="text-2xl font-bold mb-6">Pengiriman & Pembayaran</h2>
 
-    <div class="grid md:grid-cols-2 gap-8">
+    <div class="flex flex-col gap-8">
       <!-- Kiri -->
-      <div class="space-y-6">
+      <div class="flex flex-col gap-8">
+  <!-- Alamat -->
+  <div class="border rounded-md p-4">
+    <h3 class="font-semibold mb-2">Alamat Pengiriman</h3>
+    <p class="text-sm">Muliyasari Prima Utara VI MM-8, Mulyorejo, Jember, 68112, Jawa Timur, Indonesia</p>
+  </div>
 
-        <!-- Alamat -->
-        <div class="border rounded-md p-4">
-          <h3 class="font-semibold mb-2">Alamat Pengiriman</h3>
-          <p class="text-sm">Muliyasari Prima Utara VI MM-8, Mulyorejo, Jember, 68112, Jawa Timur, Indonesia</p>
-        </div>
-
-        <!-- Pesanan -->
-        <div class="border rounded-md p-4">
-          <h3 class="font-semibold mb-2">Pesanan</h3>
-          <div class="flex items-center gap-4 text-sm">
-            <img src="{{ asset('images/terpal-ayam.png') }}" class="w-14 h-14 object-cover rounded border">
-            <div class="flex-1">
-              <p class="font-medium">Terpal Ayam Jago A5</p>
-              <p>1 item - Biru</p>
-            </div>
-            <p class="font-semibold">Rp 3.700</p>
-          </div>
-        </div>
-
-        <!-- Pengiriman -->
-        <div class="border rounded-md p-4">
-          <h3 class="font-semibold mb-2">Pilihan Pengiriman</h3>
-          <div class="space-y-2 text-sm">
-            <label class="flex items-center gap-2">
-              <input type="radio" name="pengiriman" checked>
-              Kurir Perusahaan (khusus Surabaya Gratis)
-            </label>
-            <label class="flex items-center gap-2">
-              <input type="radio" name="pengiriman">
-              Ekspedisi (Rp 19.000)
-            </label>
-          </div>
-        </div>
+  <!-- Pesanan -->
+  <div class="border rounded-md p-4">
+    <h3 class="font-semibold mb-2">Pesanan</h3>
+    <div class="flex items-center gap-4 text-sm">
+      <img src="{{ asset('images/terpal-ayam.png') }}" class="w-14 h-14 object-cover rounded border">
+      <div class="flex-1">
+        <p class="font-medium">Terpal Ayam Jago A5</p>
+        <p>1 item - Biru</p>
       </div>
+      <p class="font-semibold">Rp 3.700</p>
+    </div>
+  </div>
 
-      <!-- Kanan -->
-      <div class="space-y-6">
+  <!-- Pengiriman -->
+  <div class="border rounded-md p-4">
+    <h3 class="font-semibold mb-2">Pilihan Pengiriman</h3>
+    <div class="space-y-2 text-sm">
+      <label class="flex items-center gap-2">
+        <input type="radio" name="pengiriman" checked>
+        Kurir Perusahaan (khusus Surabaya Gratis)
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="radio" name="pengiriman">
+        Ekspedisi (Rp 19.000)
+      </label>
+    </div>
+  </div>
 
-        <!-- Total Bayar -->
-        <div class="border rounded-md p-4">
-          <h3 class="font-semibold mb-2">Rincian Total Bayar</h3>
-          <div class="text-sm space-y-1">
-            <div class="flex justify-between">
-              <span>Subtotal Produk</span>
-              <span>Rp 3.700</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Subtotal Pengiriman</span>
-              <span>Rp 19.000</span>
-            </div>
-            <div class="border-t mt-2 pt-2 font-semibold flex justify-between">
-              <span>Total Pembayaran</span>
-              <span class="text-teal-600">Rp 22.700</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Metode Pembayaran -->
-        <div class="border rounded-md p-4">
-          <h3 class="font-semibold mb-2">Metode Pembayaran</h3>
-          <div class="space-y-2 text-sm">
-            <label class="flex items-center gap-2">
-              <input type="radio" name="pembayaran" checked> Transfer Bank
-            </label>
-            <label class="flex items-center gap-2">
-              <input type="radio" name="pembayaran"> E-Wallet (OVO, DANA, ShopeePay)
-            </label>
-            <label class="flex items-center gap-2">
-              <input type="radio" name="pembayaran"> COD (Bayar di Tempat)
-            </label>
-          </div>
-        </div>
-
-        <!-- Tombol Bayar -->
-        <div>
-          <button class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
-            Bayar
-          </button>
-        </div>
+  <!-- Rincian Total -->
+  <div class="border rounded-md p-4">
+    <h3 class="font-semibold mb-2">Rincian Total Bayar</h3>
+    <div class="text-sm space-y-1">
+      <div class="flex justify-between">
+        <span>Subtotal Produk</span>
+        <span>Rp 3.700</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Subtotal Pengiriman</span>
+        <span>Rp 19.000</span>
+      </div>
+      <div class="border-t mt-2 pt-2 font-semibold flex justify-between">
+        <span>Total Pembayaran</span>
+        <span class="text-teal-600">Rp 22.700</span>
       </div>
     </div>
   </div>
+
+  <!-- Metode Pembayaran -->
+  <div class="border rounded-md p-4">
+    <h3 class="font-semibold mb-2">Metode Pembayaran</h3>
+    <div class="space-y-2 text-sm">
+      <label class="flex items-center gap-2">
+        <input type="radio" name="pembayaran" checked> Transfer Bank
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="radio" name="pembayaran"> E-Wallet (OVO, DANA, ShopeePay)
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="radio" name="pembayaran"> COD (Bayar di Tempat)
+      </label>
+    </div>
+  </div>
+
+  <!-- Tombol Bayar -->
+  <div>
+    <button class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
+      Bayar
+    </button>
+  </div>
+</div>
+
 </section>
 
 <!-- Footer -->

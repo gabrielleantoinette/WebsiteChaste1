@@ -13,14 +13,14 @@ class DriverController extends Controller
     {
         $user = Session::get('user');
         $drivers = Employee::where('role', 'driver')->get();
-        $invoices = HInvoice::where('status', 'dikirim')->where('driver_id', $user->id)->get();
+        $invoices = HInvoice::where('status', 'DIKIRIM')->where('driver_id', $user->id)->get();
         return view('admin.driver-transaksi.view', compact('invoices', 'drivers'));
     }
 
     public function finishTransaksi($id, Request $request)
     {
         $invoice = HInvoice::find($id);
-        $invoice->status = 'diterima';
+        $invoice->status = 'DITERIMA';
         $invoice->save();
 
         return redirect()->back()->with('success', 'Berhasil menyelesaikan transaksi');

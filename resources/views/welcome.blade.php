@@ -30,6 +30,7 @@
                             <p class="text-3xl font-bold">20+</p>
                             <p class="text-base">Tipe Terpal</p>
                         </div>
+                        <span>|</span>
                         <div>
                             <p class="text-3xl font-bold">100+</p>
                             <p class="text-base">Pelanggan</p>
