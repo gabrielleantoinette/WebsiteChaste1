@@ -28,7 +28,7 @@
         <!-- Detail & Negosiasi -->
         <div class="flex-1 space-y-4">
           <h2 class="text-xl font-bold">Terpal A5 2x3</h2>
-          <p class="text-gray-600">Rp 4.500,00</p>
+          <p class="text-gray-600">Rp 4.500,00 (Harga Satuan)</p>
 
           <!-- Form Tawar -->
           <div class="space-y-2">
