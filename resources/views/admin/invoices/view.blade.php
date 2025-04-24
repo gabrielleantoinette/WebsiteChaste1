@@ -8,7 +8,7 @@
         @endif
     </div>
 
-    <table class="table table-bordered">
+    <table class="table table-bordered data-table">
         <thead>
             <tr>
                 <td>ID</td>

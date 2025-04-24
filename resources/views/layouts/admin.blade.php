@@ -7,6 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Admin</title>
     @vite('resources/css/app.css')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
 </head>
 
 <body>
@@ -73,5 +74,26 @@
         @yield('content')
     </div>
 </body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.2/js/jquery.dataTables.min.js"></script>
+{{-- <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script> --}}
+<script>
+    $(document).ready(function() {
+        $(".harga").on("input", function() {
+            // Remove commas and non-numeric characters from the input value
+            let rawValue = $(this).val().replace(/[^0-9]/g, '');
+
+            // Format the input value with thousand separators
+            let formattedValue = Number(rawValue).toLocaleString();
+
+            // Update the input value with the formatted value
+            $(this).val(formattedValue);
+        });
+
+        let table = $('.data-table').DataTable({
+            'order': []
+        });
+    });
+</script>
 
 </html>
