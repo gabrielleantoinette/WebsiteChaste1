@@ -18,6 +18,11 @@ return new class extends Migration
             $table->string('password');
             $table->boolean('active')->default(true);
             $table->string('role');
+            $table->string('phone')->nullable();
+            $table->string('ktp')->nullable();
+            $table->string('car_plate')->nullable();
+            $table->string('car_type')->nullable();
+            $table->string('profile_picture')->nullable();
             $table->timestamps();
         });
     }

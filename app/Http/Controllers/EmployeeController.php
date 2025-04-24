@@ -26,6 +26,10 @@ class EmployeeController extends Controller
         $password = $request->input('password');
         $active = $request->input('active') === "1" ? true : false;
         $role = $request->input('role');
+        $phone = $request->input('phone');
+        $ktp = $request->input('ktp');
+        $car_plate = $request->input('car_plate');
+        $car_type = $request->input('car_type');
 
         $employee = new Employee();
         $employee->name = $name;
@@ -33,6 +37,11 @@ class EmployeeController extends Controller
         $employee->password = $password;
         $employee->active = $active;
         $employee->role = $role;
+        $employee->phone = $phone;
+        $employee->ktp = $ktp;
+        $employee->car_plate = $car_plate;
+        $employee->car_type = $car_type;
+        $employee->active = $active;
         $employee->save();
 
         return redirect('/admin/employees');
