@@ -24,4 +24,8 @@ class DInvoice extends Model
     {
         return $this->belongsTo(ProductVariant::class);
     }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 }

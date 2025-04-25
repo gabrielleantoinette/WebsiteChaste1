@@ -9,6 +9,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Support\Facades\Route;
 
@@ -56,9 +57,7 @@ Route::middleware([LoggedIn::class])->group(function () {
 
 // Prefix Admin untuk Management
 Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
-    Route::get('/', function () {
-        return view('admin.dashboard');
-    });
+    Route::get('/', [DashboardController::class, 'index']);
 
     Route::prefix('products')->group(function () {
         Route::get('/', [ProductController::class, 'view']);

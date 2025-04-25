@@ -8,19 +8,19 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
             <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
                 <p class="text-sm text-gray-500 mb-1">Total Produk</p>
-                <p class="text-2xl font-bold text-teal-600">{{ $totalProducts ?? 0 }}</p>
+                <p class="text-2xl font-bold text-teal-600">{{ $productCount ?? 0 }}</p>
             </div>
             <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
                 <p class="text-sm text-gray-500 mb-1">Total Pembeli</p>
-                <p class="text-2xl font-bold text-teal-600">{{ $totalCustomers ?? 0 }}</p>
+                <p class="text-2xl font-bold text-teal-600">{{ $customerCount ?? 0 }}</p>
             </div>
             <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
                 <p class="text-sm text-gray-500 mb-1">Total Pegawai</p>
-                <p class="text-2xl font-bold text-teal-600">{{ $totalEmployees ?? 0 }}</p>
+                <p class="text-2xl font-bold text-teal-600">{{ $employeeCount ?? 0 }}</p>
             </div>
             <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
                 <p class="text-sm text-gray-500 mb-1">Total Penjualan</p>
-                <p class="text-2xl font-bold text-teal-600">Rp {{ number_format($totalSales ?? 0) }}</p>
+                <p class="text-2xl font-bold text-teal-600">Rp {{ number_format($totalPenjualan ?? 0) }}</p>
             </div>
         </div>
 
