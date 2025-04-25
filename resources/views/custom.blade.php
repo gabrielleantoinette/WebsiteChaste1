@@ -188,22 +188,22 @@
   tambak: {
     bahan: 'A7, A8',
     deskripsi: [
-      'A7 lebih ekonomis untuk tambak kecil',
-      'A8 lebih tebal dan tahan lama untuk tambak besar'
+      'A7 lebih ekonomis untuk tambak kecil - Rp 7.000',
+      'A8 lebih tebal dan tahan lama untuk tambak besar - Rp 8.500'
     ]
   },
   bertani: {
     bahan: 'A3, A4',
     deskripsi: [
-      'A3 cocok untuk penutup lahan ringan',
-      'A4 sedikit lebih kuat dan tahan air'
+      'A3 cocok untuk penutup lahan ringan - Rp 4.5000',
+      'A4 sedikit lebih kuat dan tahan air - Rp 5.000'
     ]
   },
   angkutan: {
     bahan: 'Keep Jep, Ulin Orchid',
     deskripsi: [
-      'Keep Jep cocok untuk barang kering',
-      'Ulin Orchid lebih kuat untuk beban berat dan tahan hujan'
+      'Keep Jep lebih kuat untuk beban berat dan tahan hujan - Rp 70.000',
+      'Ulin Orchid cocok untuk barang kering sementara - Rp 27.000'
     ]
   },
   tenda: {
@@ -216,22 +216,22 @@
   kebocoran: {
     bahan: 'A4, A5',
     deskripsi: [
-      'A4 cukup untuk tutup bocoran ringan',
-      'A5 lebih tahan terhadap tekanan dan tahan sobek'
+      'A4 cukup untuk tutup bocoran ringan - Rp 5.000',
+      'A5 lebih tahan terhadap tekanan dan tahan sobek - Rp 5.800'
     ]
   },
   bangunan: {
     bahan: 'A8, A10',
     deskripsi: [
-      'A8 digunakan untuk pelindung proyek ringan',
-      'A10 lebih tebal untuk proyek konstruksi berat'
+      'A8 digunakan untuk pelindung proyek ringan - Rp 8.500',
+      'A10 lebih tebal untuk proyek konstruksi bera - Rp 12.000'
     ]
   },
   garam: {
     bahan: 'A12, A15',
     deskripsi: [
-      'A12 cukup untuk tempat penyimpanan sementara',
-      'A15 tahan garam dan sinar UV'
+      'A12 cukup untuk tempat penyimpanan sementara - Rp 10.500',
+      'A15 tahan garam dan sinar UV - Rp 12.000'
     ]
   }
 };
