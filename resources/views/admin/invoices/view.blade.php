@@ -4,7 +4,14 @@
     <div class="flex justify-between mb-5">
         <h1 class="text-xl font-bold mb-5">Invoices List</h1>
         @if (Session::get('user')->role !== 'owner')
-            <a href="{{ url('/admin/invoices/create-customer') }}" class="btn btn-primary">Tambah Transaksi Toko</a>
+        <a href="{{ url('/admin/invoices/create-customer') }}"
+            class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm px-5 py-2.5 rounded-lg shadow-sm transition duration-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Tambah Transaksi Toko
+        </a>
         @endif
     </div>
 
