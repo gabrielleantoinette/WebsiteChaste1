@@ -11,6 +11,8 @@ use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+// use App\Models\Invoice;
+use Barryvdh\DomPDF\Facade\Pdf;
 use stdClass;
 
 class InvoiceController extends Controller
@@ -158,5 +160,13 @@ class InvoiceController extends Controller
         $invoice_code = 'CS' . $counter . '/' . $months[$month - 1] . $year;
         var_dump($invoice_code);
         return $invoice_code;
+    }
+
+    public function exportPDF()
+    {
+        $invoices = HInvoice::with(['customer', 'employee'])->get();
+
+        $pdf = PDF::loadView('exports.invoices-pdf', compact('invoices'));
+        return $pdf->download('laporan-invoice.pdf');
     }
 }

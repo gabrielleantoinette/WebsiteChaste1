@@ -2,7 +2,12 @@
 
 @section('content')
     <h1 class="text-2xl font-bold mb-6 text-gray-800">Detail Invoice</h1>
-
+    <div>
+        <a href="{{ url('/admin/invoices/export-pdf?id=' . $invoice->id) }}"
+            class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm px-5 py-2 rounded-lg shadow-sm transition">
+            📄 Download PDF
+        </a>
+    </div>
     {{-- Info Invoice --}}
     <div class="bg-white border border-gray-200 rounded-lg p-6 space-y-3 shadow-sm">
         <h2 class="text-lg font-semibold text-teal-700 mb-2">Informasi Invoice</h2>
