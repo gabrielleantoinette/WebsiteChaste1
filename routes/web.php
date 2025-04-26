@@ -25,19 +25,20 @@ Route::post('login', [LoginController::class, 'loginadmin']);
 
 Route::get('register', [LoginController::class, 'showRegisterForm'])->name('register');
 Route::post('register', [LoginController::class, 'register']);
+Route::get('/api/custom-materials/{id}/colors', [CustomMaterialController::class, 'getColors']);
 
 Route::middleware([LoggedIn::class])->group(function () {
     Route::get('/produk', [CustomerController::class, 'viewProducts'])->name('produk');
     Route::get('/produk/{id}', [CustomerController::class, 'detailProduct'])->name('produk.detail');
     Route::post('/produk/{id}', [CartController::class, 'addItem'])->name('produk.add');
-    Route::get('/custom-terpal', function () {
-        return view('custom');
-    })->name('custom.terpal');
+    Route::get('/custom-terpal', [CustomMaterialController::class, 'customTerpal'])->name('custom.terpal');
+
 
     Route::get('/keranjang', [CartController::class, 'view'])->name('keranjang');
     Route::post('/keranjang/add', [CartController::class, 'addItem'])->name('keranjang.add');
     Route::post('/keranjang/delete/{id}', [CartController::class, 'deleteItem'])->name('keranjang.delete');
     Route::post('/keranjang/custom/add', [CartController::class, 'addCustomItem'])->name('keranjang.custom.add');
+    Route::get('/custom-terpal', [CustomMaterialController::class, 'showCustomPage'])->name('custom.terpal');
     Route::get('/checkout', function () {
         return view('checkout');
     })->name('checkout');
