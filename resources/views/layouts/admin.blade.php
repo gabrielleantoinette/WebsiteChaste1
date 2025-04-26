@@ -72,6 +72,12 @@
                    Kelola Produk
                 </a>
 
+                <a href="{{ url('/admin/custom-materials') }}"
+                    class="px-4 py-2 border font-semibold rounded-md transition
+                            {{ request()->is('admin/custom-materials*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                    Kelola Bahan Custom
+                </a>
+
                 <a href="{{ url('/admin/customers') }}"
                    class="px-4 py-2 border font-semibold rounded-md transition
                           {{ request()->is('admin/customers*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">

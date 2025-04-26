@@ -10,6 +10,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CustomMaterialController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,7 @@ Route::middleware([LoggedIn::class])->group(function () {
     Route::get('/keranjang', [CartController::class, 'view'])->name('keranjang');
     Route::post('/keranjang/add', [CartController::class, 'addItem'])->name('keranjang.add');
     Route::post('/keranjang/delete/{id}', [CartController::class, 'deleteItem'])->name('keranjang.delete');
+    Route::post('/keranjang/custom/add', [CartController::class, 'addCustomItem'])->name('keranjang.custom.add');
     Route::get('/checkout', function () {
         return view('checkout');
     })->name('checkout');
@@ -69,6 +71,17 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/detail/{id}/variants/create', [ProductController::class, 'createVariantAction']);
 
         Route::post('/detail/{id}/min-price', [ProductController::class, 'updateMinPriceAction']);
+    });
+
+    Route::prefix('custom-materials')->group(function () {
+        Route::get('/', [CustomMaterialController::class, 'view'])->name('custom-materials.view');
+        Route::get('/create', [CustomMaterialController::class, 'create'])->name('custom-materials.create');
+        Route::post('/create', [CustomMaterialController::class, 'store'])->name('custom-materials.store');
+        Route::post('/store', [CustomMaterialController::class, 'store'])->name('admin.custom-materials.store');
+        Route::get('/edit/{id}', [CustomMaterialController::class, 'edit'])->name('custom-materials.edit');
+        Route::post('/edit/{id}', [CustomMaterialController::class, 'update'])->name('custom-materials.update');
+        Route::post('{id}/variants', [CustomMaterialController::class, 'createVariantAction'])->name('custom-materials.variants.store');
+        Route::post('/delete/{id}', [CustomMaterialController::class, 'destroy'])->name('custom-materials.destroy');
     });
 
     Route::prefix('employees')->group(function () {
