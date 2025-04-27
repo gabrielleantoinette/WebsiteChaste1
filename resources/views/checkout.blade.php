@@ -26,28 +26,36 @@
                 <h2 class="font-semibold text-lg mb-2">Pesanan</h2>
                 <div class="space-y-4">
                 @foreach ($produkItems as $item)
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <p class="font-semibold">{{ $item->product_name }}</p>
-                            <p class="text-sm text-gray-600">{{ $item->quantity }} item - Warna: {{ $item->variant_color ?? '-' }}</p>
-                        </div>
-                        <p class="font-semibold">Rp {{ number_format($item->product_price, 0, ',', '.') }}</p>
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <p class="font-semibold">{{ $item->product_name }}</p>
+                        <p class="text-sm text-gray-600">
+                            {{ $item->quantity }} item - Warna: {{ $item->variant_color ?? '-' }}
+                        </p>
                     </div>
-                @endforeach
-                @foreach ($customItems as $item)
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <p class="font-semibold">Custom Terpal: {{ $item->kebutuhan_custom }}</p>
-                            <p class="text-sm text-gray-600">
-                                Ukuran: {{ $item->ukuran_custom ?? '-' }}, 
-                                Warna: {{ $item->warna_custom ?? '-' }}, 
-                                Jumlah Ring: {{ $item->jumlah_ring_custom ?? '-' }},
-                                Tali: {{ $item->pakai_tali_custom ?? '-' }}
-                            </p>
-                        </div>
-                        <p class="font-semibold">Rp {{ number_format($item->harga_custom, 0, ',', '.') }}</p>
+                    <p class="font-semibold">
+                        Rp {{ number_format(($item->product_price ?? 0) * ($item->quantity ?? 1), 0, ',', '.') }}
+                    </p>
+                </div>
+            @endforeach
+
+            @foreach ($customItems as $item)
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <p class="font-semibold">Custom Terpal: {{ $item->kebutuhan_custom }}</p>
+                        <p class="text-sm text-gray-600">
+                            Ukuran: {{ $item->ukuran_custom ?? '-' }}, 
+                            Warna: {{ $item->warna_custom ?? '-' }}, 
+                            Jumlah Ring: {{ $item->jumlah_ring_custom ?? '-' }},
+                            Tali: {{ $item->pakai_tali_custom ?? '-' }}
+                        </p>
                     </div>
-                @endforeach
+                    <p class="font-semibold">
+                        Rp {{ number_format(($item->harga_custom ?? 0) * ($item->quantity ?? 1), 0, ',', '.') }}
+                    </p>
+                </div>
+            @endforeach
+
                 </div>
             </section>
 
