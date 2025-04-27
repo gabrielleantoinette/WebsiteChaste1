@@ -174,48 +174,47 @@ class InvoiceController extends Controller
 
     public function storeFromCheckout(Request $request)
     {
-        $request->validate([
-            'address' => 'required|string',
-            'cart_ids' => 'required|array',
-            'shipping_method' => 'required|string',
-            'payment_method' => 'required|string',
-        ]);
+        $customerId = session()->get('customer_id');
+        $alamat = $request->input('alamat');
 
-        $customerId = auth()->user()->id;
+        $code = 'INV-' . date('Ymd') . '-' . Str::random(5);
 
-        // Ambil semua barang yang dipilih
-        $cartItems = Cart::whereIn('id', $request->cart_ids)->get();
-
-        if ($cartItems->isEmpty()) {
-            return redirect()->back()->with('error', 'Tidak ada barang yang dipilih.');
-        }
-
-        // Hitung subtotal produk
         $subtotalProduk = 0;
-        foreach ($cartItems as $item) {
-            $subtotalProduk += $item->quantity * $item->price;
+
+        if ($request->has('cart_ids')) {
+            $cartIds = $request->cart_ids;
+            $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+
+            foreach ($carts as $cart) {
+                if ($cart->variant_id) {
+                    $product = DB::table('product_variants')
+                        ->join('products', 'product_variants.product_id', '=', 'products.id')
+                        ->where('product_variants.id', $cart->variant_id)
+                        ->select('products.price')
+                        ->first();
+                    $subtotalProduk += ($product->price ?? 0) * $cart->quantity;
+                } elseif ($cart->kebutuhan_custom) {
+                    $subtotalProduk += ($cart->harga_custom ?? 0) * $cart->quantity;
+                }
+            }
         }
 
-        // Ongkir fix misal Rp 19.000 kalau ekspedisi, Rp 0 kalau kurir perusahaan
-        $shippingCost = $request->shipping_method == 'expedition' ? 19000 : 0;
-        $grandTotal = $subtotalProduk + $shippingCost;
-
-        // Buat hinvoice baru
-        $invoice = Hinvoice::create([
-            'code' => 'INV-' . strtoupper(Str::random(8)),
+        DB::table('hinvoice')->insert([
+            'code' => $code,
             'customer_id' => $customerId,
-            'grand_total' => $grandTotal,
-            'status' => 'Pending',
-            'address' => $request->address,
-            'is_paid' => 0,
-            'is_online' => 1,
+            'employee_id' => 1,
+            'driver_id' => null,
+            'gudang_id' => null,
+            'accountant_id' => null,
+            'grand_total' => $subtotalProduk,
+            'status' => 'Menunggu',
+            'address' => $alamat,
+            'is_online' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        // (Optional) Kalau mau simpan detail item satu-satu ke tabel lain (hinvoice_items), bisa lanjut disini
-
-        // Hapus barang di cart
-        Cart::whereIn('id', $request->cart_ids)->delete();
-
-        return redirect()->route('order.success')->with('success', 'Pesanan berhasil dibuat!');
+        return redirect()->route('order.success');
     }
+
 }

@@ -135,9 +135,32 @@
 
             <!-- Tombol Bayar -->
             <div class="text-center">
-                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg w-full">
+            <form action="{{ route('checkout.invoice') }}" method="POST">
+                @csrf
+
+                <!-- kirim semua cart id produk biasa -->
+                @foreach ($produkItems as $item)
+                    <input type="hidden" name="cart_ids[]" value="{{ $item->id }}">
+                @endforeach
+
+                <!-- kirim semua cart id produk custom -->
+                @foreach ($customItems as $item)
+                    <input type="hidden" name="cart_ids[]" value="{{ $item->id }}">
+                @endforeach
+
+                <!-- kirim alamat -->
+                <input type="hidden" name="alamat" value="{{ $alamat_default_user }}">
+
+                <!-- default shipping method dan payment method -->
+                <input type="hidden" name="shipping_method" value="kurir">
+                <input type="hidden" name="payment_method" value="transfer_bank">
+
+                <!-- Tombol Bayar -->
+                <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
                     Bayar
                 </button>
+            </form>
+
             </div>
 
         </form>
