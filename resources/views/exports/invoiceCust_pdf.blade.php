@@ -38,7 +38,7 @@
                 <tr>
                     <td>
                         @if($item->kebutuhan_custom)
-                            {{ $item->kebutuhan_custom }}
+                        Produk Custom ( {{ $item->kebutuhan_custom }} )
                         @else
                             {{ $item->product_name ?? 'Produk Biasa' }}
                         @endif
