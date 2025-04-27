@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\Employee;
 use Illuminate\Support\Facades\Session;
 
@@ -33,17 +34,20 @@ class LoginController extends Controller
         }
 
         //login customer
-        $customer = Customer::where('email', $request->email)->first();
-        if ($customer) {
-            if ($customer->password == $request->password) {
-                Session::put('user', $customer);
-                return redirect('/');
-            } else {
-                return back()->with('error', 'Password salah.');
-            }
-        }
+        $credentials = $request->only('email', 'password');
 
-        return back()->with('error', 'Email tidak ditemukan.');
+        $customer = Customer::where('email', $credentials['email'])->first();
+
+        if ($customer && $credentials['password'] === $customer->password) {
+            session(['user' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'email' => $customer->email,
+            ]]);
+            return redirect('/produk');
+        } else {
+            return back()->withErrors(['email' => 'Email atau password salah.']);
+        }
     }
 
     public function logout(Request $request)

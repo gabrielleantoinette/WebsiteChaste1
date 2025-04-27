@@ -16,6 +16,14 @@
 
     <form method="POST" action="{{ route('keranjang.custom.add') }}" class="grid md:grid-cols-2 gap-8">
       @csrf
+      <input type="hidden" name="harga_custom" id="hargaCustomInput" value="0">
+      <input type="hidden" name="kebutuhan_custom" id="kebutuhanCustomInput">
+      <input type="hidden" name="ukuran_custom" id="ukuranCustomInput">
+      <input type="hidden" name="warna_custom" id="warnaCustomInput">
+      <input type="hidden" name="jumlah_ring_custom" id="jumlahRingCustomInput">
+      <input type="hidden" name="pakai_tali_custom" id="pakaiTaliCustomInput">
+      <input type="hidden" name="catatan_custom" id="catatanCustomInput">
+
 
       <div class="space-y-4">
         <div>
@@ -111,7 +119,7 @@
       </div>
 
       <div class="col-span-2 flex flex-col md:flex-row items-center justify-between mt-8 gap-4">
-        <div id="" class="text-lg font-semibold text-gray-800"></div>
+        <div class="text-lg font-semibold text-gray-800"></div>
         <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-6 rounded-md transition">
           Tambah Ke Keranjang
         </button>
@@ -179,7 +187,6 @@ const jumlahRingInput = document.getElementById('qtyInput');
 const pakaiTaliInput = document.querySelector('input[name="pakai_tali"]');
 const totalPriceText = document.getElementById('totalPrice');
 
-// Load warna saat pilih bahan
 bahanSelect.addEventListener('change', function() {
   fetch(`/api/custom-materials/${this.value}/colors`)
     .then(response => response.json())
@@ -193,7 +200,6 @@ bahanSelect.addEventListener('change', function() {
     });
 });
 
-// Kalkulasi otomatis
 function calculateTotal() {
   const panjang = parseFloat(panjangInput.value) || 0;
   const lebar = parseFloat(lebarInput.value) || 0;
@@ -207,14 +213,13 @@ function calculateTotal() {
   const hargaTali = pakaiTali ? keliling * 500 : 0;
   const grandTotal = hargaBahan + hargaRing + hargaTali;
 
-  totalPriceText.innerHTML = `Estimasi Total: <span class="font-bold text-teal-600">Rp ${grandTotal.toLocaleString('id-ID')}</span>`;
+  document.getElementById('detailBahan').innerHTML = `<span>Harga Bahan</span><span>Rp ${hargaBahan.toLocaleString('id-ID')}</span>`;
+  document.getElementById('detailRing').innerHTML = `<span>Harga Ring</span><span>Rp ${hargaRing.toLocaleString('id-ID')}</span>`;
+  document.getElementById('detailTali').innerHTML = `<span>Harga Tali</span><span>Rp ${hargaTali.toLocaleString('id-ID')}</span>`;
+  document.getElementById('totalPrice').innerHTML = `Rp ${grandTotal.toLocaleString('id-ID')}`;
 
-  // Tampilkan rincian
+  document.getElementById('hargaCustomInput').value = Math.round(grandTotal);
   document.getElementById('rincianHarga').style.display = 'block';
-  document.getElementById('detailBahan').innerHTML = `- Harga Bahan: Rp ${hargaBahan.toLocaleString('id-ID')}`;
-  document.getElementById('detailRing').innerHTML = `- Harga Ring: Rp ${hargaRing.toLocaleString('id-ID')}`;
-  document.getElementById('detailTali').innerHTML = `- Harga Tali: Rp ${hargaTali.toLocaleString('id-ID')}`;
-  document.getElementById('detailGrandTotal').innerHTML = `Total Estimasi: Rp ${grandTotal.toLocaleString('id-ID')}`;
 }
 
 panjangInput.addEventListener('input', calculateTotal);
@@ -223,8 +228,77 @@ tinggiInput.addEventListener('input', calculateTotal);
 jumlahRingInput.addEventListener('input', calculateTotal);
 pakaiTaliInput.addEventListener('change', calculateTotal);
 
-// Rekomendasi kebutuhan
 const rekomendasiMap = @json($rekomendasiMap);
+
+function updateHiddenInputs() {
+  // Ambil data dari form
+  const kebutuhan = kebutuhanSelect.options[kebutuhanSelect.selectedIndex]?.text || '';
+  const panjang = parseFloat(panjangInput.value) || 0;
+  const lebar = parseFloat(lebarInput.value) || 0;
+  const tinggi = parseFloat(tinggiInput.value) || 0;
+  const ukuranText = tinggi > 0 ? `${panjang}m x ${lebar}m x ${tinggi}m` : `${panjang}m x ${lebar}m`;
+  const warna = warnaSelect.options[warnaSelect.selectedIndex]?.text || '';
+  const jumlahRing = parseInt(jumlahRingInput.value) || 0;
+  const pakaiTali = pakaiTaliInput.checked ? 'Ya' : 'Tidak';
+  const catatan = document.querySelector('textarea[name="catatan"]').value || '';
+
+  // Isi ke hidden inputs
+  document.getElementById('kebutuhanCustomInput').value = kebutuhan;
+  document.getElementById('ukuranCustomInput').value = ukuranText;
+  document.getElementById('warnaCustomInput').value = warna;
+  document.getElementById('jumlahRingCustomInput').value = jumlahRing;
+  document.getElementById('pakaiTaliCustomInput').value = pakaiTali;
+  document.getElementById('catatanCustomInput').value = catatan;
+}
+
+// Event supaya hidden inputs selalu terupdate
+panjangInput.addEventListener('input', () => {
+  calculateTotal();
+  updateHiddenInputs();
+});
+
+lebarInput.addEventListener('input', () => {
+  calculateTotal();
+  updateHiddenInputs();
+});
+
+tinggiInput.addEventListener('input', () => {
+  calculateTotal();
+  updateHiddenInputs();
+});
+
+jumlahRingInput.addEventListener('input', () => {
+  calculateTotal();
+  updateHiddenInputs();
+});
+
+pakaiTaliInput.addEventListener('change', () => {
+  calculateTotal();
+  updateHiddenInputs();
+});
+
+warnaSelect.addEventListener('change', updateHiddenInputs);
+
+kebutuhanSelect.addEventListener('change', () => {
+  const value = kebutuhanSelect.value;
+  const data = rekomendasiMap[value] || { bahan: '', deskripsi: [] };
+
+  bahanRekomendasi.value = data.bahan;
+
+  if (data.deskripsi.length > 0) {
+    deskripsiBahan.innerHTML = `<ul class="list-disc pl-5 space-y-1 text-gray-600 text-sm italic">
+      ${data.deskripsi.map(item => `<li>${item}</li>`).join('')}
+    </ul>`;
+  } else {
+    deskripsiBahan.innerHTML = '';
+  }
+
+  calculateTotal();
+  updateHiddenInputs();
+});
+
+document.querySelector('textarea[name="catatan"]').addEventListener('input', updateHiddenInputs);
+
 
 kebutuhanSelect.addEventListener('change', function () {
   const value = kebutuhanSelect.value;

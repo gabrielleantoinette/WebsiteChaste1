@@ -14,6 +14,11 @@
 
     <!-- Keranjang -->
     <section class="px-[100px] h-screen">
+        @php
+            $carts = \Illuminate\Support\Facades\DB::table('cart')
+                ->where('user_id', session('user')['id'])
+                ->get();
+        @endphp
         <h2 class="text-xl font-semibold mb-6 bg-[#D9F2F2] inline-block px-4 py-2 rounded-md">🛍️ Keranjang Belanja</h2>
 
         <!-- Pilih Semua -->
@@ -27,28 +32,34 @@
             @foreach ($cart as $item)
                 <!-- Item Produk -->
                 <div class="flex items-center gap-4 border-b pb-6">
+
                     <input type="checkbox" class="item-checkbox">
-                    <img src="{{ asset('images/terpal-ayam.png') }}" class="w-20 h-20 object-cover rounded border">
+                
+                    <img src="{{ asset('images/terpal-ayam.png') }}" class="w-20 h-20 object-cover rounded-md">
+                
                     <div class="flex-1">
-                        <p class="font-semibold">{{ $item->variant->product->name }}</p>
-                        <p class="text-sm text-gray-500">Variasi: {{ $item->variant->color }}</p>
+                        @if ($item->variant && $item->variant->product)
+                            <!-- Produk biasa -->
+                            <p class="font-semibold">{{ $item->variant->product->name }}</p>
+                            <p class="text-sm text-gray-500">Variasi: {{ $item->variant->color }}</p>
+                        @else
+                            <!-- Produk custom -->
+                            <p class="font-semibold">Custom Terpal</p>
+                        @endif
                     </div>
-                    <p class="w-28 text-sm text-gray-700">Rp
-                        {{ number_format($item->variant->product->price) }}</p>
-
-                    <!-- Qty -->
-                    <div class="flex items-center border border-gray-300 w-max rounded-md overflow-hidden">
-                        <button type="button" class="px-3 py-1 text-lg hover:bg-gray-100">-</button>
-                        <input type="number" value="{{ $item->quantity }}" min="1"
-                            class="w-10 text-center border-l border-r border-gray-300 outline-none text-sm py-1 appearance-none">
-                        <button type="button" class="px-3 py-1 text-lg hover:bg-gray-100">+</button>
+                
+                    <div class="w-28 text-sm font-semibold text-gray-700 text-right">
+                        @if ($item->variant && $item->variant->product)
+                            <!-- Harga produk biasa -->
+                            Rp {{ number_format($item->variant->product->price * $item->quantity) }}
+                        @else
+                            <!-- Harga custom -->
+                            Rp {{ number_format(($item->harga_custom ?? 0) * $item->quantity) }}
+                        @endif
                     </div>
-
-                    <p class="w-28 text-sm font-semibold text-red-500 text-right">Rp
-                        {{ number_format($item->variant->product->price * $item->quantity) }}</p>
-                    <form method="post" action="{{ route('keranjang.delete', $item->id) }}">
+                    <form action="{{ route('keranjang.delete', $item->id) }}" method="POST" onsubmit="return confirm('Yakin mau hapus item ini dari keranjang?')">
                         @csrf
-                        <button type="submit" class="text-sm text-red-500 hover:underline">Hapus</button>
+                        <button type="submit" class="text-red-500 hover:text-red-700 text-sm">Hapus</button>
                     </form>
                 </div>
         </div>
