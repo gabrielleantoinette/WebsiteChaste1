@@ -82,6 +82,11 @@ class CustomerController extends Controller
     {
         $user = Session::get('user');
         $customer = Customer::find($user['id']);
-        return view('profile', compact('customer'));
+
+        $dikemasCount = HInvoice::where('customer_id', $user['id'])->where('status', 'dikemas')->count();
+        $dikirimCount = HInvoice::where('customer_id', $user['id'])->where('status', 'dikirim')->count();
+        $reviewCount = HInvoice::where('customer_id', $user['id'])->where('status', 'review')->count();
+
+        return view('profile', compact('customer', 'dikemasCount', 'dikirimCount', 'reviewCount'));
     }
 }

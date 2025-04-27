@@ -30,26 +30,22 @@
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
                     <input type="text" name="name" id="name"
-                        class="w-full border border-gray-300 rounded-md px-4 py-2"
-                        value="{{ $customer->name }}">
+                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->name }}">
                 </div>
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                     <input type="text" name="email" id="email"
-                        class="w-full border border-gray-300 rounded-md px-4 py-2"
-                        value="{{ $customer->email }}">
+                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->email }}">
                 </div>
                 <div>
                     <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
                     <input type="text" name="phone" id="phone"
-                        class="w-full border border-gray-300 rounded-md px-4 py-2"
-                        value="{{ $customer->phone }}">
+                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->phone }}">
                 </div>
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
                     <input type="passsword" name="password" id="password"
-                        class="w-full border border-gray-300 rounded-md px-4 py-2"
-                        value="{{ $customer->password }}">
+                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->password }}">
                 </div>
                 <button type="submit"
                     class="w-full bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-600 transition">
@@ -74,17 +70,17 @@
                     <div>
                         <div class="text-4xl text-[#BBD3D3]">📦</div>
                         <p class="mt-2 font-semibold">Dikemas</p>
-                        <p>(0)</p>
+                        <p>({{ $dikemasCount }})</p>
                     </div>
                     <div>
                         <div class="text-4xl text-[#BBD3D3]">🚚</div>
                         <p class="mt-2 font-semibold">Dikirim</p>
-                        <p>(0)</p>
+                        <p>({{ $dikirimCount }})</p>
                     </div>
                     <div>
                         <div class="text-4xl text-[#BBD3D3]">⭐</div>
                         <p class="mt-2 font-semibold">Beri Penilaian</p>
-                        <p>(0)</p>
+                        <p>({{ $reviewCount }})</p>
                     </div>
                 </div>
             </div>
