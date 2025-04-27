@@ -4,7 +4,8 @@
     <div class="max-w-2xl mx-auto">
         <h1 class="text-2xl font-bold mb-6 text-gray-800">Tambah Bahan Custom</h1>
 
-        <form method="POST" action="{{ route('admin.custom-materials.store') }}" class="space-y-4 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <form method="POST" action="{{ route('custom-materials.store') }}" class="..."
+            class="space-y-4 bg-white p-6 rounded-lg shadow-md border border-gray-200">
             @csrf
 
             <div>

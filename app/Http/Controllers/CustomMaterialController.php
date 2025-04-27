@@ -21,16 +21,18 @@ class CustomMaterialController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name'  => 'required|string',
             'price' => 'required|numeric',
-            'stock' => 'required|integer',
+            'stock' => 'nullable|integer',
             'color' => 'nullable|string',
         ]);
 
         CustomMaterial::create([
-            'name'  => $request->name,
-            'price' => $request->price,// boleh kosong
+            'name'  => $validated['name'],
+            'price' => $validated['price'],
+            'stock' => $validated['stock'] ?? 0,
+            'color' => $validated['color'] ?? null,
         ]);
 
         return redirect('/admin/custom-materials')->with('success', 'Bahan berhasil ditambahkan.');

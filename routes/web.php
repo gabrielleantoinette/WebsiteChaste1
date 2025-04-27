@@ -78,7 +78,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/', [CustomMaterialController::class, 'view'])->name('custom-materials.view');
         Route::get('/create', [CustomMaterialController::class, 'create'])->name('custom-materials.create');
         Route::post('/create', [CustomMaterialController::class, 'store'])->name('custom-materials.store');
-        Route::post('/store', [CustomMaterialController::class, 'store'])->name('admin.custom-materials.store');
+        // Route::post('/store', [CustomMaterialController::class, 'store'])->name('admin.custom-materials.store');
         Route::get('/edit/{id}', [CustomMaterialController::class, 'edit'])->name('custom-materials.edit');
         Route::post('/edit/{id}', [CustomMaterialController::class, 'update'])->name('custom-materials.update');
         Route::post('{id}/variants', [CustomMaterialController::class, 'createVariantAction'])->name('custom-materials.variants.store');
