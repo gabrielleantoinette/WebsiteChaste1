@@ -1,105 +1,141 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checkout | CHASTE</title>
-  @vite('resources/css/app.css')
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | CHASTE</title>
+    @vite('resources/css/app.css')
 </head>
 
-<body class="bg-white font-sans text-gray-800">
-
-<!-- Header -->
+<body class="bg-gray-100 min-h-screen py-10">
 @include('layouts.customer-nav')
+    <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-6 text-center">Pengiriman & Pembayaran</h1>
 
-<!-- Checkout -->
-<section class="px-6 md:px-20 py-12">
-  <div class="max-w-5xl mx-auto border rounded-xl p-8">
-    <h2 class="text-2xl font-bold mb-6">Pengiriman & Pembayaran</h2>
+        <form action="{{ route('checkout.invoice') }}" method="POST">
+            @csrf
 
-    <div class="flex flex-col gap-8">
-      <!-- Kiri -->
-      <div class="flex flex-col gap-8">
-  <!-- Alamat -->
-  <div class="border rounded-md p-4">
-    <h3 class="font-semibold mb-2">Alamat Pengiriman</h3>
-    <p class="text-sm">Muliyasari Prima Utara VI MM-8, Mulyorejo, Jember, 68112, Jawa Timur, Indonesia</p>
-  </div>
+            <!-- Section Alamat -->
+            <section class="border p-4 rounded mb-6">
+                <h2 class="font-semibold text-lg mb-2">Alamat Pengiriman</h2>
+                <textarea name="address" id="address" rows="3" class="w-full border rounded p-2" required>{{ old('address', $alamat_default_user ?? '') }}</textarea>
+            </section>
 
-  <!-- Pesanan -->
-  <div class="border rounded-md p-4">
-    <h3 class="font-semibold mb-2">Pesanan</h3>
-    <div class="flex items-center gap-4 text-sm">
-      <img src="{{ asset('images/terpal-ayam.png') }}" class="w-14 h-14 object-cover rounded border">
-      <div class="flex-1">
-        <p class="font-medium">Terpal Ayam Jago A5</p>
-        <p>1 item - Biru</p>
-      </div>
-      <p class="font-semibold">Rp 3.700</p>
+            <!-- Section Pesanan -->
+            <section class="border p-4 rounded mb-6">
+                <h2 class="font-semibold text-lg mb-2">Pesanan</h2>
+                <div class="space-y-4">
+                @foreach ($checkoutItems as $item)
+                    @php
+                        $variant = \App\Models\ProductVariant::find($item->variant_id);
+                        $product = $variant ? $variant->product : null;
+                    @endphp
+
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-4">
+                            <img src="{{ $product ? ($product->image_url ?? 'https://via.placeholder.com/50') : 'https://via.placeholder.com/50' }}" alt="Produk" class="w-12 h-12 object-cover rounded">
+                            <div>
+                                <p class="font-semibold">{{ $product ? $product->name : 'Produk tidak ditemukan' }}</p>
+                                <p class="text-sm text-gray-600">{{ $item->quantity }} item</p>
+                            </div>
+                        </div>
+                        <p class="font-semibold">Rp {{ number_format($item->price, 0, ',', '.') }}</p>
+                    </div>
+                    <input type="hidden" name="cart_ids[]" value="{{ $item->id }}">
+                @endforeach
+                </div>
+            </section>
+
+            <!-- Section Pilihan Pengiriman -->
+            <section class="border p-4 rounded mb-6">
+                <h2 class="font-semibold text-lg mb-2">Pilihan Pengiriman</h2>
+
+                <div>
+                    <label class="flex items-center space-x-2 mb-2">
+                        <input type="radio" name="shipping_method" value="kurir" checked onclick="updateShippingCost(0)">
+                        <span>Kurir Perusahaan (khusus Surabaya Gratis)</span>
+                    </label>
+
+                    <label class="flex items-center space-x-2">
+                        <input type="radio" name="shipping_method" value="expedition" onclick="updateShippingCost(19000)">
+                        <span>Ekspedisi (Rp 19.000)</span>
+                    </label>
+                </div>
+            </section>
+
+            <script>
+                function updateShippingCost(cost) {
+                    document.getElementById('shippingCost').innerText = formatRupiah(cost);
+                    updateTotal(cost);
+                }
+
+                function updateTotal(shippingCost) {
+                    var productSubtotal = parseInt(document.getElementById('productSubtotalHidden').value);
+                    var total = productSubtotal + shippingCost;
+                    document.getElementById('totalCost').innerText = formatRupiah(total);
+                }
+
+                function formatRupiah(amount) {
+                    return "Rp " + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                }
+            </script>
+
+            <!-- Section Rincian Total Bayar -->
+            <section class="border p-4 rounded mb-6">
+                <h2 class="font-semibold text-lg mb-2">Rincian Total Bayar</h2>
+                <div class="flex justify-between mb-1">
+                    <span>Subtotal Produk</span>
+                    <span id="productSubtotal">{{ number_format($subtotalProduk, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span>Subtotal Pengiriman</span>
+                    <span id="shippingCost">{{ number_format($subtotalPengiriman, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between font-bold border-t pt-2">
+                    <span>Total Pembayaran</span>
+                    <span id="totalCost">{{ number_format($subtotalProduk + $subtotalPengiriman, 0, ',', '.') }}</span>
+                </div>
+
+                <input type="hidden" id="productSubtotalHidden" value="{{ $subtotalProduk }}">
+            </section>
+
+
+            <!-- Section Metode Pembayaran -->
+            <section class="border p-4 rounded mb-6">
+                <h2 class="font-semibold text-lg mb-2">Metode Pembayaran</h2>
+                <div class="space-y-2">
+                    <div>
+                        <label class="flex items-center space-x-2">
+                            <input type="radio" name="payment_method" value="transfer" class="accent-blue-600" required>
+                            <span>Transfer Bank</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="flex items-center space-x-2">
+                            <input type="radio" name="payment_method" value="ewallet" class="accent-blue-600">
+                            <span>E-Wallet (OVO, DANA, ShopeePay)</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="flex items-center space-x-2">
+                            <input type="radio" name="payment_method" value="cod" class="accent-blue-600">
+                            <span>COD (Bayar di Tempat)</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tombol Bayar -->
+            <div class="text-center">
+                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg w-full">
+                    Bayar
+                </button>
+            </div>
+
+        </form>
     </div>
-  </div>
 
-  <!-- Pengiriman -->
-  <div class="border rounded-md p-4">
-    <h3 class="font-semibold mb-2">Pilihan Pengiriman</h3>
-    <div class="space-y-2 text-sm">
-      <label class="flex items-center gap-2">
-        <input type="radio" name="pengiriman" checked>
-        Kurir Perusahaan (khusus Surabaya Gratis)
-      </label>
-      <label class="flex items-center gap-2">
-        <input type="radio" name="pengiriman">
-        Ekspedisi (Rp 19.000)
-      </label>
-    </div>
-  </div>
-
-  <!-- Rincian Total -->
-  <div class="border rounded-md p-4">
-    <h3 class="font-semibold mb-2">Rincian Total Bayar</h3>
-    <div class="text-sm space-y-1">
-      <div class="flex justify-between">
-        <span>Subtotal Produk</span>
-        <span>Rp 3.700</span>
-      </div>
-      <div class="flex justify-between">
-        <span>Subtotal Pengiriman</span>
-        <span>Rp 19.000</span>
-      </div>
-      <div class="border-t mt-2 pt-2 font-semibold flex justify-between">
-        <span>Total Pembayaran</span>
-        <span class="text-teal-600">Rp 22.700</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Metode Pembayaran -->
-  <div class="border rounded-md p-4">
-    <h3 class="font-semibold mb-2">Metode Pembayaran</h3>
-    <div class="space-y-2 text-sm">
-      <label class="flex items-center gap-2">
-        <input type="radio" name="pembayaran" checked> Transfer Bank
-      </label>
-      <label class="flex items-center gap-2">
-        <input type="radio" name="pembayaran"> E-Wallet (OVO, DANA, ShopeePay)
-      </label>
-      <label class="flex items-center gap-2">
-        <input type="radio" name="pembayaran"> COD (Bayar di Tempat)
-      </label>
-    </div>
-  </div>
-
-  <!-- Tombol Bayar -->
-  <div>
-    <button class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
-      Bayar
-    </button>
-  </div>
-</div>
-
-</section>
-
-<!-- Footer -->
+    <!-- Footer -->
 <footer class="bg-[#D9F2F2] py-10 px-6 md:px-20 text-sm text-gray-700 mt-20">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
     <div>
@@ -126,6 +162,5 @@
     © 2025 Hak Cipta Dilindungi
   </div>
 </footer>
-
 </body>
 </html>

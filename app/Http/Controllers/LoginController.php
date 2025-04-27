@@ -39,11 +39,16 @@ class LoginController extends Controller
         $customer = Customer::where('email', $credentials['email'])->first();
 
         if ($customer && $credentials['password'] === $customer->password) {
-            session(['user' => [
-                'id' => $customer->id,
-                'name' => $customer->name,
-                'email' => $customer->email,
-            ]]);
+            session([
+                'user' => [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'email' => $customer->email,
+                ],
+                'isLoggedIn' => true,
+                'customer_id' => $customer->id,
+                'customer_address' => $customer->address ?? '',
+            ]);
             return redirect('/produk');
         } else {
             return back()->withErrors(['email' => 'Email atau password salah.']);

@@ -11,6 +11,7 @@ use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CustomMaterialController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Support\Facades\Route;
 
@@ -39,9 +40,6 @@ Route::middleware([LoggedIn::class])->group(function () {
     Route::post('/keranjang/delete/{id}', [CartController::class, 'deleteItem'])->name('keranjang.delete');
     Route::post('/keranjang/custom/add', [CartController::class, 'addCustomItem'])->name('keranjang.custom.add');
     Route::get('/custom-terpal', [CustomMaterialController::class, 'showCustomPage'])->name('custom.terpal');
-    Route::get('/checkout', function () {
-        return view('checkout');
-    })->name('checkout');
 
     Route::get('/transaksi', [CustomerController::class, 'viewTransaction'])->name('transaksi');
     Route::get('/transaksi/detail/{id}', [CustomerController::class, 'detailTransaction'])->name('transaksi.detail');
@@ -55,6 +53,14 @@ Route::middleware([LoggedIn::class])->group(function () {
     })->name('produk.negosiasi');
 
     Route::get('/profile', [CustomerController::class, 'viewProfile'])->name('profile');
+
+    Route::post('/checkout/invoice', [InvoiceController::class, 'storeFromCheckout'])->name('checkout.invoice');
+
+    Route::get('/order-success', function () {
+        return view('order_success');
+    })->name('order.success');
+
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 });
 
 

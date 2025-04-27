@@ -11,6 +11,8 @@ use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
+use App\Models\Cart;
 // use App\Models\Invoice;
 use Barryvdh\DomPDF\Facade\Pdf;
 use stdClass;
@@ -168,5 +170,52 @@ class InvoiceController extends Controller
 
         $pdf = PDF::loadView('exports.invoices-pdf', compact('invoices'));
         return $pdf->download('laporan-invoice.pdf');
+    }
+
+    public function storeFromCheckout(Request $request)
+    {
+        $request->validate([
+            'address' => 'required|string',
+            'cart_ids' => 'required|array',
+            'shipping_method' => 'required|string',
+            'payment_method' => 'required|string',
+        ]);
+
+        $customerId = auth()->user()->id;
+
+        // Ambil semua barang yang dipilih
+        $cartItems = Cart::whereIn('id', $request->cart_ids)->get();
+
+        if ($cartItems->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada barang yang dipilih.');
+        }
+
+        // Hitung subtotal produk
+        $subtotalProduk = 0;
+        foreach ($cartItems as $item) {
+            $subtotalProduk += $item->quantity * $item->price;
+        }
+
+        // Ongkir fix misal Rp 19.000 kalau ekspedisi, Rp 0 kalau kurir perusahaan
+        $shippingCost = $request->shipping_method == 'expedition' ? 19000 : 0;
+        $grandTotal = $subtotalProduk + $shippingCost;
+
+        // Buat hinvoice baru
+        $invoice = Hinvoice::create([
+            'code' => 'INV-' . strtoupper(Str::random(8)),
+            'customer_id' => $customerId,
+            'grand_total' => $grandTotal,
+            'status' => 'Pending',
+            'address' => $request->address,
+            'is_paid' => 0,
+            'is_online' => 1,
+        ]);
+
+        // (Optional) Kalau mau simpan detail item satu-satu ke tabel lain (hinvoice_items), bisa lanjut disini
+
+        // Hapus barang di cart
+        Cart::whereIn('id', $request->cart_ids)->delete();
+
+        return redirect()->route('order.success')->with('success', 'Pesanan berhasil dibuat!');
     }
 }
