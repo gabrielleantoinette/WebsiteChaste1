@@ -208,7 +208,7 @@ class InvoiceController extends Controller
             'gudang_id' => null,
             'accountant_id' => null,
             'grand_total' => $subtotalProduk,
-            'status' => 'Menunggu',
+            'status' => 'dikemas',
             'address' => $alamat,
             'is_online' => 0,
             'created_at' => now(),
