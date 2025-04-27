@@ -199,7 +199,8 @@ class InvoiceController extends Controller
             }
         }
 
-        DB::table('hinvoice')->insert([
+        // ⬇️ Ubah ini supaya insert sekaligus ambil ID
+        $newInvoiceId = DB::table('hinvoice')->insertGetId([
             'code' => $code,
             'customer_id' => $customerId,
             'employee_id' => 1,
@@ -214,7 +215,67 @@ class InvoiceController extends Controller
             'updated_at' => now(),
         ]);
 
+        // ⬇️ Simpan ID invoice baru ke session
+        session()->put('last_invoice_id', $newInvoiceId);
+
         return redirect()->route('order.success');
+    }
+
+
+    // public function download()
+    // {
+    //     return response()->download(public_path('contoh-invoice.pdf'));
+    // }
+
+    public function viewInvoice($id)
+    {
+        $invoice = DB::table('hinvoice')->where('id', $id)->first();
+    
+        if (!$invoice) {
+            abort(404, 'Invoice tidak ditemukan.');
+        }
+    
+        // JOIN cart ke product_variants dan products untuk ambil nama produk
+        $cartItems = DB::table('cart')
+        ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+        ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
+        ->select(
+            'cart.*',
+            'products.name as product_name',
+            'products.price as product_price',  // INI PENTING!
+            'product_variants.color as variant_color'
+        )
+        ->where('cart.user_id', $invoice->customer_id)
+        ->get();
+    
+        $pdf = Pdf::loadView('exports.invoiceCust_pdf', compact('invoice', 'cartItems'));
+    
+        return $pdf->stream('Invoice-' . $invoice->code . '.pdf');
+    }
+    
+    public function downloadInvoice($id)
+    {
+        $invoice = DB::table('hinvoice')->where('id', $id)->first();
+    
+        if (!$invoice) {
+            abort(404, 'Invoice tidak ditemukan.');
+        }
+    
+        $cartItems = DB::table('cart')
+        ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+        ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
+        ->select(
+            'cart.*',
+            'products.name as product_name',
+            'products.price as product_price',  // INI PENTING!
+            'product_variants.color as variant_color'
+        )
+        ->where('cart.user_id', $invoice->customer_id)
+        ->get();
+    
+        $pdf = Pdf::loadView('exports.invoiceCust_pdf', compact('invoice', 'cartItems'));
+    
+        return $pdf->download('Invoice-' . $invoice->code . '.pdf');
     }
 
 }

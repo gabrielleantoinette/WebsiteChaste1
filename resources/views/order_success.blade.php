@@ -26,6 +26,12 @@
             <a href="{{ route('produk') }}" class="inline-block bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg">
                 Kembali Belanja
             </a>
+            <a href="{{ route('invoice.view', ['id' => session('last_invoice_id')]) }}" target="_blank" class="inline-block bg-white border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white font-semibold py-2 px-6 rounded-lg">
+                Lihat Invoice
+            </a>
+            <a href="{{ route('invoice.download', ['id' => session('last_invoice_id')]) }}" class="inline-block bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg">
+                Download Invoice
+            </a>
         </div>
     </main>
 

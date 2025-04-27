@@ -61,6 +61,10 @@ Route::middleware([LoggedIn::class])->group(function () {
     })->name('order.success');
 
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+
+    Route::get('/invoice/view/{id}', [InvoiceController::class, 'viewInvoice'])->name('invoice.view');
+    Route::get('/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('invoice.download');
+
 });
 
 
