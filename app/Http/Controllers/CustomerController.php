@@ -68,7 +68,7 @@ class CustomerController extends Controller
     public function viewTransaction()
     {
         $user = Session::get('user');
-        $transactions = HInvoice::where('customer_id', $user->id)->get();
+        $transactions = HInvoice::where('customer_id', $user['id'])->get();
         return view('transaction-list', compact('transactions'));
     }
 
