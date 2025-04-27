@@ -25,23 +25,28 @@
             <section class="border p-4 rounded mb-6">
                 <h2 class="font-semibold text-lg mb-2">Pesanan</h2>
                 <div class="space-y-4">
-                @foreach ($checkoutItems as $item)
-                    @php
-                        $variant = \App\Models\ProductVariant::find($item->variant_id);
-                        $product = $variant ? $variant->product : null;
-                    @endphp
-
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center space-x-4">
-                            <img src="{{ $product ? ($product->image_url ?? 'https://via.placeholder.com/50') : 'https://via.placeholder.com/50' }}" alt="Produk" class="w-12 h-12 object-cover rounded">
-                            <div>
-                                <p class="font-semibold">{{ $product ? $product->name : 'Produk tidak ditemukan' }}</p>
-                                <p class="text-sm text-gray-600">{{ $item->quantity }} item</p>
-                            </div>
+                @foreach ($produkItems as $item)
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <p class="font-semibold">{{ $item->product_name }}</p>
+                            <p class="text-sm text-gray-600">{{ $item->quantity }} item - Warna: {{ $item->variant_color ?? '-' }}</p>
                         </div>
-                        <p class="font-semibold">Rp {{ number_format($item->price, 0, ',', '.') }}</p>
+                        <p class="font-semibold">Rp {{ number_format($item->product_price, 0, ',', '.') }}</p>
                     </div>
-                    <input type="hidden" name="cart_ids[]" value="{{ $item->id }}">
+                @endforeach
+                @foreach ($customItems as $item)
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <p class="font-semibold">Custom Terpal: {{ $item->kebutuhan_custom }}</p>
+                            <p class="text-sm text-gray-600">
+                                Ukuran: {{ $item->ukuran_custom ?? '-' }}, 
+                                Warna: {{ $item->warna_custom ?? '-' }}, 
+                                Jumlah Ring: {{ $item->jumlah_ring_custom ?? '-' }},
+                                Tali: {{ $item->pakai_tali_custom ?? '-' }}
+                            </p>
+                        </div>
+                        <p class="font-semibold">Rp {{ number_format($item->harga_custom, 0, ',', '.') }}</p>
+                    </div>
                 @endforeach
                 </div>
             </section>
@@ -83,17 +88,20 @@
             <!-- Section Rincian Total Bayar -->
             <section class="border p-4 rounded mb-6">
                 <h2 class="font-semibold text-lg mb-2">Rincian Total Bayar</h2>
+
                 <div class="flex justify-between mb-1">
                     <span>Subtotal Produk</span>
-                    <span id="productSubtotal">{{ number_format($subtotalProduk, 0, ',', '.') }}</span>
+                    <span id="productSubtotal">Rp {{ number_format($subtotalProduk, 0, ',', '.') }}</span>
                 </div>
+
                 <div class="flex justify-between mb-1">
                     <span>Subtotal Pengiriman</span>
-                    <span id="shippingCost">{{ number_format($subtotalPengiriman, 0, ',', '.') }}</span>
+                    <span id="shippingCost">Rp 0</span> <!-- AWALNYA 0 -->
                 </div>
+
                 <div class="flex justify-between font-bold border-t pt-2">
                     <span>Total Pembayaran</span>
-                    <span id="totalCost">{{ number_format($subtotalProduk + $subtotalPengiriman, 0, ',', '.') }}</span>
+                    <span id="totalCost">Rp {{ number_format($subtotalProduk, 0, ',', '.') }}</span> <!-- TOTAL AWAL SAMA DENGAN PRODUK -->
                 </div>
 
                 <input type="hidden" id="productSubtotalHidden" value="{{ $subtotalProduk }}">

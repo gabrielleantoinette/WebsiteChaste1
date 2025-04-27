@@ -3,42 +3,76 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\ProductVariant;
 use App\Models\Cart;
+use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
     public function index()
     {
-        // Cek apakah session login ada
         if (!session()->has('isLoggedIn')) {
-            return redirect()->route('login')->with('error', 'Silahkan login dahulu untuk checkout.');
+            return redirect()->route('login')->with('error', 'Silakan login dahulu.');
         }
 
-        // Ambil id customer dari session
-        $customerId = session()->get('customer_id'); // Pastikan di loginmu simpan 'customer_id'
+        $customerId = session()->get('customer_id');
 
-        // Kalau customer_id tidak ketemu, redirect
         if (!$customerId) {
-            return redirect()->route('login')->with('error', 'Session habis, silahkan login ulang.');
+            return redirect()->route('login')->with('error', 'Session habis, silakan login ulang.');
         }
 
-        // Ambil cart items berdasarkan customer_id
-        $checkoutItems = Cart::where('user_id', $customerId)->get();
+        // Ambil barang produk biasa
+        $produkItems = DB::table('cart')
+            ->join('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+            ->join('products', 'product_variants.product_id', '=', 'products.id')
+            ->select(
+                'cart.id',
+                'cart.quantity',
+                'products.name as product_name',
+                'products.price as product_price',
+                'product_variants.color as variant_color'
+            )
+            ->where('cart.user_id', $customerId)
+            ->whereNull('cart.kebutuhan_custom')
+            ->get();
 
-        // Hitung subtotal
+        // Ambil barang custom
+        $customItems = DB::table('cart')
+            ->select(
+                'id',
+                'quantity',
+                'kebutuhan_custom',
+                'ukuran_custom',
+                'warna_custom',
+                'jumlah_ring_custom',
+                'pakai_tali_custom',
+                'catatan_custom',
+                'harga_custom'
+            )
+            ->where('user_id', $customerId)
+            ->whereNotNull('kebutuhan_custom')
+            ->get();
+
+        // Hitung subtotal produk + custom
         $subtotalProduk = 0;
-        foreach ($checkoutItems as $item) {
-            $variant = \App\Models\ProductVariant::find($item->variant_id);
-            $price = $variant ? $variant->price : 0;
-        
-            $subtotalProduk += $item->quantity * $price;
+
+        foreach ($produkItems as $item) {
+            $subtotalProduk += $item->product_price * $item->quantity;
         }
 
-        $subtotalPengiriman = 19000;
+        foreach ($customItems as $item) {
+            $subtotalProduk += $item->harga_custom * $item->quantity;
+        }
 
-        // Ambil alamat dari session (kalau kamu simpan alamat)
+        $subtotalPengiriman = 0; // default 0, berubah saat user pilih ekspedisi
         $alamat_default_user = session()->get('customer_address', '');
 
-        return view('checkout', compact('checkoutItems', 'subtotalProduk', 'subtotalPengiriman', 'alamat_default_user'));
+        return view('checkout', [
+            'produkItems' => $produkItems,
+            'customItems' => $customItems,
+            'subtotalProduk' => $subtotalProduk,
+            'subtotalPengiriman' => $subtotalPengiriman,
+            'alamat_default_user' => $alamat_default_user
+        ]);
     }
 }
