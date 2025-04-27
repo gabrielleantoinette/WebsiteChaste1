@@ -13,9 +13,9 @@ class CartController extends Controller
     public function view()
     {
         $user = Session::get('user');
-        $cart = Cart::where('user_id', $user['id'])->get();
+        $cartItems = Cart::where('user_id', $user['id'])->get(); // <- pastikan ini
 
-        return view('cart', compact('cart'));
+        return view('cart', compact('cartItems'));
     }
 
     public function addItem(Request $request, $id)
@@ -25,7 +25,7 @@ class CartController extends Controller
 
         $user = Session::get('user');
 
-        $cartExist = Cart::where('user_id', $user->id)->where('variant_id', $variantId)->first();
+        $cartExist = Cart::where('user_id', $user['id'])->where('variant_id', $variantId)->first();
 
         if ($cartExist) {
             $cartExist->quantity += $quantity;
@@ -37,7 +37,7 @@ class CartController extends Controller
             $cartExist->save();
         } else {
             Cart::create([
-                'user_id' => $user->id,
+                'user_id' => $user['id'],                
                 'variant_id' => $variantId,
                 'quantity' => $quantity,
             ]);
@@ -49,33 +49,29 @@ class CartController extends Controller
     public function addCustomItem(Request $request)
     {
         $user = Session::get('user');
-        $userId = $user ? $user['id'] : null;
-
-        if (!$userId) {
-            return back()->withErrors('User belum login.');
-        }
 
         $validated = $request->validate([
-            'bahan' => 'required|integer',
-            'warna' => 'required|string',
-            'kebutuhan' => 'required|string',
-            'panjang' => 'required|numeric',
-            'lebar' => 'required|numeric',
-            'tinggi' => 'nullable|numeric',
-            'jumlah_ring' => 'required|integer',
-            'pakai_tali' => 'nullable|boolean',
-            'catatan' => 'nullable|string',
-            'harga_custom' => 'required|numeric', // <<< tambahkan validasi harga custom
+            'harga_custom' => 'required|numeric',
+            'kebutuhan_custom' => 'nullable|string',
+            'ukuran_custom' => 'nullable|string',
+            'warna_custom' => 'nullable|string',
+            'jumlah_ring_custom' => 'nullable|string',
+            'pakai_tali_custom' => 'nullable|string',
+            'catatan_custom' => 'nullable|string',
         ]);
 
-        \DB::table('cart')->insert([
-            'user_id' => $userId,
-            'variant_id' => null, // karena ini custom, tidak ada variant
-            'quantity' => 1, // custom terpal 1 pesanan
-            'harga_custom' => $validated['harga_custom'], // simpan harga custom
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $cart = new Cart();
+        $cart->user_id = $user['id'];
+        $cart->variant_id = 0; // <== Tambahkan ini supaya aman
+        $cart->quantity = 1;
+        $cart->harga_custom = $validated['harga_custom'];
+        $cart->kebutuhan_custom = $validated['kebutuhan_custom'];
+        $cart->ukuran_custom = $validated['ukuran_custom'];
+        $cart->warna_custom = $validated['warna_custom'];
+        $cart->jumlah_ring_custom = $validated['jumlah_ring_custom'];
+        $cart->pakai_tali_custom = $validated['pakai_tali_custom'];
+        $cart->catatan_custom = $validated['catatan_custom'];
+        $cart->save();
 
         return redirect()->route('keranjang')->with('success', 'Custom Terpal berhasil ditambahkan ke keranjang.');
     }

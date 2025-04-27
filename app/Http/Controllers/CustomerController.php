@@ -81,7 +81,7 @@ class CustomerController extends Controller
     public function viewProfile()
     {
         $user = Session::get('user');
-        $customer = Customer::find($user->id);
+        $customer = Customer::find($user['id']);
         return view('profile', compact('customer'));
     }
 }
