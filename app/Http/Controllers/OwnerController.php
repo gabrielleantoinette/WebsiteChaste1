@@ -11,7 +11,7 @@ class OwnerController extends Controller
     public function viewAssignDriver()
     {
         $drivers = Employee::where('role', 'driver')->get();
-        $invoices = HInvoice::where('status', 'DIKEMAS')->orWhere('status', 'DIKIRIM')->get();
+        $invoices = HInvoice::where('status', 'dikemas')->orWhere('status', 'dikirim')->get();
         return view('admin.assign-driver.view', compact('invoices', 'drivers'));
     }
 
@@ -19,7 +19,6 @@ class OwnerController extends Controller
     {
         $invoice = HInvoice::find($id);
         $invoice->driver_id = $request->driver_id;
-        $invoice->status = 'DIKIRIM';
         $invoice->save();
 
         return redirect()->back()->with('success', 'Berhasil memilih driver');
