@@ -58,12 +58,13 @@ class CartController extends Controller
             'jumlah_ring_custom' => 'nullable|string',
             'pakai_tali_custom' => 'nullable|string',
             'catatan_custom' => 'nullable|string',
+            'quantity' => 'required|integer|min:1', // <-- TAMBAHKAN VALIDASI INI
         ]);
 
         $cart = new Cart();
         $cart->user_id = $user['id'];
-        $cart->variant_id = 0; // <== Tambahkan ini supaya aman
-        $cart->quantity = 1;
+        $cart->variant_id = 0;
+        $cart->quantity = $validated['quantity']; // <-- GANTI dari 1 menjadi dari form
         $cart->harga_custom = $validated['harga_custom'];
         $cart->kebutuhan_custom = $validated['kebutuhan_custom'];
         $cart->ukuran_custom = $validated['ukuran_custom'];
@@ -75,6 +76,7 @@ class CartController extends Controller
 
         return redirect()->route('keranjang')->with('success', 'Custom Terpal berhasil ditambahkan ke keranjang.');
     }
+
 
 
     public function deleteItem($id)

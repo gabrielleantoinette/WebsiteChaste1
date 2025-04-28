@@ -90,6 +90,15 @@
         </div>
 
         <div>
+          <label class="text-sm font-medium text-gray-700">Jumlah Barang <span class="text-red-500">*</span></label>
+          <div class="flex items-center border border-gray-300 w-max rounded-md overflow-hidden">
+            <button type="button" onclick="changeBarangQty(-1)" class="px-3 py-2 text-lg hover:bg-gray-100">-</button>
+            <input type="number" id="barangQtyInput" name="quantity" value="1" min="1" class="w-12 text-center border-l border-r border-gray-300 outline-none text-sm py-2">
+            <button type="button" onclick="changeBarangQty(1)" class="px-3 py-2 text-lg hover:bg-gray-100">+</button>
+          </div>
+        </div>
+
+        <div>
           <label class="text-sm font-medium text-gray-700">Catatan Tambahan</label>
           <textarea name="catatan" rows="3" class="w-full border border-gray-300 rounded-md p-2 text-sm resize-none"></textarea>
         </div>
@@ -175,6 +184,14 @@ function changeQty(amount) {
   calculateTotal();
 }
 
+function changeBarangQty(amount) {
+  const input = document.getElementById('barangQtyInput');
+  let val = parseInt(input.value) + amount;
+  if (val < 1) val = 1;
+  input.value = val;
+}
+
+
 const bahanSelect = document.getElementById('bahanSelect');
 const warnaSelect = document.getElementById('warnaSelect');
 const kebutuhanSelect = document.getElementById('kebutuhanSelect');
@@ -211,7 +228,10 @@ function calculateTotal() {
   const hargaRing = jumlahRing * 50;
   const keliling = 2 * (panjang + lebar);
   const hargaTali = pakaiTali ? keliling * 500 : 0;
-  const grandTotal = hargaBahan + hargaRing + hargaTali;
+  const quantity = parseInt(document.getElementById('barangQtyInput')?.value) || 1;
+  const totalPerItem = hargaBahan + hargaRing + hargaTali;
+  const grandTotal = totalPerItem * quantity;
+
 
   document.getElementById('detailBahan').innerHTML = `<span>Harga Bahan</span><span>Rp ${hargaBahan.toLocaleString('id-ID')}</span>`;
   document.getElementById('detailRing').innerHTML = `<span>Harga Ring</span><span>Rp ${hargaRing.toLocaleString('id-ID')}</span>`;
@@ -220,6 +240,16 @@ function calculateTotal() {
 
   document.getElementById('hargaCustomInput').value = Math.round(grandTotal);
   document.getElementById('rincianHarga').style.display = 'block';
+
+}
+
+function changeBarangQty(amount) {
+  const input = document.getElementById('barangQtyInput');
+  let val = parseInt(input.value) + amount;
+  if (val < 1) val = 1;
+  input.value = val;
+  calculateTotal(); // << Tambahkan ini supaya langsung update harga
+  updateHiddenInputs(); // << Sekalian update hidden inputnya
 }
 
 panjangInput.addEventListener('input', calculateTotal);
@@ -227,6 +257,11 @@ lebarInput.addEventListener('input', calculateTotal);
 tinggiInput.addEventListener('input', calculateTotal);
 jumlahRingInput.addEventListener('input', calculateTotal);
 pakaiTaliInput.addEventListener('change', calculateTotal);
+document.getElementById('barangQtyInput').addEventListener('input', () => {
+  calculateTotal();
+  updateHiddenInputs();
+});
+
 
 const rekomendasiMap = @json($rekomendasiMap);
 

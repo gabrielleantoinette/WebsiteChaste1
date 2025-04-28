@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use App\Models\Cart;
-// use App\Models\Invoice;
 use Barryvdh\DomPDF\Facade\Pdf;
 use stdClass;
 

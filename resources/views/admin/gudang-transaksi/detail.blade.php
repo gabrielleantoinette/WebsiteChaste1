@@ -62,15 +62,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($invoice->details as $detail)
-                            <tr class="border-t border-gray-200 hover:bg-gray-50">
-                                <td class="px-4 py-2">{{ $detail->id }}</td>
-                                <td class="px-4 py-2">{{ $detail->product->name }}</td>
-                                <td class="px-4 py-2">Rp {{ number_format($detail->price) }}</td>
-                                <td class="px-4 py-2">{{ $detail->variant->color }}</td>
-                                <td class="px-4 py-2">{{ $detail->quantity }}</td>
-                                <td class="px-4 py-2">Rp {{ number_format($detail->subtotal) }}</td>
-                            </tr>
+                        @foreach ($cartItems as $item)
+                        <tr class="border-t border-gray-200 hover:bg-gray-50">
+                            <td class="px-4 py-2">{{ $loop->iteration }}</td>
+                            <td class="px-4 py-2">{{ $item->product_name ?? 'Custom Terpal' }}</td>
+                            <td class="px-4 py-2">Rp {{ number_format($item->product_price ?? $item->harga_custom, 0, ',', '.') }}</td>
+                            <td class="px-4 py-2">{{ $item->variant_color ?? $item->warna_custom ?? '-' }}</td>
+                            <td class="px-4 py-2">{{ $item->quantity }}</td>
+                            <td class="px-4 py-2">Rp {{ number_format(($item->product_price ?? $item->harga_custom) * $item->quantity, 0, ',', '.') }}</td>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>
