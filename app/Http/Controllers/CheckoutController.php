@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (!session()->has('isLoggedIn')) {
             return redirect()->route('login')->with('error', 'Silakan login dahulu.');
@@ -19,6 +19,12 @@ class CheckoutController extends Controller
 
         if (!$customerId) {
             return redirect()->route('login')->with('error', 'Session habis, silakan login ulang.');
+        }
+
+        $selectedItems = $request->input('selected_items'); // Ambil dari form
+
+        if (!$selectedItems) {
+            return redirect()->route('keranjang')->with('error', 'Pilih minimal satu barang untuk checkout.');
         }
 
         // Ambil barang produk biasa
@@ -34,6 +40,7 @@ class CheckoutController extends Controller
             )
             ->where('cart.user_id', $customerId)
             ->whereNull('cart.kebutuhan_custom')
+            ->whereIn('cart.id', $selectedItems) // <<< Tambahkan filter ini
             ->get();
 
         // Ambil barang custom
@@ -51,6 +58,7 @@ class CheckoutController extends Controller
             )
             ->where('user_id', $customerId)
             ->whereNotNull('kebutuhan_custom')
+            ->whereIn('id', $selectedItems) // <<< Tambahkan filter ini
             ->get();
 
         // Hitung subtotal produk + custom

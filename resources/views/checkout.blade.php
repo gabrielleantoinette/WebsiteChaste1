@@ -24,40 +24,42 @@
             <!-- Section Pesanan -->
             <section class="border p-4 rounded mb-6">
                 <h2 class="font-semibold text-lg mb-2">Pesanan</h2>
-                <div class="space-y-4">
-                @foreach ($produkItems as $item)
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <p class="font-semibold">{{ $item->product_name }}</p>
-                        <p class="text-sm text-gray-600">
-                            {{ $item->quantity }} item - Warna: {{ $item->variant_color ?? '-' }}
-                        </p>
-                    </div>
-                    <p class="font-semibold">
-                        Rp {{ number_format(($item->product_price ?? 0) * ($item->quantity ?? 1), 0, ',', '.') }}
-                    </p>
-                </div>
-            @endforeach
-
-            @foreach ($customItems as $item)
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <p class="font-semibold">Custom Terpal: {{ $item->kebutuhan_custom }}</p>
-                        <p class="text-sm text-gray-600">
-                            Ukuran: {{ $item->ukuran_custom ?? '-' }}, 
-                            Warna: {{ $item->warna_custom ?? '-' }}, 
-                            Jumlah Ring: {{ $item->jumlah_ring_custom ?? '-' }},
-                            Tali: {{ $item->pakai_tali_custom ?? '-' }}
-                        </p>
-                    </div>
-                    <p class="font-semibold">
-                        Rp {{ number_format(($item->harga_custom ?? 0) * ($item->quantity ?? 1), 0, ',', '.') }}
-                    </p>
-                </div>
-            @endforeach
-
+                <div class="divide-y divide-gray-200"> <!-- Tambahkan divide -->
+                    @php $no = 1; @endphp <!-- Inisialisasi nomor -->
+                    
+                    @foreach ($produkItems as $item)
+                        <div class="flex justify-between items-center py-4"> <!-- Ganti mb-4 ke py-4 -->
+                            <div>
+                                <p class="font-semibold">{{ $no++ }}. {{ $item->product_name }}</p> <!-- Nomor urut -->
+                                <p class="text-sm text-gray-600">
+                                    {{ $item->quantity }} item - Warna: {{ $item->variant_color ?? '-' }}
+                                </p>
+                            </div>
+                            <p class="font-semibold">
+                                Rp {{ number_format(($item->product_price ?? 0) * ($item->quantity ?? 1), 0, ',', '.') }}
+                            </p>
+                        </div>
+                    @endforeach
+            
+                    @foreach ($customItems as $item)
+                        <div class="flex justify-between items-center py-4"> <!-- Ganti mb-4 ke py-4 -->
+                            <div>
+                                <p class="font-semibold">{{ $no++ }}. Custom Terpal: {{ $item->kebutuhan_custom }}</p> <!-- Nomor urut -->
+                                <p class="text-sm text-gray-600">
+                                    Ukuran: {{ $item->ukuran_custom ?? '-' }}, 
+                                    Warna: {{ $item->warna_custom ?? '-' }}, 
+                                    Jumlah Ring: {{ $item->jumlah_ring_custom ?? '-' }},
+                                    Tali: {{ $item->pakai_tali_custom ?? '-' }}
+                                </p>
+                            </div>
+                            <p class="font-semibold">
+                                Rp {{ number_format(($item->harga_custom ?? 0) * ($item->quantity ?? 1), 0, ',', '.') }}
+                            </p>
+                        </div>
+                    @endforeach
                 </div>
             </section>
+            
 
             <!-- Section Pilihan Pengiriman -->
             <section class="border p-4 rounded mb-6">
