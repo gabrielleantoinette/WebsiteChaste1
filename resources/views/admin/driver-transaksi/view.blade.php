@@ -33,7 +33,7 @@
                         <form method="POST" action="{{ url('/admin/driver-transaksi/finish/' . $invoice->id) }}">
                             @csrf
                             <button class="btn btn-sm btn-primary"
-                                disabled={{ $invoice->status == 'diterima' }}>Selesaikan</button>
+                                {{ $invoice->status == 'sampai' ? 'disabled' : '' }}>Selesaikan</button>
                         </form>
                     </td>
                 </tr>

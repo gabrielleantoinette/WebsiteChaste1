@@ -89,4 +89,12 @@ class CustomerController extends Controller
 
         return view('profile', compact('customer', 'dikemasCount', 'dikirimCount', 'reviewCount'));
     }
+
+    public function transaksiDiterima($id)
+    {
+        $transaction = HInvoice::find($id);
+        $transaction->status = 'diterima';
+        $transaction->save();
+        return redirect()->back();
+    }
 }

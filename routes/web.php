@@ -43,6 +43,7 @@ Route::middleware([LoggedIn::class])->group(function () {
 
     Route::get('/transaksi', [CustomerController::class, 'viewTransaction'])->name('transaksi');
     Route::get('/transaksi/detail/{id}', [CustomerController::class, 'detailTransaction'])->name('transaksi.detail');
+    Route::post('/transaksi/detail/{id}/diterima', [CustomerController::class, 'transaksiDiterima'])->name('transaksi.diterima');
     Route::get('/pesanan', function () {
         return view('pesanan');
     })->name('pesanan');
@@ -64,7 +65,6 @@ Route::middleware([LoggedIn::class])->group(function () {
 
     Route::get('/invoice/view/{id}', [InvoiceController::class, 'viewInvoice'])->name('invoice.view');
     Route::get('/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('invoice.download');
-
 });
 
 
