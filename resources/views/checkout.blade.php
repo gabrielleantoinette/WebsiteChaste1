@@ -65,12 +65,12 @@
 
                 <div>
                     <label class="flex items-center space-x-2 mb-2">
-                        <input type="radio" name="shipping_method" value="kurir" checked onclick="updateShippingCost(0)">
+                        <input type="radio" name="shipping_method" value="kurir" class="accent-teal-600" checked onclick="updateShippingCost(0)">
                         <span>Kurir Perusahaan (khusus Surabaya Gratis)</span>
                     </label>
 
                     <label class="flex items-center space-x-2">
-                        <input type="radio" name="shipping_method" value="expedition" onclick="updateShippingCost(19000)">
+                        <input type="radio" name="shipping_method" value="expedition" class="accent-teal-600" onclick="updateShippingCost(19000)">
                         <span>Ekspedisi (Rp 19.000)</span>
                     </label>
                 </div>
@@ -118,28 +118,32 @@
 
             <!-- Section Metode Pembayaran -->
             <section class="border p-4 rounded mb-6">
-                <h2 class="font-semibold text-lg mb-2">Metode Pembayaran</h2>
-                <div class="space-y-2">
+                <h2 class="font-semibold text-lg mb-2" >Metode Pembayaran</h2>
+                <div class="space-y-2 ">
                     <div>
                         <label class="flex items-center space-x-2">
-                            <input type="radio" name="payment_method" value="transfer" class="accent-blue-600" required>
+                            <input type="radio" name="payment_method" value="transfer" class="accent-teal-600" required onchange="showPaymentInfo()">
                             <span>Transfer Bank</span>
                         </label>
                     </div>
                     <div>
                         <label class="flex items-center space-x-2">
-                            <input type="radio" name="payment_method" value="ewallet" class="accent-blue-600">
+                            <input type="radio" name="payment_method" value="ewallet" class="accent-teal-600" onchange="showPaymentInfo()">
                             <span>E-Wallet (OVO, DANA, ShopeePay)</span>
                         </label>
                     </div>
                     <div>
                         <label class="flex items-center space-x-2">
-                            <input type="radio" name="payment_method" value="cod" class="accent-blue-600">
+                            <input type="radio" name="payment_method" value="cod" class="accent-teal-600" onchange="showPaymentInfo()">
                             <span>COD (Bayar di Tempat)</span>
                         </label>
                     </div>
                 </div>
+            
+                <!-- DIV KETERANGAN -->
+                <div id="paymentInfo" class="mt-4 hidden bg-teal-50 p-4 rounded text-sm text-gray-700"></div>
             </section>
+            
 
             <!-- Tombol Bayar -->
             <div class="text-center">
@@ -164,9 +168,9 @@
                 <input type="hidden" name="payment_method" value="transfer_bank">
 
                 <!-- Tombol Bayar -->
-                <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">
                     Bayar
-                </button>
+                </button>                
             </form>
 
             </div>
@@ -201,5 +205,41 @@
     © 2025 Hak Cipta Dilindungi
   </div>
 </footer>
+<script>
+    function showPaymentInfo() {
+        const paymentInfo = document.getElementById('paymentInfo');
+        const selected = document.querySelector('input[name="payment_method"]:checked');
+
+        if (!selected) {
+            paymentInfo.classList.add('hidden');
+            paymentInfo.innerHTML = '';
+            return;
+        }
+
+        if (selected.value === 'transfer') {
+            paymentInfo.innerHTML = `
+                <div>
+                    <strong>Transfer ke:</strong><br>
+                    Bank BCA - 1234567890<br>
+                    a.n PT. Chaste Gemilang Mandiri<br>
+                    <em>(Dicek Manual)</em>
+                </div>
+            `;
+            paymentInfo.classList.remove('hidden');
+        } else if (selected.value === 'ewallet') {
+            paymentInfo.innerHTML = `
+                <div>
+                    <strong>Pembayaran melalui Midtrans</strong><br>
+                    Support OVO, DANA, ShopeePay<br>
+                    <em>(Pembayaran Otomatis)</em>
+                </div>
+            `;
+            paymentInfo.classList.remove('hidden');
+        } else {
+            paymentInfo.classList.add('hidden');
+            paymentInfo.innerHTML = '';
+        }
+    }
+</script>
 </body>
 </html>
