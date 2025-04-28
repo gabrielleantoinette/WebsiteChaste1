@@ -24,13 +24,13 @@
             <!-- Section Pesanan -->
             <section class="border p-4 rounded mb-6">
                 <h2 class="font-semibold text-lg mb-2">Pesanan</h2>
-                <div class="divide-y divide-gray-200"> <!-- Tambahkan divide -->
-                    @php $no = 1; @endphp <!-- Inisialisasi nomor -->
+                <div class="divide-y divide-gray-200">
+                    @php $no = 1; @endphp
                     
                     @foreach ($produkItems as $item)
-                        <div class="flex justify-between items-center py-4"> <!-- Ganti mb-4 ke py-4 -->
+                        <div class="flex justify-between items-center py-4">
                             <div>
-                                <p class="font-semibold">{{ $no++ }}. {{ $item->product_name }}</p> <!-- Nomor urut -->
+                                <p class="font-semibold">{{ $no++ }}. {{ $item->product_name }}</p>
                                 <p class="text-sm text-gray-600">
                                     {{ $item->quantity }} item - Warna: {{ $item->variant_color ?? '-' }}
                                 </p>
@@ -42,7 +42,7 @@
                     @endforeach
             
                     @foreach ($customItems as $item)
-                        <div class="flex justify-between items-center py-4"> <!-- Ganti mb-4 ke py-4 -->
+                        <div class="flex justify-between items-center py-4">
                             <div>
                                 <p class="font-semibold">{{ $no++ }}. Custom Terpal: {{ $item->kebutuhan_custom }}</p> <!-- Nomor urut -->
                                 <p class="text-sm text-gray-600">
@@ -106,12 +106,12 @@
 
                 <div class="flex justify-between mb-1">
                     <span>Subtotal Pengiriman</span>
-                    <span id="shippingCost">Rp 0</span> <!-- AWALNYA 0 -->
+                    <span id="shippingCost">Rp 0</span> 
                 </div>
 
                 <div class="flex justify-between font-bold border-t pt-2">
                     <span>Total Pembayaran</span>
-                    <span id="totalCost">Rp {{ number_format($subtotalProduk, 0, ',', '.') }}</span> <!-- TOTAL AWAL SAMA DENGAN PRODUK -->
+                    <span id="totalCost">Rp {{ number_format($subtotalProduk, 0, ',', '.') }}</span>
                 </div>
 
                 <input type="hidden" id="productSubtotalHidden" value="{{ $subtotalProduk }}">
