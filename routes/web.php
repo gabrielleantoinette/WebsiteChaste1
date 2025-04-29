@@ -12,6 +12,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CustomMaterialController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Support\Facades\Route;
 
@@ -94,6 +95,15 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('{id}/variants', [CustomMaterialController::class, 'createVariantAction'])->name('custom-materials.variants.store');
         Route::post('/delete/{id}', [CustomMaterialController::class, 'destroy'])->name('custom-materials.destroy');
     });
+
+    Route::prefix('categories')->group(function () {
+        Route::get('/', [CategoryController::class, 'view'])->name('admin.categories.view');
+        Route::post('/create', [CategoryController::class, 'store'])->name('admin.categories.store');
+        Route::get('/edit/{id}', [CategoryController::class, 'edit'])->name('admin.categories.edit');
+        Route::post('/edit/{id}', [CategoryController::class, 'update'])->name('admin.categories.update');
+        Route::post('/delete/{id}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+    });
+    
 
     Route::prefix('employees')->group(function () {
         Route::get('/', [EmployeeController::class, 'view']);
