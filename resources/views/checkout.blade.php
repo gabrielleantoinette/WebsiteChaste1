@@ -10,6 +10,13 @@
 <body class="bg-gray-100 min-h-screen py-10">
 @include('layouts.customer-nav')
     <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <a href="{{ url()->previous() }}" 
+            class="inline-flex items-center gap-2 bg-teal-100 hover:bg-teal-200 text-teal-700 font-medium py-2 px-4 rounded-md text-sm transition">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+             </svg>
+             Kembali
+         </a>         
         <h1 class="text-2xl font-bold mb-6 text-center">Pengiriman & Pembayaran</h1>
 
         <form action="{{ route('checkout.invoice') }}" method="POST">
@@ -181,7 +188,7 @@
     </div>
 
     @include('layouts.footer')
-    
+
 <script>
     function showPaymentInfo() {
         const paymentInfo = document.getElementById('paymentInfo');

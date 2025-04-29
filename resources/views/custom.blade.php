@@ -10,7 +10,14 @@
 
 @include('layouts.customer-nav')
 
-<section class="px-6 md:px-20 py-16">
+<section class="px-6 md:px-20 py-8">
+  <a href="{{ url()->previous() }}" 
+      class="inline-flex items-center gap-2 bg-teal-100 hover:bg-teal-200 text-teal-700 font-medium py-2 px-4 rounded-md text-sm transition">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Kembali
+  </a>
   <div class="max-w-5xl mx-auto border rounded-xl p-8 bg-white">
     <h2 class="text-2xl font-bold mb-6">Custom Terpal</h2>
 

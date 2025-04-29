@@ -35,58 +35,69 @@
         <section class="py-16 bg-white">
             <div class="flex flex-col md:flex-row gap-8">
                 <!-- Sidebar Filter -->
-                <aside class="w-full md:w-1/4 space-y-8">
+                <aside class="w-full md:w-1/4 space-y-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    {{-- Kategori --}}
                     <div>
-                        <h3 class="text-lg font-semibold mb-2">Kategori</h3>
-                        <div class="space-y-2 text-sm">
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" class="form-checkbox text-teal-500"> Plastik
+                        <h3 class="text-lg font-bold text-teal-700 mb-4 border-b pb-2">Kategori</h3>
+                        <div class="space-y-3 text-sm text-gray-700">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="form-checkbox text-teal-600 focus:ring-teal-400">
+                                <span>Plastik</span>
                             </label>
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" class="form-checkbox text-teal-500"> Kain
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="form-checkbox text-teal-600 focus:ring-teal-400">
+                                <span>Kain</span>
                             </label>
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" class="form-checkbox text-teal-500"> Karet
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="form-checkbox text-teal-600 focus:ring-teal-400">
+                                <span>Karet</span>
                             </label>
                         </div>
                     </div>
-
+                
+                    {{-- Ukuran --}}
                     <div>
-                        <h3 class="text-lg font-semibold mb-2">Ukuran</h3>
-                        <div class="space-y-2 text-sm">
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" class="form-checkbox text-teal-500"> 2x3
+                        <h3 class="text-lg font-bold text-teal-700 mb-4 border-b pb-2">Ukuran</h3>
+                        <div class="space-y-3 text-sm text-gray-700">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="form-checkbox text-teal-600 focus:ring-teal-400">
+                                <span>2x3</span>
                             </label>
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" class="form-checkbox text-teal-500"> 5x7
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="form-checkbox text-teal-600 focus:ring-teal-400">
+                                <span>5x7</span>
                             </label>
                         </div>
                     </div>
-
+                
+                    {{-- Harga --}}
                     <div>
-                        <h3 class="text-lg font-semibold mb-2">Harga</h3>
-                        <div class="flex items-center gap-2 text-sm">
+                        <h3 class="text-lg font-bold text-teal-700 mb-4 border-b pb-2">Harga</h3>
+                        <div class="flex items-center gap-3 text-sm text-gray-700">
                             <input type="number" name="harga_min" placeholder="Min"
-                                class="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400">
+                                class="w-1/2 border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400">
                             <span>-</span>
                             <input type="number" name="harga_max" placeholder="Max"
-                                class="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400">
+                                class="w-1/2 border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400">
                         </div>
                     </div>
-
-
+                
+                    {{-- Warna --}}
                     <div>
-                        <h3 class="text-lg font-semibold mb-2">Warna</h3>
-                        <div class="space-y-2 text-sm">
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" class="form-checkbox text-teal-500"> Biru
+                        <h3 class="text-lg font-bold text-teal-700 mb-4 border-b pb-2">Warna</h3>
+                        <div class="space-y-3 text-sm text-gray-700">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="form-checkbox text-teal-600 focus:ring-teal-400">
+                                <span>Biru</span>
                             </label>
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" class="form-checkbox text-teal-500"> Oranye
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="form-checkbox text-teal-600 focus:ring-teal-400">
+                                <span>Oranye</span>
                             </label>
                         </div>
                     </div>
                 </aside>
+                
 
                 <!-- Grid Produk -->
                 <div class="w-full md:w-3/4">
