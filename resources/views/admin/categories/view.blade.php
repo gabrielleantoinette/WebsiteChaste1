@@ -37,10 +37,12 @@
                     <td class="py-3 px-4">{{ $loop->iteration }}</td>
                     <td class="py-3 px-4">{{ $category->name }}</td>
                     <td class="py-3 px-4 flex gap-2">
-                        <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" onsubmit="return confirm('Yakin ingin hapus kategori ini?')">
-                            @csrf
-                            <button class="text-sm px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Hapus</button>
-                        </form>
+                        @if (Session::get('user')->role !== 'admin')
+                            <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" onsubmit="return confirm('Yakin ingin hapus kategori ini?')">
+                                @csrf
+                                <button class="text-sm px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Hapus</button>
+                            </form>
+                        @endif
                         <button onclick="editCategory({{ $category->id }})"
                                 class="text-sm px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500">
                             Edit
