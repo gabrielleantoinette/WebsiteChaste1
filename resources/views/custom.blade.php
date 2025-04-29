@@ -80,7 +80,7 @@
         </div>
 
         <div>
-          <label class="text-sm font-medium text-gray-700">Jumlah Ring</label>
+          <label class="text-sm font-medium text-gray-700">Jumlah Ring (Rp 50/ring)</label>
           <div class="flex items-center border border-gray-300 w-max rounded-md overflow-hidden">
             <button type="button" onclick="changeQty(-1)" class="px-3 py-2 text-lg hover:bg-gray-100">-</button>
             <input type="number" id="qtyInput" name="jumlah_ring" value="0" min="0" class="w-12 text-center border-l border-r border-gray-300 outline-none text-sm py-2">
@@ -89,7 +89,7 @@
         </div>
 
         <div>
-          <label class="text-sm font-medium text-gray-700">Butuh Tali?</label>
+          <label class="text-sm font-medium text-gray-700">Butuh Tali? (Rp 500 x Keliling Terpal)</label>
           <div class="flex items-center gap-2">
             <input type="checkbox" name="pakai_tali" value="1">
             <span class="text-sm">Ya, perlu tali</span>
@@ -208,18 +208,23 @@ bahanSelect.addEventListener('change', function() {
 function calculateTotal() {
   const panjang = parseFloat(panjangInput.value) || 0;
   const lebar = parseFloat(lebarInput.value) || 0;
+  const tinggi = parseFloat(tinggiInput.value) || 0;
   const jumlahRing = parseInt(jumlahRingInput.value) || 0;
   const pakaiTali = pakaiTaliInput.checked;
+  const isVolume = document.getElementById('isVolumeCheckbox').checked;
 
-  const luas = panjang * lebar;
+  let luas = panjang * lebar;
+  if (isVolume && tinggi > 0) {
+    luas += 2 * (panjang * tinggi) + 2 * (lebar * tinggi);
+  }
+
   const hargaBahan = luas * selectedPrice;
   const hargaRing = jumlahRing * 50;
-  const keliling = 2 * (panjang + lebar);
+  const keliling = 2 * (panjang + lebar); // keliling tetap 2*(p+l)
   const hargaTali = pakaiTali ? keliling * 500 : 0;
   const quantity = parseInt(document.getElementById('barangQtyInput')?.value) || 1;
   const totalPerItem = hargaBahan + hargaRing + hargaTali;
   const grandTotal = totalPerItem * quantity;
-
 
   document.getElementById('detailBahan').innerHTML = `<span>Harga Bahan</span><span>Rp ${hargaBahan.toLocaleString('id-ID')}</span>`;
   document.getElementById('detailRing').innerHTML = `<span>Harga Ring</span><span>Rp ${hargaRing.toLocaleString('id-ID')}</span>`;
@@ -228,7 +233,6 @@ function calculateTotal() {
 
   document.getElementById('hargaCustomInput').value = Math.round(grandTotal);
   document.getElementById('rincianHarga').style.display = 'block';
-
 }
 
 function changeBarangQty(amount) {
@@ -236,8 +240,8 @@ function changeBarangQty(amount) {
   let val = parseInt(input.value) + amount;
   if (val < 1) val = 1;
   input.value = val;
-  calculateTotal(); // << Tambahkan ini supaya langsung update harga
-  updateHiddenInputs(); // << Sekalian update hidden inputnya
+  calculateTotal(); 
+  updateHiddenInputs();
 }
 
 panjangInput.addEventListener('input', calculateTotal);
