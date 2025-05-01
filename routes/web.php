@@ -99,11 +99,15 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     Route::prefix('categories')->group(function () {
         Route::get('/', [CategoryController::class, 'view'])->name('admin.categories.view');
         Route::post('/create', [CategoryController::class, 'store'])->name('admin.categories.store');
-        Route::get('/edit/{id}', [CategoryController::class, 'edit'])->name('admin.categories.edit');
-        Route::post('/edit/{id}', [CategoryController::class, 'update'])->name('admin.categories.update');
-        Route::post('/delete/{id}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+
+        Route::get('/detail/{id}', [CategoryController::class, 'detail'])->name('admin.categories.detail');
+        Route::post('/detail/{id}', [CategoryController::class, 'update'])->name('admin.categories.update');
+        Route::post('/detail/{id}/remove-product', [CategoryController::class, 'removeProductFromCategory'])->name('admin.categories.remove.product');
+
+        Route::get('/detail/{id}/add-product', [CategoryController::class, 'addProductView'])->name('admin.categories.add.product');
+        Route::post('/detail/{id}/add-product', [CategoryController::class, 'addProductToCategory'])->name('admin.categories.add.product');
     });
-    
+
 
     Route::prefix('employees')->group(function () {
         Route::get('/', [EmployeeController::class, 'view']);

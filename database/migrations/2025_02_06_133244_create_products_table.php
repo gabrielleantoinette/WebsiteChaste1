@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('size')->nullable();
             $table->string('image')->nullable();
             $table->boolean('live')->default(false);
+            $table->string('category_id')->nullable();
             $table->timestamps();
         });
     }

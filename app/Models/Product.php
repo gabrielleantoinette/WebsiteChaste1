@@ -16,10 +16,16 @@ class Product extends Model
         'min_price',
         'size',
         'live',
+        'category_id',
     ];
 
     public function variants()
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Categories::class);
     }
 }
