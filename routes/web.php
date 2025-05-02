@@ -105,7 +105,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/detail/{id}/remove-product', [CategoryController::class, 'removeProductFromCategory'])->name('admin.categories.remove.product');
 
         Route::get('/detail/{id}/add-product', [CategoryController::class, 'addProductView'])->name('admin.categories.add.product');
-        Route::post('/detail/{id}/add-product', [CategoryController::class, 'addProductToCategory'])->name('admin.categories.add.product');
+        Route::post('/detail/{id}/add-product', [CategoryController::class, 'addProductToCategory'])->name('admin.categories.add.product.action');
     });
 
 

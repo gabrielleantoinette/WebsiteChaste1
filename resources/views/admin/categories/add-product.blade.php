@@ -24,7 +24,7 @@
                     <tr>
                         <td>{{ $product->name }}</td>
                         <td>
-                            <form action="{{ route('admin.categories.add.product', $category->id) }}" method="POST">
+                            <form action="{{ route('admin.categories.add.product.action', $category->id) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
                                 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
