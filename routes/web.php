@@ -123,7 +123,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/create', [CustomerController::class, 'create']);
         Route::post('/create', [CustomerController::class, 'createCustomerAction']);
         Route::get('/detail/{id}', [CustomerController::class, 'detail']);
-        Route::post('/detail/{id}', [CustomerController::class, 'updateCustomerAction']);
+        Route::post('/detail/{id}', [EmployeeController::class, 'updateEmployeeAction'])->name('employees.updateEmployeeAction');
     });
 
     Route::prefix('invoices')->group(function () {

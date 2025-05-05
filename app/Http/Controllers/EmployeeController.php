@@ -57,10 +57,24 @@ class EmployeeController extends Controller
     public function updateEmployeeAction(Request $request, $id)
     {
         $employee = Employee::find($id);
+
         $employee->name = $request->name;
         $employee->email = $request->email;
         $employee->password = $request->password;
+        $employee->role = $request->role;
+        $employee->active = $request->active === "true" ? true : false;
+
+        $employee->phone = $request->phone;
+        $employee->ktp = $request->ktp;
+
+        // Ganti ke profile_picture (bukan photo)
+        if ($request->hasFile('profile_picture')) {
+            $profile_picture = $request->file('profile_picture')->store('photos', 'public');
+            $employee->profile_picture = basename($profile_picture);
+        }
+
         $employee->save();
+
         return redirect('/admin/employees/');
     }
 }
