@@ -100,6 +100,13 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Employee::create([
+            'name' => 'Keuangan',
+            'email' => 'keuangan@gmail.com',
+            'password' => '123',
+            'role' => 'keuangan',
+        ]);
+
+        Employee::create([
             'name' => 'Owner',
             'email' => 'owner@gmail.com',
             'password' => '123',
