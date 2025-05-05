@@ -116,6 +116,16 @@
                    Transaksi Gudang
                 </a>
             @endif
+
+            @if (Session::get('user')->role == 'keuangan')
+                <a href="{{ route('keuangan.view') }}"
+                class="px-4 py-2 border font-semibold rounded-md transition
+                        {{ request()->is('admin/keuangan') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                Laporan Transaksi Pembeli
+                </a>
+            @endif
+
+
         </div>
 
         <div class="flex items-center gap-2">

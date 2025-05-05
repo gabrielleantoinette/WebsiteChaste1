@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CustomMaterialController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\KeuanganController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Support\Facades\Route;
 
@@ -151,5 +152,13 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     Route::prefix('driver-transaksi')->group(function () {
         Route::get('/', [DriverController::class, 'viewTransaksiDriver']);
         Route::post('/finish/{id}', [DriverController::class, 'finishTransaksi']);
+    });
+
+    Route::prefix('keuangan')->group(function () {
+        Route::get('/', [KeuanganController::class, 'view'])->name('keuangan.view');
+        Route::get('/detail/{id}', [KeuanganController::class, 'detail'])->name('keuangan.detail');
+        Route::get('/create', [KeuanganController::class, 'create'])->name('keuangan.create');
+        Route::post('/create', [KeuanganController::class, 'store'])->name('keuangan.store');
+        Route::get('/export-pdf', [KeuanganController::class, 'exportPDF'])->name('keuangan.export.pdf');
     });
 });
