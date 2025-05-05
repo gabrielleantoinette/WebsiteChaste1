@@ -129,6 +129,25 @@
         </div>
 
         <div class="flex items-center gap-2">
+            <div class="relative cursor-pointer mr-4" onclick="toggleNotifications()">
+                <!-- Icon lonceng -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-700 hover:text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C8.67 6.165 8 7.388 8 8.75V14.158c0 .538-.214 1.055-.595 1.437L6 17h5m0 0v1a3 3 0 006 0v-1m-6 0H9" />
+                </svg>
+                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                    3
+                </span>
+            
+                <!-- Dropdown Notifikasi -->
+                <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg z-50">
+                    <ul class="text-sm text-gray-700 divide-y divide-gray-200">
+                        <li class="px-4 py-2 hover:bg-gray-50">Pesanan #123 telah dibayar</li>
+                        <li class="px-4 py-2 hover:bg-gray-50">Pembayaran menunggu konfirmasi</li>
+                        <li class="px-4 py-2 hover:bg-gray-50">Stok bahan hampir habis</li>
+                    </ul>
+                </div>
+            </div>
             <div>{{ Session::get('user')->name }}</div>
             <div>|</div>
             <div><a href="{{ url('logout') }}" class="nav-link">Logout</a></div>
@@ -160,6 +179,11 @@
             'order': []
         });
     });
+
+    function toggleNotifications() {
+        const dropdown = document.getElementById("notifDropdown");
+        dropdown.classList.toggle("hidden");
+    }
 </script>
 
 </html>
