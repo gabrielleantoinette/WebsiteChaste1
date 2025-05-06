@@ -15,7 +15,7 @@ class DashboardController extends Controller
         $employeeCount = Employee::count();
         $customerCount = Customer::count();
         $productCount  = Product::count();
-        $totalPenjualan = DInvoice::sum('subtotal');
+        $totalPenjualan = HInvoice::sum('grand_total');
         
         $recentInvoices = HInvoice::with('customer')
                             ->orderBy('created_at', 'desc')
