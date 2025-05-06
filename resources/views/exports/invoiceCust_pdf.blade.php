@@ -91,7 +91,7 @@
             <img src="{{ public_path('images/logo-perusahaan.png') }}" alt="Logo" style="height: 60px;">
             <div style="line-height: 1.5;">
                 <h2 style="margin: 0; color: #008080; font-size: 20px;">PT. Chaste Gemilang Mandiri</h2>
-                <p style="margin: 0; font-size: 13px;">123-456-7890 | hello@example.com</p>
+                <p style="margin: 0; font-size: 13px;">031-5990710 | compagreterpal@gamil.com</p>
             </div>
         </div>
     
