@@ -228,7 +228,7 @@ class InvoiceController extends Controller
 
     public function viewInvoice($id)
     {
-        $invoice = DB::table('hinvoice')->where('id', $id)->first();
+        $invoice = HInvoice::with('customer')->findOrFail($id);
     
         if (!$invoice) {
             abort(404, 'Invoice tidak ditemukan.');
