@@ -88,17 +88,22 @@
 
         <!-- Kop Surat -->
         <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+            {{-- Logo di kiri --}}
             <img src="{{ public_path('images/logo-perusahaan.png') }}" alt="Logo" style="height: 60px;">
-            <div style="line-height: 1.5;">
+        
+            {{-- Teks di kanan --}}
+            <div style="line-height: 1.4;">
                 <h2 style="margin: 0; color: #008080; font-size: 20px;">PT. Chaste Gemilang Mandiri</h2>
-                <p style="margin: 0; font-size: 13px;">031-5990710 | compagreterpal@gamil.com</p>
+                <p style="margin: 0; font-size: 13px; color: #333;">
+                    031-5990710 | compagreterpal@gmail.com
+                </p>
             </div>
         </div>
-    
-        <hr style="margin-top: 20px;">
+        
+        <hr style="margin-top: 20px;">      
     
         <!-- Judul & Info Invoice -->
-        <h2 style="color:#008080;">FAKTUR</h2>
+        <h2 style="color:#008080;">INVOICE</h2>
     
         <div class="header-info">
             <p><strong>Kepada:</strong> {{ $invoice->customer->name ?? '-' }}</p>

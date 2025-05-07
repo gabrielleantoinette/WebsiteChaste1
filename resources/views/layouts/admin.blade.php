@@ -158,6 +158,7 @@
     <div class="max-w-[90%] mx-auto pt-10">
         @yield('content')
     </div>
+    @stack('scripts')
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.2/js/jquery.dataTables.min.js"></script>

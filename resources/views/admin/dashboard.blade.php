@@ -19,7 +19,7 @@
                 <p class="text-2xl font-bold text-teal-600">{{ $employeeCount ?? 0 }}</p>
             </div>
             <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
-                <p class="text-sm text-gray-500 mb-1">Total Penjualan</p>
+                <p class="text-sm text-gray-500 mb-1">Total Penjualan Hari Ini</p>
                 <p class="text-2xl font-bold text-teal-600">Rp {{ number_format($totalPenjualan ?? 0) }}</p>
             </div>
         </div>
@@ -50,5 +50,39 @@
                 </tbody>
             </table>
         </div>
+        {{-- Grafik Penjualan 7 Hari Terakhir --}}
+<div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mt-10">
+    <h2 class="text-lg font-semibold text-gray-700 mb-4">Penjualan 7 Hari Terakhir</h2>
+    <canvas id="salesChart" height="100"></canvas>
+</div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {!! json_encode($days) !!},
+            datasets: [{
+                label: 'Total Penjualan (Rp)',
+                data: {!! json_encode($sales) !!},
+                borderColor: '#14b8a6',
+                backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+@endpush
     </div>
 @endsection

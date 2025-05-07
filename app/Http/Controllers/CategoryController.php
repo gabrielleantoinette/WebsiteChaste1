@@ -57,4 +57,18 @@ class CategoryController extends Controller
         $product->save();
         return redirect()->route('admin.categories.detail', $id)->with('success', 'Produk dihapus dari kategori.');
     }
+    public function destroy($id)
+    {
+        $category = Category::findOrFail($id);
+        
+        // Opsional: pastikan tidak ada produk yang masih pakai kategori ini
+        if ($category->products()->count() > 0) {
+            return redirect()->back()->with('error', 'Kategori tidak dapat dihapus karena masih digunakan oleh produk.');
+        }
+
+        $category->delete();
+
+        return redirect()->route('admin.categories.view')->with('success', 'Kategori berhasil dihapus.');
+    }
+
 }
