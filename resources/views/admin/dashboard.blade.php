@@ -26,7 +26,7 @@
 
         {{-- Transaksi Terbaru --}}
         <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Transaksi Terbaru</h2>
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">Transaksi Hari Ini</h2>
             <table class="w-full text-sm text-gray-700">
                 <thead class="bg-[#D9F2F2] text-gray-800 font-medium">
                     <tr>
@@ -50,39 +50,76 @@
                 </tbody>
             </table>
         </div>
-        {{-- Grafik Penjualan 7 Hari Terakhir --}}
-<div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mt-10">
-    <h2 class="text-lg font-semibold text-gray-700 mb-4">Penjualan 7 Hari Terakhir</h2>
-    <canvas id="salesChart" height="100"></canvas>
-</div>
+    {{-- Grafik Penjualan 7 Hari Terakhir --}}
+    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mt-10">
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Penjualan 7 Hari Terakhir</h2>
+        <canvas id="salesChart" height="100"></canvas>
+    </div>
+    {{-- Grafik Penjualan 30 Hari Terakhir --}}
+    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mt-10">
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Penjualan 30 Hari Terakhir</h2>
+        <canvas id="monthlySalesChart" height="100"></canvas>
+    </div>
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode($days) !!},
-            datasets: [{
-                label: 'Total Penjualan (Rp)',
-                data: {!! json_encode($sales) !!},
-                borderColor: '#14b8a6',
-                backgroundColor: 'rgba(20, 184, 166, 0.1)',
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+    {{-- Grafik Penjualan 12 Bulan Terakhir --}}
+    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mt-10">
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Penjualan 12 Bulan Terakhir</h2>
+        <canvas id="yearlySalesChart" height="100"></canvas>
+    </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Grafik 7 hari terakhir (sudah ada)
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {!! json_encode($days) !!},
+                datasets: [{
+                    label: 'Total Penjualan (Rp)',
+                    data: {!! json_encode($sales) !!},
+                    borderColor: '#14b8a6',
+                    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
             }
-        }
-    });
-</script>
-@endpush
+        });
+    
+        // Grafik 30 hari terakhir
+        const monthlyCtx = document.getElementById('monthlySalesChart').getContext('2d');
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: {!! json_encode($monthlyLabels) !!},
+                datasets: [{
+                    label: 'Total Penjualan (Rp)',
+                    data: {!! json_encode($monthlySales) !!},
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            }
+        });
+    
+        // Grafik 12 bulan terakhir
+        const yearlyCtx = document.getElementById('yearlySalesChart').getContext('2d');
+        new Chart(yearlyCtx, {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode($yearLabels) !!},
+                datasets: [{
+                    label: 'Total Penjualan (Rp)',
+                    data: {!! json_encode($yearSales) !!},
+                    backgroundColor: 'rgba(52, 211, 153, 0.6)',
+                    borderColor: '#34d399',
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+    @endpush    
     </div>
 @endsection

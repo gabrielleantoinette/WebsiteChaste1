@@ -18,9 +18,9 @@ class DashboardController extends Controller
         $totalPenjualan = HInvoice::whereDate('created_at', Carbon::today())->sum('grand_total');
 
         $recentInvoices = HInvoice::with('customer')
-                            ->orderBy('created_at', 'desc')
-                            ->take(5)
-                            ->get();
+                        ->whereDate('created_at', Carbon::today())
+                        ->orderBy('created_at', 'desc')
+                        ->get();
 
         // Data untuk grafik 7 hari terakhir
         $days = collect();
@@ -34,14 +34,37 @@ class DashboardController extends Controller
             );
         }
 
+        // Penjualan 30 hari terakhir (harian)
+        $monthlyLabels = collect();
+        $monthlySales = collect();
+
+        for ($i = 29; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i);
+            $monthlyLabels->push($date->format('d M'));
+            $monthlySales->push(
+                HInvoice::whereDate('created_at', $date)->sum('grand_total')
+            );
+        }
+
+        // Penjualan 12 bulan terakhir (bulanan)
+        $yearLabels = collect();
+        $yearSales = collect();
+
+        for ($i = 11; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $yearLabels->push($month->format('M Y'));
+            $yearSales->push(
+                HInvoice::whereYear('created_at', $month->year)
+                        ->whereMonth('created_at', $month->month)
+                        ->sum('grand_total')
+            );
+        }
+
         return view('admin.dashboard', compact(
-            'employeeCount',
-            'customerCount',
-            'productCount',
-            'totalPenjualan',
-            'recentInvoices',
-            'days',
-            'sales'
+            'employeeCount', 'customerCount', 'productCount', 'totalPenjualan',
+            'recentInvoices', 'days', 'sales',
+            'monthlyLabels', 'monthlySales', 'yearLabels', 'yearSales'
         ));
+        
     }
 }
