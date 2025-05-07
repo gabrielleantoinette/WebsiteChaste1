@@ -63,15 +63,16 @@
             <div class="mb-12 max-w-[250px]">
                 <h2 class="text-3xl font-bold text-gray-800">Penjualan<br>Terpal Terbaik</h2>
                 <p class="text-gray-600 mt-3">Langkah mudah membeli produk terpal favorit anda!</p>
-                <button class="bg-[#D9F2F2] h-[50px] text-gray-800 px-4 py-2 rounded-lg mt-4 flex items-center gap-2">
+                <a href="{{ route('produk') }}"
+                class="inline-flex bg-[#D9F2F2] h-[50px] text-gray-800 px-4 py-2 rounded-lg mt-4 items-center gap-2">
                     Lihat Lebih
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="size-6">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
                     </svg>
+                </a>
 
-                </button>
             </div>
 
             <div class="grid grid-cols-3 gap-10 grow">
@@ -156,8 +157,8 @@
                             alt="Terpal Kain">
                     </div>
                     <p class="text-sm font-medium text-gray-700">Terpal Kain</p>
-                    <a href="#"
-                        class="mt-2 inline-flex items-center gap-2 px-5 py-2 bg-white border border-gray-300 text-sm rounded-full hover:bg-gray-100 transition">
+                    <a href="{{ route('produk') }}"
+                    class="mt-2 inline-flex items-center gap-2 px-5 py-2 bg-white border border-gray-300 text-sm rounded-full hover:bg-gray-100 transition">
                         Telusuri →
                     </a>
                 </div>

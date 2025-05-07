@@ -12,14 +12,15 @@
     @include('layouts.customer-nav')
 
     <div class="max-w-4xl mx-auto py-10 px-4">
-        <a href="{{ route('transaksi') }}"
-            class="flex items-center gap-2 text-sm transition-all duration-300 hover:gap-4">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+    <div class="mb-6">
+        <a href="{{ url()->previous() }}" 
+        class="inline-flex items-center gap-2 bg-teal-100 hover:bg-teal-200 text-teal-700 font-medium py-2 px-4 rounded-md text-sm transition shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
-            Kembali ke Daftar Transaksi
+            Kembali
         </a>
+    </div>
         <h1 class="text-2xl font-bold text-center mb-8">Detail Transaksi</h1>
 
         <div class="bg-white rounded-lg shadow p-6 mb-6">

@@ -46,9 +46,15 @@ Route::middleware([LoggedIn::class])->group(function () {
     Route::get('/transaksi', [CustomerController::class, 'viewTransaction'])->name('transaksi');
     Route::get('/transaksi/detail/{id}', [CustomerController::class, 'detailTransaction'])->name('transaksi.detail');
     Route::post('/transaksi/detail/{id}/diterima', [CustomerController::class, 'transaksiDiterima'])->name('transaksi.diterima');
+    Route::get('/transaksi/status/{status}', [CustomerController::class, 'filterTransaksiByStatus'])->name('transaksi.status');
     Route::get('/pesanan', function () {
         return view('pesanan');
     })->name('pesanan');
+    Route::get('/transaksi/menunggu-pembayaran', [CustomerController::class, 'showMenungguPembayaran'])->name('transaksi.menunggupembayaran');
+    Route::get('/transaksi/dikemas', [CustomerController::class, 'showDikemas'])->name('transaksi.dikemas');
+    Route::get('/transaksi/dikirim', [CustomerController::class, 'showDikirim'])->name('transaksi.dikirim');
+    Route::get('/transaksi/beri-penilaian', [CustomerController::class, 'showBeriPenilaian'])->name('transaksi.beripenilaian');
+
 
 
     Route::get('/produk/{id}/negosiasi', function () {

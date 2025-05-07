@@ -83,11 +83,12 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $customer = Customer::find($user['id']);
 
+        $menungguPembayaranCount = HInvoice::where('customer_id', $user['id'])->where('status', 'Menunggu Pembayaran')->count();
         $dikemasCount = HInvoice::where('customer_id', $user['id'])->where('status', 'dikemas')->count();
-        $dikirimCount = HInvoice::where('customer_id', $user['id'])->where('status', 'dikirim')->count();
-        $reviewCount = HInvoice::where('customer_id', $user['id'])->where('status', 'review')->count();
+        $dikirimCount = HInvoice::where('customer_id', $user['id'])->whereIn('status', ['dikirim', 'sampai'])->count();
+        $reviewCount = HInvoice::where('customer_id', $user['id'])->where('status', 'diterima')->count();
 
-        return view('profile', compact('customer', 'dikemasCount', 'dikirimCount', 'reviewCount'));
+        return view('profile', compact('customer', 'dikemasCount', 'dikirimCount', 'reviewCount', 'menungguPembayaranCount'));
     }
 
     public function transaksiDiterima($id)
@@ -97,4 +98,59 @@ class CustomerController extends Controller
         $transaction->save();
         return redirect()->back();
     }
+
+    public function filterTransaksiByStatus($status)
+    {
+        $user = Session::get('user');
+        $customer = Customer::find($user['id']);
+        $orders = HInvoice::where('status', $status)
+                    ->where('customer_id', $user['id'])
+                    ->latest()
+                    ->get();
+
+        return view('customer.transaksi.status', compact('orders', 'status'));
+    }
+
+    public function showMenungguPembayaran()
+    {
+        $user = Session::get('user');
+        $customer = Customer::find($user['id']);
+        $orders = HInvoice::where('status', 'Menunggu Pembayaran')
+                    ->where('customer_id', $user['id'])
+                    ->latest()->get();
+        return view('menunggupembayaran', compact('orders'));
+    }
+
+    public function showDikemas()
+    {
+        $user = Session::get('user');
+        $customer = Customer::find($user['id']);
+        $orders = HInvoice::where('status', 'dikemas')
+                    ->where('customer_id', $user['id'])
+                    ->latest()->get();
+        return view('barangdikemas', compact('orders'));
+    }
+
+    public function showDikirim()
+    {
+        $user = Session::get('user');
+        $customer = Customer::find($user['id']);
+        $orders = HInvoice::whereIn('status', ['dikirim', 'sampai'])
+                  ->where('customer_id', $user['id'])
+                  ->latest()
+                  ->get();
+        return view('barangdikirim', compact('orders'));
+    }
+
+    public function showBeriPenilaian()
+    {
+        $user = Session::get('user');
+        $customer = Customer::find($user['id']);
+        $orders = HInvoice::where('status', 'diterima')
+                    ->where('customer_id', $user['id'])
+                    ->latest()->get();
+        return view('beripenilaian', compact('orders'));
+    }
+
+
 }

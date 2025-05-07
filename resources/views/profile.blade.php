@@ -85,19 +85,32 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 text-center gap-6 text-sm">
                     <div>
+                    <a href="{{ route('transaksi.menunggupembayaran') }}" class="block">
+                        <div class="text-4xl text-[#BBD3D3]">💸</div>
+                        <p class="mt-2 font-semibold">Menunggu Pembayaran</p>
+                        <p>({{ $menungguPembayaranCount }})</p>
+                    </a>
+                    </div>
+                    <div>
+                    <a href="{{ route('transaksi.dikemas') }}" class="block">
                         <div class="text-4xl text-[#BBD3D3]">📦</div>
                         <p class="mt-2 font-semibold">Dikemas</p>
                         <p>({{ $dikemasCount }})</p>
+                    </a>
                     </div>
                     <div>
+                    <a href="{{ route('transaksi.dikirim') }}" class="block">
                         <div class="text-4xl text-[#BBD3D3]">🚚</div>
                         <p class="mt-2 font-semibold">Dikirim</p>
                         <p>({{ $dikirimCount }})</p>
+                    </a>
                     </div>
                     <div>
+                    <a href="{{ route('transaksi.beripenilaian') }}" class="block">
                         <div class="text-4xl text-[#BBD3D3]">⭐</div>
                         <p class="mt-2 font-semibold">Beri Penilaian</p>
                         <p>({{ $reviewCount }})</p>
+                    </a>
                     </div>
                 </div>
             </div>
