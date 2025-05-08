@@ -14,6 +14,7 @@ use App\Http\Controllers\CustomMaterialController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\KeuanganController;
+use App\Http\Controllers\HutangController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Support\Facades\Route;
 
@@ -166,6 +167,10 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/detail/{id}', [KeuanganController::class, 'detail'])->name('keuangan.detail');
         Route::get('/create', [KeuanganController::class, 'create'])->name('keuangan.create');
         Route::post('/create', [KeuanganController::class, 'store'])->name('keuangan.store');
+        Route::get('/keuangan/hutang', [HutangController::class, 'index'])->name('keuangan.hutang.index');
+        Route::get('/keuangan/hutang/{id}', [HutangController::class, 'show'])->name('keuangan.hutang.show');
+        Route::get('/hutang/create', [HutangController::class, 'create'])->name('keuangan.hutang.create');
+        Route::post('/hutang/store', [HutangController::class, 'store'])->name('keuangan.hutang.store');               
         Route::get('/export-pdf', [KeuanganController::class, 'exportPDF'])->name('keuangan.export.pdf');
     });
 });

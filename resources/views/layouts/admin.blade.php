@@ -121,7 +121,12 @@
                 <a href="{{ route('keuangan.view') }}"
                 class="px-4 py-2 border font-semibold rounded-md transition
                         {{ request()->is('admin/keuangan') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
-                Laporan Transaksi Pembeli
+                    Laporan Transaksi Pembeli
+                </a>
+                <a href="{{ route('keuangan.hutang.index') }}"
+                class="px-4 py-2 border font-semibold rounded-md transition
+                        {{ request()->is('keuangan/hutang') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                    Hutang Supplier
                 </a>
             @endif
 
