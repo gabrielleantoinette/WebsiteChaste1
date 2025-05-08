@@ -1,140 +1,95 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Produk | CHASTE</title>
-    @vite('resources/css/app.css')
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail Produk | CHASTE</title>
+  @vite('resources/css/app.css')
 </head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased">
 
-<script>
-    function changeQty(amount) {
-        const input = document.getElementById('qtyInput');
-        let current = parseInt(input.value);
-        const min = parseInt(input.min) || 1;
+  @include('layouts.customer-nav')
 
-        if (!isNaN(current)) {
-            let newVal = current + amount;
-            if (newVal < min) newVal = min;
-            input.value = newVal;
-        }
-    }
-    let index = 0;
+  <section class="container mx-auto px-6 py-12">
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden md:flex">
+      <!-- Gambar Produk (Kotak Persegi) -->
+      <div class="md:w-1/2">
+        @php
+          $imgPath = $product->image
+            ? asset('storage/'.$product->image)
+            : asset('images/placeholder.png');
+        @endphp
+        <div class="w-full aspect-square overflow-hidden rounded-l-2xl">
+          <img
+            src="{{ $imgPath }}"
+            alt="{{ $product->name }}"
+            class="w-full h-full object-cover"
+          >
+        </div>
+      </div>
 
-    function slide(direction) {
-        const slider = document.getElementById('slider');
-        const slides = slider.children.length;
-        index += direction;
+      <!-- Details Section -->
+      <div class="md:w-1/2 p-8 space-y-6">
+        <h1 class="text-3xl font-bold text-gray-800">
+          {{ $product->name }}
+          <span class="text-lg text-gray-600">({{ $product->size }})</span>
+        </h1>
+        <p class="text-xl text-teal-600 font-semibold">
+          Rp {{ number_format($product->price, 0, ',', '.') }}
+          <span class="text-sm text-gray-500">/ unit</span>
+        </p>
+        <p class="text-gray-600">{{ $product->description }}</p>
 
-        if (index < 0) index = slides - 1;
-        if (index >= slides) index = 0;
+        <!-- Variant & Quantity -->
+        <form action="{{ route('keranjang.add') }}" method="POST" class="space-y-4">
+          @csrf
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Warna</label>
+            <select name="variant_id"
+                    class="w-full border border-gray-300 rounded-lg p-2 focus:ring-teal-400">
+              @foreach ($variants as $variant)
+                <option value="{{ $variant->id }}">{{ ucfirst($variant->color) }}</option>
+              @endforeach
+            </select>
+          </div>
 
-        slider.style.transform = `translateX(-${index * 100}%)`;
-    }
-</script>
-
-<style>
-    /* Hilangkan spinner untuk input type number di semua browser */
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
-    input[type=number] {
-        -moz-appearance: textfield;
-        /* Firefox */
-    }
-</style>
-
-
-<body class="bg-white font-sans text-gray-800">
-    <!-- Header -->
-    @include('layouts.customer-nav')
-    <div class="px-[100px] h-screen">
-        <a href="{{ url()->previous() }}" 
-            class="inline-flex items-center gap-2 bg-teal-100 hover:bg-teal-200 text-teal-700 font-medium py-2 px-4 rounded-md text-sm transition">
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-             </svg>
-             Kembali
-        </a>
-        <!-- Detail Produk -->
-        <section class="py-16 bg-white">
-            <div class="flex flex-col md:flex-row gap-10">
-                <!-- Gambar Produk -->
-                <div class="relative w-full overflow-hidden rounded-xl border border-gray-200 max-w-1/2">
-                    <div id="slider" class="flex transition-transform duration-300 ease-in-out w-[300%]">
-                        <img src="{{ asset('images/terpal-ayam.png') }}" class="w-full object-cover h-[400px]">
-                        <img src="{{ asset('images/terpal-gajah.png') }}" class="w-full object-cover h-[400px]">
-                        <img src="{{ asset('images/terpal-lumba.png') }}" class="w-full object-cover h-[400px]">
-                    </div>
-
-                    <!-- Panah -->
-                    <button onclick="slide(-1)"
-                        class="absolute left-4 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow text-xl z-10">❮</button>
-                    <button onclick="slide(1)"
-                        class="absolute right-4 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow text-xl z-10">❯</button>
-                </div>
-
-
-                <!-- Info Produk -->
-                <form method="POST" class="w-full md:w-1/2 space-y-6">
-                    @csrf
-                    <div>
-                        <h2 class="text-2xl font-bold">{{ $product->name }}</h2>
-                        <p class="text-xl text-teal-600 font-semibold mt-1">Rp {{ number_format($product->price) }}
-                        </p>
-                        <p class="text-sm text-gray-600 mt-2">{{ $product->description }}</p>
-                    </div>
-
-                    <!-- Pilih Warna -->
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Pilihan Warna</label>
-                        <select class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-teal-300"
-                            name="variant_id">
-                            @foreach ($variants as $variant)
-                                <option value="{{ $variant->id }}">{{ $variant->color }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Jumlah -->
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Jumlah</label>
-                        <div class="flex items-center border border-gray-300 w-max rounded-md overflow-hidden">
-                            <button type="button" class="px-3 py-2 text-lg hover:bg-gray-100"
-                                onclick="changeQty(-1)">-</button>
-
-                            <input type="number" id="qtyInput" value="1" min="1" name="quantity"
-                                class="w-12 text-center border-l border-r border-gray-300 outline-none text-sm py-2">
-
-                            <button type="button" class="px-3 py-2 text-lg hover:bg-gray-100"
-                                onclick="changeQty(1)">+</button>
-                        </div>
-
-                    </div>
-
-                    <!-- Tombol -->
-                    <button
-                        class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
-                        Tambah ke Keranjang
-                    </button>
-                    <a href="{{ route('produk.negosiasi', $product) }}"
-                    class="block text-center bg-gray-300 hover:bg-gray-400 text-white font-semibold py-3 rounded-md transition">
-                        Tawar Harga
-                    </a>
-
-                </form>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+            <div class="inline-flex items-center border border-gray-300 rounded-lg overflow-hidden">
+              <button type="button" onclick="changeQty(-1)"
+                      class="px-3 py-2 text-lg hover:bg-gray-100">-</button>
+              <input type="number" id="qtyInput" name="quantity" value="1" min="1"
+                     class="w-16 text-center border-l border-r border-gray-300 focus:outline-none" />
+              <button type="button" onclick="changeQty(1)"
+                      class="px-3 py-2 text-lg hover:bg-gray-100">+</button>
             </div>
-        </section>
+          </div>
 
-
+          <!-- Buttons -->
+          <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-3 sm:space-y-0">
+            <button type="submit"
+                    class="flex-1 bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition">
+              Tambah ke Keranjang
+            </button>
+            <a href="{{ route('produk.negosiasi', $product) }}"
+               class="flex-1 text-center bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition">
+              Tawar Harga
+            </a>
+          </div>
+        </form>
+      </div>
     </div>
+  </section>
 
-    @include('layouts.footer')
+  @include('layouts.footer')
 
+  <script>
+    function changeQty(amount) {
+      const input = document.getElementById('qtyInput');
+      let val = parseInt(input.value) || 1;
+      val = Math.max(val + amount, 1);
+      input.value = val;
+    }
+  </script>
 </body>
-
 </html>

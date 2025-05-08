@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
     public function view()
     {
         return view('admin.products.view', [
-            'products' => Product::all()
+            'products' => Product::all(),
         ]);
     }
 
@@ -21,64 +22,102 @@ class ProductController extends Controller
 
     public function createProductAction(Request $request)
     {
-        $product = new Product();
-        $product->name = $request->input('name');
-        $product->description = $request->input('description');
-        $product->image = $request->input('image');
-        $product->price = $request->input('price');
-        $product->size = $request->input('size');
-        $product->live = $request->input('live') == "1";
-        $product->save();
+        // 1) Validasi
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'image'       => 'nullable|image|max:2048', // max 2MB
+            'price'       => 'required|numeric|min:0',
+            'size'        => 'required|in:2x3,3x4,4x6,6x8',
+            'live'        => 'required|boolean',
+        ]);
 
-        return redirect('/admin/products');
+        // 2) Upload image jika ada
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')
+                ->store('products', 'public'); // disimpan di storage/app/public/products
+            $data['image'] = $path;
+        }
+
+        // 3) Simpan
+        Product::create($data);
+
+        return redirect()
+            ->route('admin.products.view')
+            ->with('success', 'Produk baru berhasil ditambahkan.');
     }
 
     public function detail($id)
     {
-        $product = Product::find($id);
+        $product = Product::findOrFail($id);
 
-        return view('admin.products.detail', [
-            'product' => $product,
-        ]);
+        return view('admin.products.detail', compact('product'));
     }
 
     public function updateProductAction(Request $request, $id)
     {
-        $product = Product::find($id);
-        $product->name = $request->input('name');
-        $product->description = $request->input('description');
-        $product->image = $request->input('image');
-        $product->price = $request->input('price');
-        $product->size = $request->input('size');
-        $product->live = $request->input('live');
-        $product->save();
+        // 1) Validasi
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'image'       => 'nullable|image|max:2048',
+            'price'       => 'required|numeric|min:0',
+            'size'        => 'required|in:2x3,3x4,4x6,6x8',
+            'live'        => 'required|boolean',
+        ]);
 
-        return redirect('/admin/products');
+        $product = Product::findOrFail($id);
+
+        // 2) Jika ada upload baru, hapus file lama dan simpan yang baru
+        if ($request->hasFile('image')) {
+            // hapus lama
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+            // simpan baru
+            $path = $request->file('image')->store('products', 'public');
+            $data['image'] = $path;
+        }
+
+        // 3) Update
+        $product->update($data);
+
+        return redirect()
+            ->route('admin.products.view')
+            ->with('success', 'Produk berhasil diupdate.');
     }
 
     public function updateMinPriceAction(Request $request, $id)
     {
-        $product = Product::find($id);
+        $request->validate(['min_price' => 'required|numeric|min:0']);
+        $product = Product::findOrFail($id);
         $product->min_price = $request->input('min_price');
         $product->save();
 
-        return redirect('/admin/products');
+        return redirect()
+            ->route('admin.products.view')
+            ->with('success', 'Minimal price berhasil diupdate.');
     }
 
     public function createVariant($id)
     {
-        return view('admin.products.create-variant', [
-            'product' => Product::find($id)
-        ]);
+        $product = Product::findOrFail($id);
+
+        return view('admin.products.create-variant', compact('product'));
     }
 
     public function createVariantAction(Request $request, $id)
     {
-        $product = Product::find($id);
-        $product->variants()->create([
-            'color' => $request->input('color'),
-            'stock' => $request->input('stock'),
+        $request->validate([
+            'color' => 'required|string|max:100',
+            'stock' => 'required|integer|min:0',
         ]);
-        return redirect('/admin/products/detail/' . $id);
+
+        $product = Product::findOrFail($id);
+        $product->variants()->create($request->only('color', 'stock'));
+
+        return redirect()
+            ->route('admin.products.detail', $id)
+            ->with('success', 'Variant berhasil ditambahkan.');
     }
 }

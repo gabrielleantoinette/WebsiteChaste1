@@ -5,58 +5,70 @@
     <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 max-w-xl w-full mt-6">
         <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Tambah Produk Baru</h3>
 
-        <form method="POST" class="space-y-4">
+        <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
 
             {{-- Nama Produk --}}
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nama Produk</label>
                 <input type="text" name="name" id="name" placeholder="Contoh: Terpal Gajah Surya"
-                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300">
+                    value="{{ old('name') }}"
+                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 @error('name') border-red-500 @enderror">
+                @error('name')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
 
             {{-- Deskripsi --}}
             <div>
                 <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
                 <textarea name="description" id="description" placeholder="Tulis deskripsi produk"
-                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-300"></textarea>
+                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-300 @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+                @error('description')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
 
-            {{-- Gambar --}}
+            {{-- Gambar Produk --}}
             <div>
-                <label for="image" class="block text-sm font-medium text-gray-700 mb-1">URL Gambar</label>
-                <input type="text" name="image" id="image" placeholder="https://contoh.com/terpal.jpg"
-                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300">
+                <label for="image" class="block text-sm font-medium text-gray-700 mb-1">Gambar Produk</label>
+                <input type="file" name="image" id="image" accept="image/*"
+                    class="w-full text-sm text-gray-600
+                           file:py-2 file:px-4 file:rounded file:border-0
+                           file:text-sm file:font-semibold
+                           file:bg-teal-100 file:text-teal-700
+                           hover:file:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 @error('image') file:bg-red-100 file:text-red-700 @enderror">
+                @error('image')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
 
             {{-- Harga --}}
             <div>
                 <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Harga</label>
                 <input type="number" name="price" id="price" placeholder="Contoh: 7500"
-                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300" required>
+                    value="{{ old('price') }}"
+                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 @error('price') border-red-500 @enderror" required>
+                @error('price')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
 
             {{-- Ukuran --}}
             <div>
                 <label for="size" class="block text-sm font-medium text-gray-700 mb-1">Ukuran</label>
                 <select name="size" id="size"
-                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300" required>
-                    <option selected disabled>Pilih Ukuran</option>
-                    <option value="2x3">2x3</option>
-                    <option value="3x4">3x4</option>
-                    <option value="4x6">4x6</option>
-                    <option value="6x8">6x8</option>
+                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 @error('size') border-red-500 @enderror" required>
+                    <option value="" disabled {{ old('size') ? '' : 'selected' }}>Pilih Ukuran</option>
+                    <option value="2x3" {{ old('size')=='2x3'?'selected':'' }}>2x3</option>
+                    <option value="3x4" {{ old('size')=='3x4'?'selected':'' }}>3x4</option>
+                    <option value="4x6" {{ old('size')=='4x6'?'selected':'' }}>4x6</option>
+                    <option value="6x8" {{ old('size')=='6x8'?'selected':'' }}>6x8</option>
                 </select>
+                @error('size')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
 
             {{-- Status Tampil --}}
             <div>
                 <label for="live" class="block text-sm font-medium text-gray-700 mb-1">Status Tampil</label>
                 <select name="live" id="live"
-                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300">
-                    <option value="1" selected>Tampil</option>
-                    <option value="0">Tidak Tampil</option>
+                    class="w-full border border-teal-600 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 @error('live') border-red-500 @enderror">
+                    <option value="1" {{ old('live', '1')=='1'?'selected':'' }}>Tampil</option>
+                    <option value="0" {{ old('live')=='0'?'selected':'' }}>Tidak Tampil</option>
                 </select>
+                @error('live')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
 
             {{-- Tombol Submit --}}

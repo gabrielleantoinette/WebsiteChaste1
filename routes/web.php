@@ -92,9 +92,11 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
 
     Route::prefix('products')->group(function () {
-        Route::get('/', [ProductController::class, 'view']);
+        Route::get('/', [ProductController::class, 'view'])
+         ->name('admin.products.view');
         Route::get('/create', [ProductController::class, 'create']);
-        Route::post('/create', [ProductController::class, 'createProductAction']);
+        Route::post('/create', [ProductController::class, 'createProductAction'])
+        ->name('admin.products.store');
         Route::get('/detail/{id}', [ProductController::class, 'detail']);
         Route::post('/detail/{id}', [ProductController::class, 'updateProductAction']);
         Route::get('/detail/{id}/variants/create', [ProductController::class, 'createVariant']);
