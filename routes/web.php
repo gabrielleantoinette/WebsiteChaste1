@@ -15,6 +15,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\HutangController;
+use App\Http\Controllers\NegotiationController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Support\Facades\Route;
 
@@ -59,9 +60,10 @@ Route::middleware([LoggedIn::class])->group(function () {
 
 
 
-    Route::get('/produk/{id}/negosiasi', function () {
-        return view('negosiasi');
-    })->name('produk.negosiasi');
+    Route::get('/produk/{product}/negosiasi', [NegotiationController::class, 'show'])
+     ->name('produk.negosiasi');
+    Route::post('/produk/{product}/negosiasi', [NegotiationController::class, 'tawar'])
+     ->name('produk.negosiasi.tawar');
 
     Route::get('/profile', [CustomerController::class, 'viewProfile'])->name('profile');
 

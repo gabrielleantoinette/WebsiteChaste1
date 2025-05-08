@@ -32,26 +32,54 @@
 
           <!-- Form Tawar -->
           <div class="space-y-2">
-            <label for="penawaran" class="text-sm text-gray-600">Penawaran Anda</label>
-            <div class="flex items-center gap-2">
-              <input type="number" id="penawaran" name="penawaran" placeholder="Masukkan harga tawar..."
-                    class="border rounded-md px-3 py-2 w-1/2 text-sm" />
-              <button class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-sm">Tawar</button>
-            </div>
+            <form action="{{ route('produk.negosiasi.tawar', $product) }}" method="POST" class="space-y-2">
+              @csrf
+              <label for="harga" class="text-sm text-gray-600">Penawaran Anda</label>
+              <div class="flex items-center gap-2">
+                <input 
+                  type="number" 
+                  id="harga" 
+                  name="harga" 
+                  min="1" 
+                  required
+                  placeholder="Masukkan harga tawar..."
+                  class="border rounded-md px-3 py-2 w-1/2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                  value="{{ old('harga') }}"
+                />
+                <button type="submit"
+                        class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition">
+                  Tawar
+                </button>
+              </div>
+            </form>
           </div>
 
           <!-- Hasil Negosiasi -->
-          <div>
-            <p class="font-semibold mb-1 text-sm">Hasil Negosiasi</p>
-            <div class="border rounded-md px-4 py-2 text-sm space-y-1 max-h-48 overflow-y-auto bg-white">
-              <p>Gaby #1: Rp 4.000</p>
-              <p><strong>Chaste #1:</strong> Rp 4.200</p>
-              <p>Gaby #2: Rp 3.900</p>
-              <p><strong>Chaste #2:</strong> Rp 4.100</p>
-              <p>Gaby #3: Rp 4.050</p>
-              <p><strong class="text-red-500">Chaste #3:</strong> <span class="text-red-500">Rp 4.100</span> <strong class="text-red-500">FINAL</strong></p>
-            </div>
+          <div class="mt-4 border border-gray-200 rounded p-4 bg-white text-sm space-y-2">
+            @if(isset($neg) && $neg->status)
+              @foreach([1,2,3] as $i)
+                @php
+                  $cust = "cust_nego_$i";
+                  $sell = "seller_nego_$i";
+                @endphp
+
+                @if($neg->$cust !== null)
+                  <p>
+                    <strong>You #{{ $i }}:</strong> 
+                      Rp {{ number_format($neg->$cust, 0, ',', '.') }}<br>
+                    <strong>System #{{ $i }}:</strong> 
+                      Rp {{ number_format($neg->$sell, 0, ',', '.') }}
+                    @if($neg->status === 'final' && $i === 3)
+                      <span class="text-red-600 font-bold ml-2">FINAL</span>
+                    @endif
+                  </p>
+                @endif
+              @endforeach
+            @else
+              <p class="text-gray-500">Belum ada tawaran.</p>
+            @endif
           </div>
+
 
           <!-- Tombol Deal -->
           <div class="flex gap-4">
