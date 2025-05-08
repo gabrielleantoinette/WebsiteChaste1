@@ -61,7 +61,7 @@
                                 </label>
                             </div>
                         </div>
-                    
+
                         {{-- Ukuran --}}
                         <div>
                             <h3 class="text-lg font-bold text-teal-700 mb-4 border-b pb-2">Ukuran</h3>
@@ -80,19 +80,21 @@
                                 </label>
                             </div>
                         </div>
-                    
+
                         {{-- Harga --}}
                         <div>
                             <h3 class="text-lg font-bold text-teal-700 mb-4 border-b pb-2">Harga</h3>
                             <div class="flex items-center gap-3 text-sm text-gray-700">
-                                <input type="number" name="harga_min" placeholder="Min" value="{{ request('harga_min') }}"
+                                <input type="number" name="harga_min" placeholder="Min"
+                                    value="{{ request('harga_min') }}"
                                     class="w-1/2 border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400">
                                 <span>-</span>
-                                <input type="number" name="harga_max" placeholder="Max" value="{{ request('harga_max') }}"
+                                <input type="number" name="harga_max" placeholder="Max"
+                                    value="{{ request('harga_max') }}"
                                     class="w-1/2 border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400">
                             </div>
                         </div>
-                    
+
                         {{-- Warna --}}
                         <div>
                             <h3 class="text-lg font-bold text-teal-700 mb-4 border-b pb-2">Warna</h3>
@@ -111,7 +113,7 @@
                                 </label>
                             </div>
                         </div>
-                    
+
                         {{-- Tombol Filter --}}
                         <div>
                             <button type="submit"
@@ -119,9 +121,9 @@
                                 Terapkan Filter
                             </button>
                         </div>
-                    </form>                    
+                    </form>
                 </aside>
-                
+
 
                 <!-- Grid Produk -->
                 <div class="w-full md:w-3/4">
@@ -140,13 +142,9 @@
 
                                     <!-- Gambar Produk -->
                                     <div class="relative w-full h-56">
-                                        <img
-                                            src="{{ $product->image
-                                                ? asset('storage/'.$product->image)
-                                                : asset('images/placeholder.png') }}"
+                                        <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/logo-perusahaan.png') }}"
                                             alt="{{ $product->name }}"
-                                            class="w-full h-full object-cover rounded-t-[20px]"
-                                        >
+                                            class="w-full h-full object-cover rounded-t-[20px]">
 
                                         <a href="{{ route('produk.detail', $product->id) }}"
                                             class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2

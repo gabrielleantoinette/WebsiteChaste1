@@ -15,15 +15,16 @@
     <div class="px-[100px]">
         <!-- Hero Section -->
         <section class="bg-[#D9F2F2] py-16 px-6 md:px-20 rounded-[24px] mt-[24px]">
-  <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-    
-    <!-- Text -->
-    <div class="w-full md:w-3/5 space-y-8">
-      <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-relaxed">
-        Beli terpal anda sekarang!<br>
-        Cari terpal yang <span class="font-extrabold text-teal-600">kuat, tahan air, dan siap pakai?</span> 
-  Temukan berbagai tipe dan ukuran dengan harga terbaik di sini!
-      </h1>
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+
+                <!-- Text -->
+                <div class="w-full md:w-3/5 space-y-8">
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-relaxed">
+                        Beli terpal anda sekarang!<br>
+                        Cari terpal yang <span class="font-extrabold text-teal-600">kuat, tahan air, dan siap
+                            pakai?</span>
+                        Temukan berbagai tipe dan ukuran dengan harga terbaik di sini!
+                    </h1>
 
                     <div class="flex gap-12 text-gray-700">
                         <div>
@@ -64,7 +65,7 @@
                 <h2 class="text-3xl font-bold text-gray-800">Penjualan<br>Terpal Terbaik</h2>
                 <p class="text-gray-600 mt-3">Langkah mudah membeli produk terpal favorit anda!</p>
                 <a href="{{ route('produk') }}"
-                class="inline-flex bg-[#D9F2F2] h-[50px] text-gray-800 px-4 py-2 rounded-lg mt-4 items-center gap-2">
+                    class="inline-flex bg-[#D9F2F2] h-[50px] text-gray-800 px-4 py-2 rounded-lg mt-4 items-center gap-2">
                     Lihat Lebih
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="size-6">
@@ -158,7 +159,7 @@
                     </div>
                     <p class="text-sm font-medium text-gray-700">Terpal Kain</p>
                     <a href="{{ route('produk') }}"
-                    class="mt-2 inline-flex items-center gap-2 px-5 py-2 bg-white border border-gray-300 text-sm rounded-full hover:bg-gray-100 transition">
+                        class="mt-2 inline-flex items-center gap-2 px-5 py-2 bg-white border border-gray-300 text-sm rounded-full hover:bg-gray-100 transition">
                         Telusuri →
                     </a>
                 </div>
