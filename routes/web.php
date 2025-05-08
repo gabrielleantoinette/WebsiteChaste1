@@ -172,5 +172,6 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/hutang/create', [HutangController::class, 'create'])->name('keuangan.hutang.create');
         Route::post('/hutang/store', [HutangController::class, 'store'])->name('keuangan.hutang.store');               
         Route::get('/export-pdf', [KeuanganController::class, 'exportPDF'])->name('keuangan.export.pdf');
+        Route::get('/hutang/export-pdf', [HutangController::class, 'exportPDF'])->name('keuangan.hutang.export.pdf');
     });
 });

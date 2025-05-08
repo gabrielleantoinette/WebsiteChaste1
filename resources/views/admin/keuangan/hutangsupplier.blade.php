@@ -8,12 +8,24 @@
         class="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-4 py-2 rounded">
         + Tambah PO Manual
         </a>
+        <a href="{{ route('keuangan.hutang.export.pdf') }}"
+        class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded">
+        Export PDF
+        </a>
     </div>
 
     {{-- Filter & Search (opsional, jika ingin ditambah nanti) --}}
 
     {{-- Tabel Daftar Hutang --}}
     <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <form action="{{ route('keuangan.hutang.index') }}" method="GET" class="mb-4 flex gap-2 items-center">
+            <input type="text" name="search" value="{{ request('search') }}"
+                placeholder="Cari kode PO atau nama supplier..."
+                class="border border-gray-300 px-3 py-2 rounded-md w-64">
+            <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">
+                Cari
+            </button>
+        </form>        
         <table class="min-w-full text-sm text-left">
             <thead class="bg-teal-100 text-teal-800 uppercase">
                 <tr>
@@ -52,6 +64,9 @@
                 @endforelse
             </tbody>
         </table>
+        <div class="mt-4">
+            {{ $hutang->withQueryString()->links() }}
+        </div>        
     </div>
 </div>
 @endsection

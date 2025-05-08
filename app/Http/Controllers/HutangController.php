@@ -6,16 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class HutangController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $hutang = PurchaseOrder::with('supplier')
-            ->whereIn('status', ['belum_dibayar', 'sebagian_dibayar'])
-            ->orderBy('due_date', 'asc')
-            ->get();
+            $query = PurchaseOrder::with('supplier')
+            ->whereIn('status', ['belum_dibayar', 'sebagian_dibayar']);
+
+        if ($request->has('search') && $request->search != '') {
+            $query->where(function ($q) use ($request) {
+                $q->where('code', 'like', '%' . $request->search . '%')
+                ->orWhereHas('supplier', function ($q2) use ($request) {
+                    $q2->where('name', 'like', '%' . $request->search . '%');
+                });
+            });
+        }
+
+        $hutang = $query->orderBy('due_date', 'asc')->paginate(5); // tampilkan 5 per halaman
 
         return view('admin.keuangan.hutangsupplier', compact('hutang'));
     }
@@ -57,4 +67,23 @@ class HutangController extends Controller
 
         return redirect()->route('keuangan.hutang.index')->with('success', 'PO berhasil ditambahkan.');
     }
+
+    public function exportPDF()
+    {
+        $hutang = PurchaseOrder::with('supplier')
+        ->whereIn('status', ['belum_dibayar', 'sebagian_dibayar'])
+        ->orderBy('due_date', 'asc')
+        ->get();
+
+        $total = $hutang->sum('total');
+
+        $pdf = Pdf::loadView('exports.hutangsupplier_pdf', [
+            'hutang' => $hutang,
+            'total' => $total,
+            'tanggal' => now()->format('d M Y H:i')
+        ]);
+
+        return $pdf->download('laporan_piutang_supplier_'.now()->format('Ymd').'.pdf');
+    }
+
 }
