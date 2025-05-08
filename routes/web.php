@@ -32,7 +32,8 @@ Route::post('register', [LoginController::class, 'register']);
 Route::get('/api/custom-materials/{id}/colors', [CustomMaterialController::class, 'getColors']);
 
 Route::middleware([LoggedIn::class])->group(function () {
-    Route::get('/produk', [CustomerController::class, 'viewProducts'])->name('produk');
+    Route::get('/produk', [CustomerController::class, 'produk'])->name('produk');
+    // Route::get('/produk', [CustomerController::class, 'viewProducts'])->name('produk');
     Route::get('/produk/{id}', [CustomerController::class, 'detailProduct'])->name('produk.detail');
     Route::post('/produk/{id}', [CartController::class, 'addItem'])->name('produk.add');
     Route::get('/custom-terpal', [CustomMaterialController::class, 'customTerpal'])->name('custom.terpal');

@@ -58,6 +58,39 @@ class CustomerController extends Controller
         return view('produk', compact('products'));
     }
 
+    public function produk(Request $request)
+    {
+        $products = Product::query();
+
+        // Filter kategori berdasarkan ID
+        if ($request->has('kategori')) {
+            $kategoriMap = ['plastik' => 1, 'kain' => 2, 'karet' => 3];
+            $kategoriIds = collect($request->kategori)->map(fn($key) => $kategoriMap[$key] ?? null)->filter();
+            $products->whereIn('category_id', $kategoriIds);
+        }
+
+        // Filter ukuran
+        if ($request->has('ukuran')) {
+            $products->whereIn('size', $request->input('ukuran'));
+        }
+
+        // Filter harga
+        if ($request->filled('harga_min')) {
+            $products->where('price', '>=', $request->harga_min);
+        }
+
+        if ($request->filled('harga_max')) {
+            $products->where('price', '<=', $request->harga_max);
+        }
+
+        // Warna: bisa ditambahkan jika kamu sudah punya kolom `color` atau relasi warna
+
+        $products = $products->paginate(9);
+
+        return view('produk', compact('products'));
+    }
+
+
     public function detailProduct($id)
     {
         $product = Product::find($id);
