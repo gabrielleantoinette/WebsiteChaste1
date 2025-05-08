@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'midtrans' => [
+        'serverKey'     => "SB-Mid-server-GkW-oS9nOpd2CktkXZve26qV",
+        'clientKey'     => "SB-Mid-client-_63DbX6J3paRjarh",
+        'isProduction'  => false,
+        'isSanitized'   => true,
+        'is3ds'         => true,
+    ],
+
 ];

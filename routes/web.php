@@ -17,6 +17,7 @@ use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\HutangController;
 use App\Http\Controllers\NegotiationController;
 use App\Http\Middleware\LoggedIn;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -61,23 +62,24 @@ Route::middleware([LoggedIn::class])->group(function () {
 
 
     Route::get('/produk/{product}/negosiasi', [NegotiationController::class, 'show'])
-     ->name('produk.negosiasi');
+        ->name('produk.negosiasi');
     Route::post('/produk/{product}/negosiasi', [NegotiationController::class, 'tawar'])
-     ->name('produk.negosiasi.tawar');
+        ->name('produk.negosiasi.tawar');
     // routes/web.php
     Route::post(
         '/produk/{product}/negosiasi/reset',
         [NegotiationController::class, 'reset']
     )->name('produk.negosiasi.reset')
         ->middleware(LoggedIn::class);
-  
+
 
     Route::get('/profile', [CustomerController::class, 'viewProfile'])->name('profile');
 
     Route::post('/checkout/invoice', [InvoiceController::class, 'storeFromCheckout'])->name('checkout.invoice');
 
-    Route::get('/order-success', function () {
-        return view('order_success');
+    Route::get('/order-success', function (Request $request) {
+        $snapToken = $request->query('snapToken');
+        return view('order_success', compact('snapToken'));
     })->name('order.success');
 
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
@@ -93,10 +95,10 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
 
     Route::prefix('products')->group(function () {
         Route::get('/', [ProductController::class, 'view'])
-         ->name('admin.products.view');
+            ->name('admin.products.view');
         Route::get('/create', [ProductController::class, 'create']);
         Route::post('/create', [ProductController::class, 'createProductAction'])
-        ->name('admin.products.store');
+            ->name('admin.products.store');
         Route::get('/detail/{id}', [ProductController::class, 'detail']);
         Route::post('/detail/{id}', [ProductController::class, 'updateProductAction']);
         Route::get('/detail/{id}/variants/create', [ProductController::class, 'createVariant']);
@@ -182,7 +184,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/keuangan/hutang', [HutangController::class, 'index'])->name('keuangan.hutang.index');
         Route::get('/keuangan/hutang/{id}', [HutangController::class, 'show'])->name('keuangan.hutang.show');
         Route::get('/hutang/create', [HutangController::class, 'create'])->name('keuangan.hutang.create');
-        Route::post('/hutang/store', [HutangController::class, 'store'])->name('keuangan.hutang.store');               
+        Route::post('/hutang/store', [HutangController::class, 'store'])->name('keuangan.hutang.store');
         Route::get('/export-pdf', [KeuanganController::class, 'exportPDF'])->name('keuangan.export.pdf');
         Route::get('/hutang/export-pdf', [HutangController::class, 'exportPDF'])->name('keuangan.hutang.export.pdf');
     });

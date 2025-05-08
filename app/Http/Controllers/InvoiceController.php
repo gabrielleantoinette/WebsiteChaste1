@@ -13,11 +13,25 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use App\Models\Cart;
+use App\Models\PaymentModel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Midtrans\Config;
+use Midtrans\Snap;
 use stdClass;
 
 class InvoiceController extends Controller
 {
+    protected $request;
+    public function __construct(Request $request)
+    {
+        $this->request = $request;
+        // Set midtrans configuration
+        Config::$serverKey = 'SB-Mid-server-GkW-oS9nOpd2CktkXZve26qV';
+        Config::$isProduction = false;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
+    }
+
     public function view()
     {
         $invoices = HInvoice::all();
@@ -214,10 +228,42 @@ class InvoiceController extends Controller
             'updated_at' => now(),
         ]);
 
+        // Midtrans
+        $customer = Customer::find($customerId);
+        $payload = [
+            'transaction_details' => [
+                'order_id'      => $newInvoiceId,
+                'gross_amount'  => $subtotalProduk,
+            ],
+            'customer_details' => [
+                'first_name'    => $customer->name,
+                'email'         => $customer->email,
+                // 'phone'         => '08888888888',
+                // 'address'       => '',
+            ],
+            'item_details' => [
+                [
+                    'id'       => $newInvoiceId,
+                    'price'    => $subtotalProduk,
+                    'quantity' => 1,
+                    'name'     => 'Invoice ' . $code
+                ]
+            ]
+        ];
+        $snapToken = Snap::getSnapToken($payload);
+
+        $newPayment = new PaymentModel();
+        $newPayment->invoice_id = $newInvoiceId;
+        $newPayment->method = 'midtrans';
+        $newPayment->amount = $subtotalProduk;
+        $newPayment->snap_token = $snapToken;
+        $newPayment->status = 'waiting';
+        $newPayment->save();
+
         // ⬇️ Simpan ID invoice baru ke session
         session()->put('last_invoice_id', $newInvoiceId);
 
-        return redirect()->route('order.success');
+        return redirect()->route('order.success', ['snapToken' => $snapToken]);
     }
 
 
@@ -229,52 +275,51 @@ class InvoiceController extends Controller
     public function viewInvoice($id)
     {
         $invoice = HInvoice::with('customer')->findOrFail($id);
-    
+
         if (!$invoice) {
             abort(404, 'Invoice tidak ditemukan.');
         }
-    
+
         // JOIN cart ke product_variants dan products untuk ambil nama produk
         $cartItems = DB::table('cart')
-        ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
-        ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
-        ->select(
-            'cart.*',
-            'products.name as product_name',
-            'products.price as product_price',  // INI PENTING!
-            'product_variants.color as variant_color'
-        )
-        ->where('cart.user_id', $invoice->customer_id)
-        ->get();
-    
+            ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+            ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
+            ->select(
+                'cart.*',
+                'products.name as product_name',
+                'products.price as product_price',  // INI PENTING!
+                'product_variants.color as variant_color'
+            )
+            ->where('cart.user_id', $invoice->customer_id)
+            ->get();
+
         $pdf = Pdf::loadView('exports.invoiceCust_pdf', compact('invoice', 'cartItems'));
-    
+
         return $pdf->stream('Invoice-' . $invoice->code . '.pdf');
     }
-    
+
     public function downloadInvoice($id)
     {
         $invoice = DB::table('hinvoice')->where('id', $id)->first();
-    
+
         if (!$invoice) {
             abort(404, 'Invoice tidak ditemukan.');
         }
-    
+
         $cartItems = DB::table('cart')
-        ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
-        ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
-        ->select(
-            'cart.*',
-            'products.name as product_name',
-            'products.price as product_price',  // INI PENTING!
-            'product_variants.color as variant_color'
-        )
-        ->where('cart.user_id', $invoice->customer_id)
-        ->get();
-    
+            ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+            ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
+            ->select(
+                'cart.*',
+                'products.name as product_name',
+                'products.price as product_price',  // INI PENTING!
+                'product_variants.color as variant_color'
+            )
+            ->where('cart.user_id', $invoice->customer_id)
+            ->get();
+
         $pdf = Pdf::loadView('exports.invoiceCust_pdf', compact('invoice', 'cartItems'));
-    
+
         return $pdf->download('Invoice-' . $invoice->code . '.pdf');
     }
-
 }

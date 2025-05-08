@@ -18,7 +18,7 @@ class CartController extends Controller
         return view('cart', compact('cartItems'));
     }
 
-    public function addItem(Request $request, $id)
+    public function addItem(Request $request)
     {
         $variantId = $request->variant_id;
         $quantity = $request->quantity;
@@ -37,7 +37,7 @@ class CartController extends Controller
             $cartExist->save();
         } else {
             Cart::create([
-                'user_id' => $user['id'],                
+                'user_id' => $user['id'],
                 'variant_id' => $variantId,
                 'quantity' => $quantity,
             ]);
