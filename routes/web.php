@@ -64,6 +64,13 @@ Route::middleware([LoggedIn::class])->group(function () {
      ->name('produk.negosiasi');
     Route::post('/produk/{product}/negosiasi', [NegotiationController::class, 'tawar'])
      ->name('produk.negosiasi.tawar');
+    // routes/web.php
+    Route::post(
+        '/produk/{product}/negosiasi/reset',
+        [NegotiationController::class, 'reset']
+    )->name('produk.negosiasi.reset')
+        ->middleware(LoggedIn::class);
+  
 
     Route::get('/profile', [CustomerController::class, 'viewProfile'])->name('profile');
 

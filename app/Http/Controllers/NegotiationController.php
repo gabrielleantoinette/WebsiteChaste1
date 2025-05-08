@@ -86,4 +86,19 @@ class NegotiationController extends Controller
 
     }
 
+    public function reset(Product $product)
+    {
+        $user = Session::get('user');
+        $userId = is_array($user) ? $user['id'] : $user->id;
+
+        // Hapus record negosiasi untuk user + product
+        NegotiationTable::where('user_id', $userId)
+                        ->where('product_id', $product->id)
+                        ->delete();
+
+        return redirect()
+            ->route('produk.negosiasi', $product)
+            ->with('success', 'Negosiasi telah di-reset.');
+    }
+
 }
