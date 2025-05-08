@@ -5,10 +5,26 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ProductVariant;
 use App\Models\Cart;
+use App\Models\Customer;
+use App\Models\OrderModel;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 class CheckoutController extends Controller
 {
+    protected $request;
+    public function __construct(Request $request)
+    {
+        $this->request = $request;
+        // Set midtrans configuration
+        Config::$serverKey = 'SB-Mid-server-GkW-oS9nOpd2CktkXZve26qV';
+        Config::$isProduction = false;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
+    }
+
     public function index(Request $request)
     {
         if (!session()->has('isLoggedIn')) {
@@ -26,7 +42,6 @@ class CheckoutController extends Controller
         if (!$selectedItems) {
             return redirect()->route('keranjang')->with('error', 'Pilih minimal satu barang untuk checkout.');
         }
-
         // Ambil barang produk biasa
         $produkItems = DB::table('cart')
             ->join('product_variants', 'cart.variant_id', '=', 'product_variants.id')
@@ -61,26 +76,64 @@ class CheckoutController extends Controller
             ->whereIn('id', $selectedItems) // <<< Tambahkan filter ini
             ->get();
 
+        $cartIds = [];
+
         // Hitung subtotal produk + custom
         $subtotalProduk = 0;
 
         foreach ($produkItems as $item) {
             $subtotalProduk += $item->product_price * $item->quantity;
+            $cartIds[] = $item->id;
         }
 
         foreach ($customItems as $item) {
             $subtotalProduk += $item->harga_custom * $item->quantity;
+            $cartIds[] = $item->id;
         }
 
         $subtotalPengiriman = 0; // default 0, berubah saat user pilih ekspedisi
         $alamat_default_user = session()->get('customer_address', '');
+
+        // midtrans
+        $customer = Customer::find(Session::get('user')['id']);
+
+        $newOrder = new OrderModel();
+        $newOrder->cart_ids = json_encode($cartIds);
+        $newOrder->customer_id = $customer->id;
+        $newOrder->payment_method = 'transfer_bank';
+        $newOrder->address = $alamat_default_user;
+        $newOrder->save();
+
+        $payload = [
+            'transaction_details' => [
+                'order_id'      => $newOrder->id,
+                'gross_amount'  => $subtotalProduk,
+            ],
+            'customer_details' => [
+                'first_name'    => $customer->name,
+                'email'         => $customer->email,
+                // 'phone'         => '08888888888',
+                // 'address'       => '',
+            ],
+            'item_details' => [
+                [
+                    'id'       => $newOrder->id,
+                    'price'    => $subtotalProduk,
+                    'quantity' => 1,
+                    'name'     => 'Order ' . $newOrder->id
+                ]
+            ]
+        ];
+        $snapToken = Snap::getSnapToken($payload);
 
         return view('checkout', [
             'produkItems' => $produkItems,
             'customItems' => $customItems,
             'subtotalProduk' => $subtotalProduk,
             'subtotalPengiriman' => $subtotalPengiriman,
-            'alamat_default_user' => $alamat_default_user
+            'alamat_default_user' => $alamat_default_user,
+            'snapToken' => $snapToken,
+            'orderId' => $newOrder->id
         ]);
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use App\Models\Cart;
+use App\Models\OrderModel;
 use App\Models\PaymentModel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Midtrans\Config;
@@ -264,6 +265,58 @@ class InvoiceController extends Controller
         session()->put('last_invoice_id', $newInvoiceId);
 
         return redirect()->route('order.success', ['snapToken' => $snapToken]);
+    }
+
+    public function storeFromCheckoutGet(Request $request)
+    {
+        $orderId = $request->query('orderId');
+        $order = OrderModel::find($orderId);
+        $cartIds = json_decode($order->cart_ids);
+
+        $customerId = session()->get('customer_id');
+        $alamat = $order->address;
+
+        $code = 'INV-' . date('Ymd') . '-' . Str::random(5);
+
+        $subtotalProduk = 0;
+
+        if ($request->has('cart_ids')) {
+            $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+
+            foreach ($carts as $cart) {
+                if ($cart->variant_id) {
+                    $product = DB::table('product_variants')
+                        ->join('products', 'product_variants.product_id', '=', 'products.id')
+                        ->where('product_variants.id', $cart->variant_id)
+                        ->select('products.price')
+                        ->first();
+                    $subtotalProduk += ($product->price ?? 0) * $cart->quantity;
+                } elseif ($cart->kebutuhan_custom) {
+                    $subtotalProduk += ($cart->harga_custom ?? 0) * $cart->quantity;
+                }
+            }
+        }
+
+        // ⬇️ Ubah ini supaya insert sekaligus ambil ID
+        $newInvoiceId = DB::table('hinvoice')->insertGetId([
+            'code' => $code,
+            'customer_id' => $customerId,
+            'employee_id' => 1,
+            'driver_id' => null,
+            'gudang_id' => null,
+            'accountant_id' => null,
+            'grand_total' => $subtotalProduk,
+            'status' => 'dikemas',
+            'address' => $alamat,
+            'is_online' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // ⬇️ Simpan ID invoice baru ke session
+        session()->put('last_invoice_id', $newInvoiceId);
+
+        return redirect()->route('order.success');
     }
 
 

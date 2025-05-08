@@ -187,7 +187,7 @@
                     <input type="hidden" name="payment_method" value="transfer_bank">
 
                     <!-- Tombol Bayar -->
-                    <button type="submit"
+                    <button id="pay-button" type="button"
                         class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">
                         Bayar
                     </button>
@@ -200,6 +200,31 @@
 
     @include('layouts.footer')
 
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-_63DbX6J3paRjarh"></script>
+    <script type="text/javascript">
+        var payButton = document.getElementById('pay-button');
+        payButton.addEventListener('click', function() {
+            window.snap.pay("{{ $snapToken }}", {
+                onSuccess: function(result) {
+                    alert("Pembayaran berhasil!");
+                    console.log(result);
+
+                    window.location.href = "/checkout/invoice?orderId={{ $orderId }}";
+                },
+                onPending: function(result) {
+                    alert("Menunggu pembayaran!");
+                    console.log(result);
+                },
+                onError: function(result) {
+                    alert("Pembayaran gagal!");
+                    console.log(result);
+                },
+                onClose: function() {
+                    alert('Anda menutup pop-up tanpa menyelesaikan pembayaran');
+                }
+            });
+        });
+    </script>
     <script>
         function showPaymentInfo() {
             const paymentInfo = document.getElementById('paymentInfo');

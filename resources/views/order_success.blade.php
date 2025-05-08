@@ -27,52 +27,24 @@
             <p class="text-gray-600 mb-6">Pesanan kamu telah berhasil dibuat. Tim kami akan segera memprosesnya!</p>
 
             <div class="grid grid-cols-2 gap-4">
-                <a href="{{ route('produk') }}"
-                    class="inline-block bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg">
-                    Kembali Belanja
-                </a>
                 <a href="{{ route('invoice.view', ['id' => session('last_invoice_id')]) }}" target="_blank"
-                    class="inline-block bg-white border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white font-semibold py-2 px-6 rounded-lg">
+                    class="text-sm bg-white border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white font-semibold py-2 px-6 rounded-lg">
                     Lihat Invoice
                 </a>
                 <a href="{{ route('invoice.download', ['id' => session('last_invoice_id')]) }}"
-                    class="inline-block bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg">
+                    class="text-sm bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg">
                     Download Invoice
                 </a>
-                <button id="pay-button"
-                    class="inline-block bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg">
-                    Bayar Sekarang
-                </button>
+                <a href="{{ route('produk') }}"
+                    class="text-sm bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg col-span-2">
+                    Kembali Belanja
+                </a>
             </div>
 
         </div>
     </main>
 
     @include('layouts.footer')
-
-    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-_63DbX6J3paRjarh"></script>
-    <script type="text/javascript">
-        var payButton = document.getElementById('pay-button');
-        payButton.addEventListener('click', function() {
-            window.snap.pay("{{ $snapToken }}", {
-                onSuccess: function(result) {
-                    alert("Pembayaran berhasil!");
-                    console.log(result);
-                },
-                onPending: function(result) {
-                    alert("Menunggu pembayaran!");
-                    console.log(result);
-                },
-                onError: function(result) {
-                    alert("Pembayaran gagal!");
-                    console.log(result);
-                },
-                onClose: function() {
-                    alert('Anda menutup pop-up tanpa menyelesaikan pembayaran');
-                }
-            });
-        });
-    </script>
 </body>
 
 </html>
