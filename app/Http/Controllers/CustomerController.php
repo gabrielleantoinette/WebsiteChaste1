@@ -60,7 +60,7 @@ class CustomerController extends Controller
 
     public function produk(Request $request)
     {
-        $products = Product::query();
+        $products = Product::where('live', true);
 
         // Filter kategori berdasarkan ID
         if ($request->has('kategori')) {
@@ -137,9 +137,9 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $customer = Customer::find($user['id']);
         $orders = HInvoice::where('status', $status)
-                    ->where('customer_id', $user['id'])
-                    ->latest()
-                    ->get();
+            ->where('customer_id', $user['id'])
+            ->latest()
+            ->get();
 
         return view('customer.transaksi.status', compact('orders', 'status'));
     }
@@ -149,8 +149,8 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $customer = Customer::find($user['id']);
         $orders = HInvoice::where('status', 'Menunggu Pembayaran')
-                    ->where('customer_id', $user['id'])
-                    ->latest()->get();
+            ->where('customer_id', $user['id'])
+            ->latest()->get();
         return view('menunggupembayaran', compact('orders'));
     }
 
@@ -159,8 +159,8 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $customer = Customer::find($user['id']);
         $orders = HInvoice::where('status', 'dikemas')
-                    ->where('customer_id', $user['id'])
-                    ->latest()->get();
+            ->where('customer_id', $user['id'])
+            ->latest()->get();
         return view('barangdikemas', compact('orders'));
     }
 
@@ -169,9 +169,9 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $customer = Customer::find($user['id']);
         $orders = HInvoice::whereIn('status', ['dikirim', 'sampai'])
-                  ->where('customer_id', $user['id'])
-                  ->latest()
-                  ->get();
+            ->where('customer_id', $user['id'])
+            ->latest()
+            ->get();
         return view('barangdikirim', compact('orders'));
     }
 
@@ -180,10 +180,8 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $customer = Customer::find($user['id']);
         $orders = HInvoice::where('status', 'diterima')
-                    ->where('customer_id', $user['id'])
-                    ->latest()->get();
+            ->where('customer_id', $user['id'])
+            ->latest()->get();
         return view('beripenilaian', compact('orders'));
     }
-
-
 }
