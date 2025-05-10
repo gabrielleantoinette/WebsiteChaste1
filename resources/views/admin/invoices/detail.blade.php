@@ -15,7 +15,7 @@
             <div><span class="font-medium">Invoice ID:</span> {{ $invoice->id }}</div>
             <div><span class="font-medium">Kode Invoice:</span> {{ $invoice->code }}</div>
             <div><span class="font-medium">Tanggal Jatuh Tempo:</span> {{ $invoice->due_date }}</div>
-            <div><span class="font-medium">Tanggal Penerimaan Barang:</span> {{ $invoice->receive_date }}</div>
+            <div><span class="font-medium">Tanggal Penerimaan Barang:</span> {{ $invoice->updated_at }}</div>
         </div>
     </div>
 
