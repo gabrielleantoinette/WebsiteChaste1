@@ -17,8 +17,8 @@ class GudangController extends Controller
 
     public function detailTransaksiGudang($id)
     {
-        $invoice = HInvoice::with('customer', 'gudang')->findOrFail($id); // Pakai Eloquent + eager load relasi
-
+        $invoice = HInvoice::with('customer', 'gudang')->findOrFail($id);
+    
         $cartItems = DB::table('cart')
             ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
@@ -30,9 +30,14 @@ class GudangController extends Controller
             )
             ->where('cart.user_id', $invoice->customer_id)
             ->get();
-
-
-        return view('admin.gudang-transaksi.detail', compact('invoice', 'cartItems'));
+    
+        // Hitung total manual
+        $total = $cartItems->reduce(function ($carry, $item) {
+            $price = $item->product_price ?? $item->harga_custom;
+            return $carry + ($price * $item->quantity);
+        }, 0);
+    
+        return view('admin.gudang-transaksi.detail', compact('invoice', 'cartItems', 'total'));
     }
 
     public function assignGudang($id)

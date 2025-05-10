@@ -76,8 +76,8 @@
                 </table>
             </div>
             <div class="text-right mt-4 text-base font-semibold text-gray-800">
-                Total: Rp {{ number_format($invoice->grand_total) }}
-            </div>
+                Total: Rp {{ number_format($total, 0, ',', '.') }}
+            </div>            
         </div>
     </div>
 </div>
