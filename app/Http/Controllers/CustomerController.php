@@ -98,10 +98,20 @@ class CustomerController extends Controller
         return view('produk-detail', compact('product', 'variants'));
     }
 
-    public function viewTransaction()
+    public function viewTransaction(Request $request)
     {
         $user = Session::get('user');
-        $transactions = HInvoice::where('customer_id', $user['id'])->get();
+    
+        $transactions = HInvoice::where('customer_id', $user['id'])
+            ->when($request->filled('status'), function ($query) use ($request) {
+                if ($request->status === 'dikirim') {
+                    $query->whereIn('status', ['dikirim', 'sampai']);
+                } else {
+                    $query->where('status', $request->status);
+                }
+            })
+            ->get();
+    
         return view('transaction-list', compact('transactions'));
     }
 

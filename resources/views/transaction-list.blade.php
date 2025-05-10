@@ -24,6 +24,39 @@
         </a>
     </div>
         <h2 class="text-xl font-semibold mb-6 bg-[#D9F2F2] inline-block px-4 py-2 rounded-md">🛍️ List Transaksi</h2>
+        {{-- Filter Tab Status --}}
+        @php
+        $statusOptions = [
+            '' => 'Semua',
+            'dikemas' => 'Sedang Dikemas',
+            'dikirim' => 'Dikirim',
+            'diterima' => 'Selesai',
+            'pengembalian' => 'Pengembalian'
+        ];
+
+        $currentStatus = request('status');
+        @endphp
+
+        <div class="flex gap-6 text-sm font-medium mb-6 border-b border-gray-200 overflow-x-auto">
+        @foreach ($statusOptions as $key => $label)
+            @php
+                $count = \App\Models\HInvoice::where('customer_id', Session::get('user')['id'])
+                            ->when($key !== '', function ($q) use ($key) {
+                                if ($key === 'dikirim') {
+                                    $q->whereIn('status', ['dikirim', 'sampai']);
+                                } else {
+                                    $q->where('status', $key);
+                                }
+                            })
+                            ->count();
+            @endphp
+
+            <a href="{{ url('transaksi') . ($key !== '' ? '?status=' . $key : '') }}"
+            class="pb-2 whitespace-nowrap {{ $currentStatus === $key ? 'text-red-600 border-b-2 border-red-500' : 'text-gray-800 hover:text-red-500' }}">
+                {{ $label }}{{ $count > 0 ? ' ('.$count.')' : '' }}
+            </a>
+        @endforeach
+        </div>
 
         <table class="table table-bordered">
             <thead>
