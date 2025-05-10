@@ -29,6 +29,12 @@
                    Kelola Produk
                 </a>
 
+                <a href="{{ url('/admin/custom-materials') }}"
+                    class="px-4 py-2 border font-semibold rounded-md transition
+                            {{ request()->is('admin/custom-materials*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                    Kelola Bahan Custom
+                </a>
+
                 <a href="{{ url('/admin/categories') }}"
                     class="px-4 py-2 border font-semibold rounded-md transition
                             {{ request()->is('admin/categories*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
@@ -57,18 +63,6 @@
                    class="px-4 py-2 border font-semibold rounded-md transition
                           {{ request()->is('admin/assign-driver') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
                    Atur Kurir
-                </a>
-
-                <a href="{{ url('/admin/gudang-transaksi') }}"
-                   class="px-4 py-2 border font-semibold rounded-md transition
-                          {{ request()->is('admin/gudang-transaksi') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
-                   Transaksi Gudang
-                </a>
-
-                <a href="{{ url('/admin/driver-transaksi') }}"
-                   class="px-4 py-2 border font-semibold rounded-md transition
-                          {{ request()->is('admin/driver-transaksi') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
-                   Transaksi Driver
                 </a>
 
             @elseif (Session::get('user')->role == 'admin')
