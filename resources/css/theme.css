@@ -1,0 +1,71 @@
+/* === BODY === */
+body.light {
+    background-color: #ffffff;
+    color: #1f1f1f;
+}
+
+body.dark {
+    background-color: #121212;
+    color: #eeeeee;
+}
+
+/* === HEADER & FOOTER === */
+body.dark header,
+body.dark footer {
+    background-color: #003333;
+    color: #f0f0f0;
+}
+
+/* === CARD / BOX AREA === */
+body.dark .card,
+body.dark .box,
+body.dark .content-area {
+    background-color: #1e1e1e;
+    color: #f0f0f0;
+}
+
+/* === INPUT, SELECT, TEXTAREA === */
+body.dark input,
+body.dark select,
+body.dark textarea {
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    border: 1px solid #008080;
+}
+
+body.light input,
+body.light select,
+body.light textarea {
+    background-color: #ffffff;
+    color: #1f1f1f;
+}
+
+/* === DATATABLE OVERRIDES === */
+body.dark table.dataTable {
+    background-color: #1e1e1e;
+    color: #f0f0f0;
+}
+
+body.dark table.dataTable thead {
+    background-color: #004d4d;
+    color: #ccf2f2;
+}
+
+body.dark table.dataTable tbody tr {
+    background-color: #2c2c2c;
+    color: #f0f0f0;
+}
+
+body.dark .dataTables_wrapper .dataTables_filter input,
+body.dark .dataTables_wrapper .dataTables_length select {
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    border: 1px solid #00cccc;
+}
+
+/* === PAGINATION BUTTONS === */
+body.dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+    background-color: #1f1f1f !important;
+    color: #ccf2f2 !important;
+    border: 1px solid #444;
+}

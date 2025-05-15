@@ -14,8 +14,13 @@ return new class extends Migration
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
             $table->string('phone');
+            $table->string('theme')->default('light');
+            $table->string('company_name')->nullable();
+            $table->string('company_email')->nullable();
+            $table->text('company_address')->nullable();
             $table->timestamps();
         });
+        
     }
 
     /**

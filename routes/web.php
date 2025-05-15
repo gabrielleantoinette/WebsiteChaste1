@@ -16,6 +16,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\HutangController;
 use App\Http\Controllers\NegotiationController;
+use App\Http\Controllers\SettingController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -106,6 +107,11 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
 
         Route::post('/detail/{id}/min-price', [ProductController::class, 'updateMinPriceAction']);
     });
+
+    Route::prefix('settings')->group(function () {
+        Route::get('/', [SettingController::class, 'index'])->name('admin.settings');
+        Route::post('/', [SettingController::class, 'update'])->name('admin.settings.update');
+    });    
 
     Route::prefix('custom-materials')->group(function () {
         Route::get('/', [CustomMaterialController::class, 'view'])->name('custom-materials.view');

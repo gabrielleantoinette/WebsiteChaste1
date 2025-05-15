@@ -1,5 +1,10 @@
+@php
+    use App\Models\Setting;
+    $setting = Setting::first();
+    $theme = $setting?->theme ?? 'light'; // fallback ke 'light' kalau kosong
+@endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="{{ $theme === 'dark' ? 'dark' : '' }}">
 
 <head>
     <meta charset="UTF-8">
@@ -8,9 +13,10 @@
     <title>Admin</title>
     @vite('resources/css/app.css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
+    <link rel="stylesheet" href="{{ asset('css/theme.css') }}">
 </head>
 
-<body>
+<body class="{{ $theme }}">
 <header class="bg-[#D9F2F2] py-5">
     <div class="max-w-[90%] mx-auto flex justify-between items-center gap-10">
         <div class="text-xl font-bold text-gray-800">Master</div>
@@ -63,6 +69,12 @@
                    class="px-4 py-2 border font-semibold rounded-md transition
                           {{ request()->is('admin/assign-driver') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
                    Atur Kurir
+                </a>
+                
+                <a href="{{ url('/admin/settings') }}"
+                    class="px-4 py-2 border font-semibold rounded-md transition
+                            {{ request()->is('admin/settings*') ? 'bg-teal-600 text-white' : 'border-teal-600 text-teal-600 hover:bg-teal-50' }}">
+                    Pengaturan Website
                 </a>
 
             @elseif (Session::get('user')->role == 'admin')
