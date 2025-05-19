@@ -18,6 +18,7 @@ use App\Models\PaymentModel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Midtrans\Config;
 use Midtrans\Snap;
+use Illuminate\Support\Facades\Storage;
 use stdClass;
 
 class InvoiceController extends Controller
@@ -374,5 +375,27 @@ class InvoiceController extends Controller
         $pdf = Pdf::loadView('exports.invoiceCust_pdf', compact('invoice', 'cartItems'));
 
         return $pdf->download('Invoice-' . $invoice->code . '.pdf');
+    }
+
+    public function uploadBukti(Request $request, $id)
+    {
+        $request->validate([
+            'photo' => 'nullable|image|max:2048',
+            'signature' => 'nullable|image|max:2048',
+        ]);
+
+        $invoice = HInvoice::findOrFail($id); // Pakai model kamu
+
+        if ($request->hasFile('photo')) {
+            $invoice->delivery_proof_photo = $request->file('photo')->store('delivery_proofs', 'public');
+        }
+
+        if ($request->hasFile('signature')) {
+            $invoice->delivery_signature = $request->file('signature')->store('delivery_signatures', 'public');
+        }
+
+        $invoice->save();
+
+        return redirect()->back()->with('success', 'Bukti kirim berhasil diupload.');
     }
 }

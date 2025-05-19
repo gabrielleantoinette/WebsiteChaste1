@@ -164,6 +164,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/create-confirmation', [InvoiceController::class, 'createConfirmationAction']);
         Route::get('/export-pdf', [InvoiceController::class, 'exportPDF'])->name('invoices.export.pdf');
         Route::get('/detail/{id}', [InvoiceController::class, 'detail']);
+        Route::post('/upload-bukti/{id}', [InvoiceController::class, 'uploadBukti'])->name('admin.invoices.upload.bukti');
     });
 
     Route::prefix('gudang-transaksi')->group(function () {
@@ -179,6 +180,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
 
     Route::prefix('driver-transaksi')->group(function () {
         Route::get('/', [DriverController::class, 'viewTransaksiDriver']);
+        Route::get('/detail/{id}', [DriverController::class, 'detailTransaksiDriver'])->name('driver-transaksi.detail');
         Route::post('/finish/{id}', [DriverController::class, 'finishTransaksi']);
     });
 

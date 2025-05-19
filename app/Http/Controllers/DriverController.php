@@ -17,6 +17,12 @@ class DriverController extends Controller
         return view('admin.driver-transaksi.view', compact('invoices', 'drivers'));
     }
 
+    public function detailTransaksiDriver($id)
+    {
+        $invoice = HInvoice::with(['customer', 'details.product', 'details.variant'])->findOrFail($id);
+        return view('admin.driver-transaksi.detail', compact('invoice'));
+    }
+
     public function finishTransaksi($id, Request $request)
     {
         $invoice = HInvoice::find($id);

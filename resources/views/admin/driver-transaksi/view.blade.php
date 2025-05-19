@@ -30,11 +30,9 @@
                     <td>{{ $invoice->address }}</td>
                     <td>{{ $invoice->receive_date }}</td>
                     <td>
-                        <form method="POST" action="{{ url('/admin/driver-transaksi/finish/' . $invoice->id) }}">
-                            @csrf
-                            <button class="btn btn-sm btn-primary"
-                                {{ $invoice->status == 'sampai' ? 'disabled' : '' }}>Selesaikan</button>
-                        </form>
+                        <a href="{{ route('driver-transaksi.detail', $invoice->id) }}" class="btn btn-primary">
+                            Detail
+                        </a>                    
                     </td>
                 </tr>
             @endforeach
