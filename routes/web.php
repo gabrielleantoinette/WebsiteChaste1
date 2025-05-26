@@ -60,7 +60,8 @@ Route::middleware([LoggedIn::class])->group(function () {
     Route::get('/transaksi/dikirim', [CustomerController::class, 'showDikirim'])->name('transaksi.dikirim');
     Route::get('/transaksi/beri-penilaian', [CustomerController::class, 'showBeriPenilaian'])->name('transaksi.beripenilaian');
 
-
+    Route::get('/retur/{id}', [CustomerController::class, 'showReturForm'])->name('retur.create');
+    Route::post('/retur/{id}', [CustomerController::class, 'submitRetur'])->name('retur.store');
 
     Route::get('/produk/{product}/negosiasi', [NegotiationController::class, 'show'])
         ->name('produk.negosiasi');

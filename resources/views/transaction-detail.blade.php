@@ -77,6 +77,19 @@
                 </form>
             </div>
         @endif
+
+        @php
+            $selesaiKurangDari24Jam = \Carbon\Carbon::parse($transaction->updated_at)->diffInHours(now()) < 24;
+        @endphp
+
+        @if ($selesaiKurangDari24Jam)
+            <div class="mt-4">
+                <a href="{{ url('/retur/' . $transaction->id) }}"
+                class="inline-block bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md shadow text-sm">
+                    🔁 Retur Barang
+                </a>
+            </div>
+        @endif
     </div>
 
     <script>

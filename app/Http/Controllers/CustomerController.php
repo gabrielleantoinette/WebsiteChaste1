@@ -8,6 +8,10 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Returns;
+use Carbon\Carbon;
+
 
 class CustomerController extends Controller
 {
@@ -193,5 +197,35 @@ class CustomerController extends Controller
             ->where('customer_id', $user['id'])
             ->latest()->get();
         return view('beripenilaian', compact('orders'));
+    }
+
+    public function showReturForm($id)
+    {
+        $transaction = HInvoice::findOrFail($id);
+        return view('retur-form', compact('transaction'));
+    }
+
+    // Simpan retur
+    public function submitRetur(Request $request, $id)
+    {
+        $request->validate([
+            'description' => 'required|string',
+            'media' => 'nullable|file|mimes:jpg,jpeg,png,mp4|max:10240',
+        ]);
+
+        $mediaPath = null;
+        if ($request->hasFile('media')) {
+            $mediaPath = $request->file('media')->store('retur_media', 'public');
+        }
+
+        Returns::create([
+            'invoice_id' => $id,
+            'customer_id' => Session::get('user')['id'],
+            'description' => $request->description,
+            'media_path' => $mediaPath,
+            'status' => 'diajukan',
+        ]);
+
+        return redirect('/transaksi')->with('success', 'Retur berhasil diajukan.');
     }
 }
