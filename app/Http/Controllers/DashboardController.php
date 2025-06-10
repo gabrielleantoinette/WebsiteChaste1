@@ -6,6 +6,8 @@ use App\Models\Employee;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\HInvoice;
+use App\Models\ProductVariant;
+use App\Models\Returns;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -60,11 +62,23 @@ class DashboardController extends Controller
             );
         }
 
+        $user = session('user');
+        $role = strtolower($user['role']);
+
+        if ($role === 'admin') {
+            $pendingOrders = HInvoice::with('customer')
+            ->whereIn('status', ['Menunggu Pembayaran', 'Diproses'])
+            ->get();
+            $lowStocks = ProductVariant::where('stock', '<', 10)->get();
+            $returCount = Returns::where('status', 'diajukan')->count(); 
+
+            return view('admin.dashboardadmin', compact('pendingOrders', 'lowStocks', 'returCount'));
+        }
+
         return view('admin.dashboard', compact(
             'employeeCount', 'customerCount', 'productCount', 'totalPenjualan',
             'recentInvoices', 'days', 'sales',
             'monthlyLabels', 'monthlySales', 'yearLabels', 'yearSales'
-        ));
-        
+        ));           
     }
 }
