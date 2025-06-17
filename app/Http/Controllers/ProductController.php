@@ -116,8 +116,7 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $product->variants()->create($request->only('color', 'stock'));
 
-        return redirect()
-            ->route('admin.products.detail', $id)
+        return redirect()->to('/admin/products/detail/' . $id)
             ->with('success', 'Variant berhasil ditambahkan.');
     }
 }
