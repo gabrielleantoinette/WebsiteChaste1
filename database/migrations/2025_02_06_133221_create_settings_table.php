@@ -18,9 +18,9 @@ return new class extends Migration
             $table->string('company_name')->nullable();
             $table->string('company_email')->nullable();
             $table->text('company_address')->nullable();
+            $table->text('company_policy')->nullable();
             $table->timestamps();
         });
-        
     }
 
     /**
