@@ -55,7 +55,10 @@
 
             @if (Session::get('user')->role == 'keuangan')
                 <a href="{{ route('keuangan.view') }}" class="{{ request()->is('admin/keuangan') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Laporan Transaksi</a>
-                <a href="{{ route('keuangan.hutang.index') }}" class="{{ request()->is('keuangan/hutang') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Hutang Supplier</a>
+                <a href="{{ route('keuangan.hutang.index') }}"
+                class="{{ request()->is('admin/keuangan/keuangan/hutang*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">
+                    Hutang Supplier
+                </a>
             @endif
         </nav>
 
