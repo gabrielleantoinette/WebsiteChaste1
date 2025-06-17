@@ -17,6 +17,7 @@ use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\HutangController;
 use App\Http\Controllers\NegotiationController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -196,5 +197,8 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/hutang/store', [HutangController::class, 'store'])->name('keuangan.hutang.store');
         Route::get('/export-pdf', [KeuanganController::class, 'exportPDF'])->name('keuangan.export.pdf');
         Route::get('/hutang/export-pdf', [HutangController::class, 'exportPDF'])->name('keuangan.hutang.export.pdf');
+    });
+    Route::prefix('laporan')->group(function () {
+        Route::get('/penjualan/export-pdf', [LaporanController::class, 'penjualanPDF'])->name('laporan.penjualan.pdf');
     });
 });

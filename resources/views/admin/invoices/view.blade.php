@@ -19,6 +19,10 @@
         </div>
 
         @endif
+        <a href="{{ route('laporan.penjualan.pdf') }}"
+            class="bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 py-2 rounded-md transition shadow-sm">
+            📄 Export Laporan Penjualan
+        </a>
     </div>
 
     <table class="table table-bordered data-table">
