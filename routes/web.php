@@ -200,5 +200,8 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     });
     Route::prefix('laporan')->group(function () {
         Route::get('/penjualan/export-pdf', [LaporanController::class, 'penjualanPDF'])->name('laporan.penjualan.pdf');
+        Route::get('/customer/export-pdf', [LaporanController::class, 'customerPDF'])->name('laporan.customer.pdf');
+        Route::get('/retur/export-pdf', [LaporanController::class, 'returPDF'])->name('laporan.retur.pdf');
+        Route::get('/ratarata/export-pdf', [LaporanController::class, 'rataRataPDF'])->name('laporan.ratarata.pdf');
     });
 });

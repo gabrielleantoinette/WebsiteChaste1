@@ -19,6 +19,12 @@ return new class extends Migration
             $table->boolean('active')->default(true);
             $table->string('phone');
             $table->string('address')->default('');
+            $table->string('city')->nullable();
+            $table->string('province')->nullable();
+            $table->string('postal_code')->nullable();
+            $table->date('birth_date')->nullable();
+            $table->string('gender')->nullable();
+            $table->string('profile_picture')->nullable();
             $table->timestamps();
         });
     }

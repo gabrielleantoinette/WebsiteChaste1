@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="flex justify-between mb-5">
-        <h1 class="text-xl font-bold mb-5">Invoices List</h1>
+        <h1 class="text-xl font-bold mb-5">Daftar Penjualan</h1>
         @if (Session::get('user')->role !== 'owner')
         <div class="flex items-center gap-2">
             @if (Session::get('user')->role !== 'owner')
@@ -19,10 +19,23 @@
         </div>
 
         @endif
-        <a href="{{ route('laporan.penjualan.pdf') }}"
-            class="bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 py-2 rounded-md transition shadow-sm">
-            📄 Export Laporan Penjualan
-        </a>
+        <div class="relative inline-block text-left">
+            <button id="exportDropdownBtn"
+                    class="inline-flex justify-center px-4 py-2 bg-teal-600 text-white font-medium rounded-md hover:bg-teal-700 transition shadow-sm">
+                📄 Export Laporan
+                <svg class="w-4 h-4 ml-2 -mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06-.02L10 10.939l3.71-3.75a.75.75 0 111.08 1.04l-4.24 4.28a.75.75 0 01-1.08 0L5.23 8.27a.75.75 0 01-.02-1.06z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-md z-50">
+                <a href="{{ route('laporan.penjualan.pdf') }}"
+                class="block px-4 py-2 text-sm hover:bg-gray-100">📦 Laporan Penjualan</a>
+                <a href="{{ route('laporan.retur.pdf') }}"
+                class="block px-4 py-2 text-sm hover:bg-gray-100">↩️ Laporan Barang Retur</a>
+                <a href="{{ route('laporan.ratarata.pdf') }}"
+                class="block px-4 py-2 text-sm hover:bg-gray-100">📊 Laporan Rata-Rata Pesanan</a>
+            </div>
+        </div>
     </div>
 
     <table class="table table-bordered data-table">
@@ -68,4 +81,9 @@
             @endforeach
         </tbody>
     </table>
+    <script>
+        const dropdownBtn = document.getElementById('exportDropdownBtn');
+        const dropdownMenu = document.getElementById('exportDropdown');
+        dropdownBtn.addEventListener('click', () => dropdownMenu.classList.toggle('hidden'));
+    </script>
 @endsection
