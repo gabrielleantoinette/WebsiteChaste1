@@ -85,4 +85,26 @@ class LaporanController extends Controller
 
         return $pdf->download('laporan-customer.pdf');
     }
+
+    public function rataRataPDF()
+    {
+        $totalCustomer = Customer::count();
+        $invoiceGroups = HInvoice::groupBy('customer_id')
+            ->selectRaw('customer_id, COUNT(*) as jumlah_transaksi, SUM(grand_total) as total_belanja')
+            ->get();
+
+        $rataRataPerCustomer = $invoiceGroups->map(function ($row) {
+            return [
+                'customer_id' => $row->customer_id,
+                'jumlah_transaksi' => $row->jumlah_transaksi,
+                'total_belanja' => $row->total_belanja,
+                'rata_rata_belanja' => $row->jumlah_transaksi > 0 ? $row->total_belanja / $row->jumlah_transaksi : 0
+            ];
+        });
+
+        $rataRataGlobal = $rataRataPerCustomer->avg('rata_rata_belanja');
+
+        $pdf = Pdf::loadView('exports.laporan-ratarata', compact('rataRataGlobal', 'rataRataPerCustomer'));
+        return $pdf->download('laporan-pesanan-rata-rata.pdf');
+    }
 }
