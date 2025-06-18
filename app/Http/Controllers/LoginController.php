@@ -63,11 +63,28 @@ class LoginController extends Controller
 
     public function register(Request $request)
     {
+        $request->validate([
+            'email' => 'required|email|unique:customers,email',
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'password' => 'required|string|min:6',
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:100',
+            'province' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:10',
+            'gender' => 'nullable|in:male,female',
+        ]);
+
         $customer = new Customer();
         $customer->email = $request->email;
         $customer->name = $request->name;
         $customer->phone = $request->phone;
         $customer->password = $request->password;
+        $customer->address = $request->address;
+        $customer->city = $request->city;
+        $customer->province = $request->province;
+        $customer->postal_code = $request->postal_code;
+        $customer->gender = $request->gender;
         $customer->save();
 
 

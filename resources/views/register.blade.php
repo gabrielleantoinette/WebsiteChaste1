@@ -12,36 +12,77 @@
     @include('layouts.customer-nav')
 
     <!-- Form Daftar -->
-    <main class="flex items-center justify-center min-h-screen px-4 md:px-0 bg-white">
-        <div
-            class="flex flex-col md:flex-row overflow-hidden rounded-[20px] shadow-lg border border-gray-200 max-w-5xl w-full h-[540px]">
-            <!-- Gambar -->
-            <div class="hidden md:block w-[400px] h-full">
+    <main class="min-h-screen bg-white flex items-center justify-center px-4 py-10">
+        <div class="flex flex-col md:flex-row w-full max-w-5xl rounded-[20px] shadow-lg border border-gray-200 overflow-hidden bg-white">
+            <!-- Gambar Kiri (Desktop only) -->
+            <div class="hidden md:block md:w-1/2">
                 <img src="{{ asset('images/terpal-login.png') }}" alt="Terpal Gulungan"
-                    class="object-cover w-full h-full">
+                    class="w-full h-full object-cover">
             </div>
 
-            <!-- Form -->
-            <div class="w-full md:w-[700px] bg-white p-8 flex flex-col justify-center">
+            <!-- Form Kanan -->
+            <div class="w-full md:w-1/2 p-8">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">DAFTAR</h2>
-                <form method="POST" action="{{ url('/register') }}">
+                <form method="POST" action="{{ url('/register') }}" class="space-y-4">
                     @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" name="email" required
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    </div>
 
-                    <label class="block mb-2 text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" name="email" required
-                        class="w-full mb-4 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nama</label>
+                        <input type="text" name="name" required
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    </div>
 
-                    <label class="block mb-2 text-sm font-medium text-gray-700">Nama</label>
-                    <input type="text" name="name" required
-                        class="w-full mb-4 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nomor Telepon</label>
+                        <input type="tel" name="phone" placeholder="+62" required
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    </div>
 
-                    <label class="block mb-2 text-sm font-medium text-gray-700">Nomor Telepon</label>
-                    <input type="tel" name="phone" placeholder="+62" required
-                        class="w-full mb-4 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Kata Sandi</label>
+                        <input type="password" name="password" required
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    </div>
 
-                    <label class="block mb-2 text-sm font-medium text-gray-700">Kata Sandi</label>
-                    <input type="password" name="password" required
-                        class="w-full mb-6 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Alamat Lengkap</label>
+                        <input type="text" name="address"
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Kota</label>
+                            <input type="text" name="city"
+                                class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Provinsi</label>
+                            <input type="text" name="province"
+                                class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Kode Pos</label>
+                        <input type="text" name="postal_code"
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
+                        <select name="gender" required
+                            class="w-full mt-1 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                            <option value="" disabled selected>Pilih jenis kelamin</option>
+                            <option value="male">Laki-laki</option>
+                            <option value="female">Perempuan</option>
+                        </select>
+                    </div>
 
                     <button type="submit"
                         class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
