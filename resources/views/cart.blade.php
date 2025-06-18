@@ -10,15 +10,16 @@
 
 <body class="bg-white font-sans text-gray-800">
 
-    @include('layouts.customer-nav')    
+    @include('layouts.customer-nav')
 
     <section class="px-6 md:px-30 py-8 min-h-screen">
-        <a href="{{ url()->previous() }}" 
+        <a href="{{ url()->previous() }}"
             class="inline-flex items-center gap-2 bg-teal-100 hover:bg-teal-200 text-teal-700 font-medium py-2 px-4 rounded-md text-sm transition">
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-             </svg>
-             Kembali
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Kembali
         </a>
         <div class="max-w-5xl mx-auto">
             <br>
@@ -33,7 +34,8 @@
 
                 @foreach ($cartItems as $item)
                     <div class="flex items-center gap-4 border-b pb-6">
-                        <input type="checkbox" class="item-checkbox" name="selected_items[]" value="{{ $item->id }}">
+                        <input type="checkbox" class="item-checkbox" name="selected_items[]"
+                            value="{{ $item->id }}">
                         <img src="{{ asset('images/terpal-ayam.png') }}" alt="Gambar Produk"
                             class="w-20 h-20 object-cover rounded-md">
 
@@ -91,9 +93,9 @@
 
                 <div class="flex justify-end mt-8">
                     <button type="submit"
-                    class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-6 rounded-md">
-                    Lanjut Bayar
-                </button>
+                        class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-6 rounded-md">
+                        Lanjut Bayar
+                    </button>
                 </div>
             </form>
         </div>

@@ -106,14 +106,12 @@ class CheckoutController extends Controller
 
         $payload = [
             'transaction_details' => [
-                'order_id'      => $newOrder->id,
+                'order_id'      => $newOrder->created_at->format('YmdHis'),
                 'gross_amount'  => $subtotalProduk,
             ],
             'customer_details' => [
                 'first_name'    => $customer->name,
                 'email'         => $customer->email,
-                // 'phone'         => '08888888888',
-                // 'address'       => '',
             ],
             'item_details' => [
                 [

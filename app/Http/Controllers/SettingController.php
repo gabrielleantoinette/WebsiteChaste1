@@ -16,7 +16,8 @@ class SettingController extends Controller
                 'theme' => 'light',
                 'company_name' => '',
                 'company_email' => '',
-                'company_address' => ''
+                'company_address' => '',
+                'company_policy' => ''
             ]
         );
         return view('admin.settings.view', compact('setting'));
@@ -27,7 +28,12 @@ class SettingController extends Controller
         $setting = Setting::firstOrCreate(['id' => 1]);
 
         $setting->update($request->only([
-            'phone', 'theme', 'company_name', 'company_email', 'company_address'
+            'phone',
+            'theme',
+            'company_name',
+            'company_email',
+            'company_address',
+            'company_policy'
         ]));
 
         return back()->with('success', 'Pengaturan berhasil diperbarui');
