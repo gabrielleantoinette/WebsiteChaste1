@@ -265,7 +265,7 @@ class InvoiceController extends Controller
             $newPayment->invoice_id = $newInvoiceId;
             $newPayment->method = 'midtrans';
             $newPayment->type = $isFirstOrder ? 'dp' : 'full';
-            $newPayment->status = 'menunggu_pembayaran';
+            $newPayment->is_paid = false;
             $newPayment->amount = $isFirstOrder ? $grandTotal / 2 : $grandTotal;
             $newPayment->snap_token = $snapToken;
             $newPayment->save();
@@ -291,7 +291,7 @@ class InvoiceController extends Controller
 
         $paymentId = $request->query('paymentId');
         $payment = PaymentModel::find($paymentId);
-        $payment->status = $paymentStatus == 'success' ? 'success' : 'failed';
+        $payment->is_paid = $paymentStatus == 'success' ? true : false;
         $payment->save();
 
         // TODO Update Invoice setelah payment berhasil.
