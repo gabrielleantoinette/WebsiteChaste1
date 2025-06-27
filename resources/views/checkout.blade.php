@@ -92,23 +92,6 @@
                 </div>
             </section>
 
-            <script>
-                function updateShippingCost(cost) {
-                    document.getElementById('shippingCost').innerText = formatRupiah(cost);
-                    updateTotal(cost);
-                }
-
-                function updateTotal(shippingCost) {
-                    var productSubtotal = parseInt(document.getElementById('productSubtotalHidden').value);
-                    var total = productSubtotal + shippingCost;
-                    document.getElementById('totalCost').innerText = formatRupiah(total);
-                }
-
-                function formatRupiah(amount) {
-                    return "Rp " + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                }
-            </script>
-
             <!-- Section Rincian Total Bayar -->
             <section class="border p-4 rounded mb-6">
                 <h2 class="font-semibold text-lg mb-2">Rincian Total Bayar</h2>
@@ -145,7 +128,7 @@
                     </div>
                     <div>
                         <label class="flex items-center space-x-2">
-                            <input type="radio" name="payment_method" value="ewallet" class="accent-teal-600"
+                            <input type="radio" name="payment_method" value="midtrans" class="accent-teal-600"
                                 onchange="showPaymentInfo()">
                             <span>E-Wallet (OVO, DANA, ShopeePay)</span>
                         </label>
@@ -166,66 +149,47 @@
 
             <!-- Tombol Bayar -->
             <div class="text-center">
-                <form action="{{ route('checkout.invoice') }}" method="POST">
-                    @csrf
+                <!-- kirim semua cart id produk biasa -->
+                @foreach ($produkItems as $item)
+                    <input type="hidden" name="cart_ids[]" value="{{ $item->id }}">
+                @endforeach
 
-                    <!-- kirim semua cart id produk biasa -->
-                    @foreach ($produkItems as $item)
-                        <input type="hidden" name="cart_ids[]" value="{{ $item->id }}">
-                    @endforeach
+                <!-- kirim semua cart id produk custom -->
+                @foreach ($customItems as $item)
+                    <input type="hidden" name="cart_ids[]" value="{{ $item->id }}">
+                @endforeach
 
-                    <!-- kirim semua cart id produk custom -->
-                    @foreach ($customItems as $item)
-                        <input type="hidden" name="cart_ids[]" value="{{ $item->id }}">
-                    @endforeach
+                {{-- shipping cost --}}
+                <input type="hidden" id="shippingCostValue" name="shipping_cost">
 
-                    <!-- kirim alamat -->
-                    <input type="hidden" name="alamat" value="{{ $alamat_default_user }}">
-
-                    <!-- default shipping method dan payment method -->
-                    <input type="hidden" name="shipping_method" value="kurir">
-                    <input type="hidden" name="payment_method" value="transfer_bank">
-
-                    <!-- Tombol Bayar -->
-                    <button id="pay-button" type="button"
-                        class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">
-                        Bayar
-                    </button>
-                </form>
-
+                <!-- Tombol Bayar -->
+                <button id="pay-button" type="submit"
+                    class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">
+                    Bayar
+                </button>
             </div>
-
         </form>
     </div>
 
     @include('layouts.footer')
 
-    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-_63DbX6J3paRjarh"></script>
-    <script type="text/javascript">
-        var payButton = document.getElementById('pay-button');
-        payButton.addEventListener('click', function() {
-            window.snap.pay("{{ $snapToken }}", {
-                onSuccess: function(result) {
-                    alert("Pembayaran berhasil!");
-                    console.log(result);
-
-                    window.location.href = "/checkout/invoice?orderId={{ $orderId }}";
-                },
-                onPending: function(result) {
-                    alert("Menunggu pembayaran!");
-                    console.log(result);
-                },
-                onError: function(result) {
-                    alert("Pembayaran gagal!");
-                    console.log(result);
-                },
-                onClose: function() {
-                    alert('Anda menutup pop-up tanpa menyelesaikan pembayaran');
-                }
-            });
-        });
-    </script>
     <script>
+        function updateShippingCost(cost) {
+            document.getElementById('shippingCost').innerText = formatRupiah(cost);
+            document.getElementById('shippingCostValue').value = cost;
+            updateTotal(cost);
+        }
+
+        function updateTotal(shippingCost) {
+            var productSubtotal = parseInt(document.getElementById('productSubtotalHidden').value);
+            var total = productSubtotal + shippingCost;
+            document.getElementById('totalCost').innerText = formatRupiah(total);
+        }
+
+        function formatRupiah(amount) {
+            return "Rp " + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
         function showPaymentInfo() {
             const paymentInfo = document.getElementById('paymentInfo');
             const selected = document.querySelector('input[name="payment_method"]:checked');

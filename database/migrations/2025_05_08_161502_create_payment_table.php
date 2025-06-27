@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('invoice_id');
             $table->string('method');
-            $table->string('status');
+            $table->string('type');
+            $table->string('status')->default('success');
             $table->string('amount');
             $table->string('snap_token')->nullable();
             $table->timestamps();

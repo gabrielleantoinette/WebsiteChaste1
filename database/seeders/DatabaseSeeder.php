@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             'description' => 'Description 1',
             'price' => 1000,
             'size' => '2x3',
+            'live' => 1,
         ]);
         Product::create([
             'id' => 2,
@@ -43,6 +44,7 @@ class DatabaseSeeder extends Seeder
             'description' => 'Description 1',
             'price' => 2000,
             'size' => '3x4',
+            'live' => 1,
         ]);
         Product::create([
             'id' => 3,
@@ -50,6 +52,7 @@ class DatabaseSeeder extends Seeder
             'description' => 'Description 1',
             'price' => 3000,
             'size' => '4x6',
+            'live' => 1,
         ]);
 
         ProductVariant::create([

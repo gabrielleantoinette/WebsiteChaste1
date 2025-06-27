@@ -42,6 +42,7 @@ class CheckoutController extends Controller
         if (!$selectedItems) {
             return redirect()->route('keranjang')->with('error', 'Pilih minimal satu barang untuk checkout.');
         }
+
         // Ambil barang produk biasa
         $produkItems = DB::table('cart')
             ->join('product_variants', 'cart.variant_id', '=', 'product_variants.id')
@@ -95,34 +96,34 @@ class CheckoutController extends Controller
         $alamat_default_user = session()->get('customer_address', '');
 
         // midtrans
-        $customer = Customer::find(Session::get('user')['id']);
+        // $customer = Customer::find(Session::get('user')['id']);
 
-        $newOrder = new OrderModel();
-        $newOrder->cart_ids = json_encode($cartIds);
-        $newOrder->customer_id = $customer->id;
-        $newOrder->payment_method = 'transfer_bank';
-        $newOrder->address = $alamat_default_user;
-        $newOrder->save();
+        // $newOrder = new OrderModel();
+        // $newOrder->cart_ids = json_encode($cartIds);
+        // $newOrder->customer_id = $customer->id;
+        // $newOrder->payment_method = 'transfer_bank';
+        // $newOrder->address = $alamat_default_user;
+        // $newOrder->save();
 
-        $payload = [
-            'transaction_details' => [
-                'order_id'      => $newOrder->created_at->format('YmdHis'),
-                'gross_amount'  => $subtotalProduk,
-            ],
-            'customer_details' => [
-                'first_name'    => $customer->name,
-                'email'         => $customer->email,
-            ],
-            'item_details' => [
-                [
-                    'id'       => $newOrder->id,
-                    'price'    => $subtotalProduk,
-                    'quantity' => 1,
-                    'name'     => 'Order ' . $newOrder->id
-                ]
-            ]
-        ];
-        $snapToken = Snap::getSnapToken($payload);
+        // $payload = [
+        //     'transaction_details' => [
+        //         'order_id'      => $newOrder->created_at->format('YmdHis'),
+        //         'gross_amount'  => $subtotalProduk,
+        //     ],
+        //     'customer_details' => [
+        //         'first_name'    => $customer->name,
+        //         'email'         => $customer->email,
+        //     ],
+        //     'item_details' => [
+        //         [
+        //             'id'       => $newOrder->id,
+        //             'price'    => $subtotalProduk,
+        //             'quantity' => 1,
+        //             'name'     => 'Order ' . $newOrder->id
+        //         ]
+        //     ]
+        // ];
+        // $snapToken = Snap::getSnapToken($payload);
 
         return view('checkout', [
             'produkItems' => $produkItems,
@@ -130,8 +131,8 @@ class CheckoutController extends Controller
             'subtotalProduk' => $subtotalProduk,
             'subtotalPengiriman' => $subtotalPengiriman,
             'alamat_default_user' => $alamat_default_user,
-            'snapToken' => $snapToken,
-            'orderId' => $newOrder->id
+            // 'snapToken' => $snapToken,
+            // 'orderId' => $newOrder->id
         ]);
     }
 }

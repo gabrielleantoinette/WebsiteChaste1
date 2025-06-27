@@ -79,11 +79,12 @@ Route::middleware([LoggedIn::class])->group(function () {
 
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout/invoice', [InvoiceController::class, 'storeFromCheckout'])->name('checkout.invoice'); // ini tidak dipakai lagi
-    Route::get('/checkout/invoice', [InvoiceController::class, 'storeFromCheckoutGet'])->name('checkout.invoice.get');
+    // Route::get('/checkout/invoice', [InvoiceController::class, 'storeFromCheckoutGet'])->name('checkout.invoice.get');
+    Route::get('/checkout/midtrans-payment', [InvoiceController::class, 'midtransPayment'])->name('checkout.midtrans.payment');
+    Route::get('/checkout/midtrans-result', [InvoiceController::class, 'midtransPaymentAction'])->name('checkout.midtrans.result');
 
-    Route::get('/order-success', function (Request $request) {
-        $snapToken = $request->query('snapToken');
-        return view('order_success', compact('snapToken'));
+    Route::get('/order-success', function () {
+        return view('order_success');
     })->name('order.success');
 
     Route::get('/invoice/view/{id}', [InvoiceController::class, 'viewInvoice'])->name('invoice.view');

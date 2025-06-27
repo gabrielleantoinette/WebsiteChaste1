@@ -190,12 +190,17 @@ class InvoiceController extends Controller
     public function storeFromCheckout(Request $request)
     {
         $customerId = session()->get('customer_id');
-        $alamat = $request->input('alamat');
 
-        $code = 'INV-' . date('Ymd') . '-' . Str::random(5);
+        $paymentMethod = $request->input('payment_method');
+        $shippingCost = $request->input('shipping_cost');
+        $alamat = $request->input('address');
+
+        $invoiceCode = 'INV-' . date('Ymd') . '-' . Str::random(5);
+
+        // cari apakah ini pesanan pertama customer?
+        $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
 
         $subtotalProduk = 0;
-
         if ($request->has('cart_ids')) {
             $cartIds = $request->cart_ids;
             $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
@@ -214,111 +219,137 @@ class InvoiceController extends Controller
             }
         }
 
+        $grandTotal = $subtotalProduk + $shippingCost;
+
         // ⬇️ Ubah ini supaya insert sekaligus ambil ID
         $newInvoiceId = DB::table('hinvoice')->insertGetId([
-            'code' => $code,
+            'code' => $invoiceCode,
             'customer_id' => $customerId,
             'employee_id' => 1,
-            'driver_id' => null,
-            'gudang_id' => null,
-            'accountant_id' => null,
-            'grand_total' => $subtotalProduk,
-            'status' => 'dikemas',
             'address' => $alamat,
             'is_online' => 0,
+            'status' => $isFirstOrder ? 'menunggu_pembayaran' : 'dikemas',
+            'is_dp' => $isFirstOrder ? true : false,
+            'dp_amount' => $isFirstOrder ? $grandTotal / 2 : 0,
+            'grand_total' => $grandTotal,
+            'shipping_cost' => $shippingCost ?? 0,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         // Midtrans
-        $customer = Customer::find($customerId);
-        $payload = [
-            'transaction_details' => [
-                'order_id'      => $newInvoiceId,
-                'gross_amount'  => $subtotalProduk,
-            ],
-            'customer_details' => [
-                'first_name'    => $customer->name,
-                'email'         => $customer->email,
-                // 'phone'         => '08888888888',
-                // 'address'       => '',
-            ],
-            'item_details' => [
-                [
-                    'id'       => $newInvoiceId,
-                    'price'    => $subtotalProduk,
-                    'quantity' => 1,
-                    'name'     => 'Invoice ' . $code
+        // Hanya buat midtrans kalau payment_method adalah ewallet.
+        if ($paymentMethod == 'midtrans') {
+            $customer = Customer::find($customerId);
+            $payload = [
+                'transaction_details' => [
+                    'order_id'      => now() . '-' . $newInvoiceId,
+                    'gross_amount'  => $isFirstOrder ? $grandTotal / 2 : $grandTotal,
+                ],
+                'customer_details' => [
+                    'first_name'    => $customer->name,
+                    'email'         => $customer->email,
+                ],
+                'item_details' => [
+                    [
+                        'id'       => $newInvoiceId,
+                        'price'    => $isFirstOrder ? $grandTotal / 2 : $grandTotal,
+                        'quantity' => 1,
+                        'name'     => 'Invoice ' . $invoiceCode
+                    ]
                 ]
-            ]
-        ];
-        $snapToken = Snap::getSnapToken($payload);
+            ];
+            $snapToken = Snap::getSnapToken($payload);
 
-        $newPayment = new PaymentModel();
-        $newPayment->invoice_id = $newInvoiceId;
-        $newPayment->method = 'midtrans';
-        $newPayment->amount = $subtotalProduk;
-        $newPayment->snap_token = $snapToken;
-        $newPayment->status = 'waiting';
-        $newPayment->save();
+            $newPayment = new PaymentModel();
+            $newPayment->invoice_id = $newInvoiceId;
+            $newPayment->method = 'midtrans';
+            $newPayment->type = $isFirstOrder ? 'dp' : 'full';
+            $newPayment->status = 'menunggu_pembayaran';
+            $newPayment->amount = $isFirstOrder ? $grandTotal / 2 : $grandTotal;
+            $newPayment->snap_token = $snapToken;
+            $newPayment->save();
 
-        // ⬇️ Simpan ID invoice baru ke session
-        session()->put('last_invoice_id', $newInvoiceId);
-
-        return redirect()->route('order.success', ['snapToken' => $snapToken]);
-    }
-
-    public function storeFromCheckoutGet(Request $request)
-    {
-        $orderId = $request->query('orderId');
-        $order = OrderModel::find($orderId);
-        $cartIds = json_decode($order->cart_ids);
-
-        $customerId = session()->get('customer_id');
-        $alamat = $order->address;
-
-        $code = 'INV-' . date('Ymd') . '-' . Str::random(5);
-
-        $subtotalProduk = 0;
-
-        if ($request->has('cart_ids')) {
-            $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
-
-            foreach ($carts as $cart) {
-                if ($cart->variant_id) {
-                    $product = DB::table('product_variants')
-                        ->join('products', 'product_variants.product_id', '=', 'products.id')
-                        ->where('product_variants.id', $cart->variant_id)
-                        ->select('products.price')
-                        ->first();
-                    $subtotalProduk += ($product->price ?? 0) * $cart->quantity;
-                } elseif ($cart->kebutuhan_custom) {
-                    $subtotalProduk += ($cart->harga_custom ?? 0) * $cart->quantity;
-                }
-            }
+            return redirect()->route('checkout.midtrans.payment', ['snapToken' => $snapToken, 'paymentId' => $newPayment->id]);
         }
 
-        // ⬇️ Ubah ini supaya insert sekaligus ambil ID
-        $newInvoiceId = DB::table('hinvoice')->insertGetId([
-            'code' => $code,
-            'customer_id' => $customerId,
-            'employee_id' => 1,
-            'driver_id' => null,
-            'gudang_id' => null,
-            'accountant_id' => null,
-            'grand_total' => $subtotalProduk,
-            'status' => 'dikemas',
-            'address' => $alamat,
-            'is_online' => 0,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // ⬇️ Simpan ID invoice baru ke session
         session()->put('last_invoice_id', $newInvoiceId);
+        return redirect()->route('order.success');
+    }
+
+    public function midtransPayment(Request $request)
+    {
+        $snapToken = $request->query('snapToken');
+        $paymentId = $request->query('paymentId');
+
+        return view('midtrans_payment', compact('snapToken', 'paymentId'));
+    }
+
+    public function midtransPaymentAction(Request $request)
+    {
+        $paymentStatus = $request->query('status');
+
+        $paymentId = $request->query('paymentId');
+        $payment = PaymentModel::find($paymentId);
+        $payment->status = $paymentStatus == 'success' ? 'success' : 'failed';
+        $payment->save();
+
+        // TODO Update Invoice setelah payment berhasil.
 
         return redirect()->route('order.success');
     }
+
+    // public function storeFromCheckoutGet(Request $request)
+    // {
+    //     $orderId = $request->query('orderId');
+    //     $order = OrderModel::find($orderId);
+    //     $cartIds = json_decode($order->cart_ids);
+
+    //     $customerId = session()->get('customer_id');
+    //     $alamat = $order->address;
+
+    //     $code = 'INV-' . date('Ymd') . '-' . Str::random(5);
+
+    //     $subtotalProduk = 0;
+
+    //     if ($request->has('cart_ids')) {
+    //         $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+
+    //         foreach ($carts as $cart) {
+    //             if ($cart->variant_id) {
+    //                 $product = DB::table('product_variants')
+    //                     ->join('products', 'product_variants.product_id', '=', 'products.id')
+    //                     ->where('product_variants.id', $cart->variant_id)
+    //                     ->select('products.price')
+    //                     ->first();
+    //                 $subtotalProduk += ($product->price ?? 0) * $cart->quantity;
+    //             } elseif ($cart->kebutuhan_custom) {
+    //                 $subtotalProduk += ($cart->harga_custom ?? 0) * $cart->quantity;
+    //             }
+    //         }
+    //     }
+
+    //     // ⬇️ Ubah ini supaya insert sekaligus ambil ID
+    //     $newInvoiceId = DB::table('hinvoice')->insertGetId([
+    //         'code' => $code,
+    //         'customer_id' => $customerId,
+    //         'employee_id' => 1,
+    //         'driver_id' => null,
+    //         'gudang_id' => null,
+    //         'accountant_id' => null,
+    //         'grand_total' => $subtotalProduk,
+    //         'status' => 'dikemas',
+    //         'address' => $alamat,
+    //         'is_online' => 0,
+    //         'created_at' => now(),
+    //         'updated_at' => now(),
+    //     ]);
+
+    //     // ⬇️ Simpan ID invoice baru ke session
+    //     session()->put('last_invoice_id', $newInvoiceId);
+
+    //     return redirect()->route('order.success');
+    // }
 
 
     // public function download()

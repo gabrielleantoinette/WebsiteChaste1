@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('gudang_id')->nullable();
             $table->unsignedBigInteger('accountant_id')->nullable();
             $table->bigInteger('grand_total');
+            $table->bigInteger('shipping_cost')->default(0);
             $table->string('status');
             $table->string('address')->default('');
             $table->boolean('is_paid')->default(false);
@@ -31,7 +32,7 @@ return new class extends Migration
             $table->date('receive_date')->nullable();
             $table->date('received_date')->nullable();
             $table->string('delivery_proof_photo')->nullable();
-            $table->string('delivery_signature')->nullable(); 
+            $table->string('delivery_signature')->nullable();
             $table->timestamps();
         });
     }
