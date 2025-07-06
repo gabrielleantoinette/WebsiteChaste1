@@ -40,4 +40,9 @@ class HInvoice extends Model
     {
         return $this->hasMany(DInvoice::class, 'hinvoice_id');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(\App\Models\PaymentModel::class, 'invoice_id');
+    }
 }

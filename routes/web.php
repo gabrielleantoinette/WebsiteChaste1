@@ -180,6 +180,8 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/assign/{id}', [OwnerController::class, 'assignDriver']);
     });
 
+    Route::get('/transactions', [OwnerController::class, 'transactionsIndex'])->name('owner.transactions.index');
+
     Route::prefix('driver-transaksi')->group(function () {
         Route::get('/', [DriverController::class, 'viewTransaksiDriver']);
         Route::get('/detail/{id}', [DriverController::class, 'detailTransaksiDriver'])->name('driver-transaksi.detail');

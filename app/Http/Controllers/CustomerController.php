@@ -131,7 +131,7 @@ class CustomerController extends Controller
         $customer = Customer::find($user['id']);
 
         $menungguPembayaranCount = HInvoice::where('customer_id', $user['id'])->where('status', 'Menunggu Pembayaran')->count();
-        $dikemasCount = HInvoice::where('customer_id', $user['id'])->where('status', 'dikemas')->count();
+        $dikemasCount = HInvoice::where('customer_id', $user['id'])->where('status', 'Dikemas')->count();
         $dikirimCount = HInvoice::where('customer_id', $user['id'])->whereIn('status', ['dikirim', 'sampai'])->count();
         $reviewCount = HInvoice::where('customer_id', $user['id'])->where('status', 'diterima')->count();
 
