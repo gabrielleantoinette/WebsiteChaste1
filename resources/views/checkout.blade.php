@@ -140,6 +140,13 @@
                             <span>COD (Bayar di Tempat)</span>
                         </label>
                     </div>
+                    <div>
+                        <label class="flex items-center space-x-2">
+                            <input type="radio" name="payment_method" value="hutang" class="accent-teal-600"
+                                onchange="showPaymentInfo()">
+                            <span>Bayar Nanti (Hutang)</span>
+                        </label>
+                    </div>
                 </div>
 
                 <!-- DIV KETERANGAN -->

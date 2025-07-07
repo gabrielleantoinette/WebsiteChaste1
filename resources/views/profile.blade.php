@@ -162,17 +162,19 @@
             {{-- Keuangan --}}
             <div>
                 <h2 class="text-xl font-bold mb-4">Keuangan Saya</h2>
-                <div class="border rounded-md p-4 flex justify-between text-sm bg-[#F9F9F9]">
-                    <div class="text-center flex-1">
-                        <p class="text-gray-600">Hutang</p>
-                        <p class="text-red-500 font-semibold text-lg">Rp 2.000.000</p>
+                <a href="{{ route('profile.hutang') }}" class="block">
+                    <div class="border rounded-md p-4 flex justify-between text-sm bg-[#F9F9F9] hover:bg-gray-100 cursor-pointer">
+                        <div class="text-center flex-1">
+                            <p class="text-gray-600">Hutang</p>
+                            <p class="text-red-500 font-semibold text-lg">Rp {{ number_format($totalHutang, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="border-l"></div>
+                        <div class="text-center flex-1">
+                            <p class="text-gray-600">Jumlah Tagihan Nota</p>
+                            <p class="text-red-500 font-semibold text-lg">{{ $jumlahNotaBelumLunas }}</p>
+                        </div>
                     </div>
-                    <div class="border-l"></div>
-                    <div class="text-center flex-1">
-                        <p class="text-gray-600">Jumlah Tagihan Nota</p>
-                        <p class="text-red-500 font-semibold text-lg">2</p>
-                    </div>
-                </div>
+                </a>
             </div>
         </div>
     </div>

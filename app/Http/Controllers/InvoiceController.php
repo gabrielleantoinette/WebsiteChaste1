@@ -273,6 +273,17 @@ class InvoiceController extends Controller
             return redirect()->route('checkout.midtrans.payment', ['snapToken' => $snapToken, 'paymentId' => $newPayment->id]);
         }
 
+        // Tambahkan: untuk metode hutang/cod, insert ke tabel payment
+        if (in_array($paymentMethod, ['cod', 'hutang'])) {
+            PaymentModel::create([
+                'invoice_id' => $newInvoiceId,
+                'method' => $paymentMethod,
+                'type' => 'full',
+                'is_paid' => 0,
+                'amount' => $grandTotal,
+            ]);
+        }
+
         session()->put('last_invoice_id', $newInvoiceId);
         return redirect()->route('order.success');
     }

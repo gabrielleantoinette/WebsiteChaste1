@@ -164,7 +164,22 @@ class CustomerController extends Controller
         $dikirimCount = HInvoice::where('customer_id', $user['id'])->whereIn('status', ['dikirim', 'sampai'])->count();
         $reviewCount = HInvoice::where('customer_id', $user['id'])->where('status', 'diterima')->count();
 
-        return view('profile', compact('customer', 'dikemasCount', 'dikirimCount', 'reviewCount', 'menungguPembayaranCount'));
+        // Hitung total hutang dan jumlah nota belum lunas (hanya payment method hutang/cod)
+        $invoices = HInvoice::where('customer_id', $user['id'])
+            ->with(['payments' => function($q) {
+                $q->where('is_paid', 0);
+            }])
+            ->get();
+        $filtered = $invoices->filter(function($inv) {
+            $p = $inv->payments->first();
+            return $p && in_array($p->method, ['cod', 'hutang']) && $p->is_paid == 0;
+        });
+        $totalHutang = $filtered->sum(function($inv) {
+            return $inv->grand_total - ($inv->paid_amount ?? 0);
+        });
+        $jumlahNotaBelumLunas = $filtered->count();
+
+        return view('profile', compact('customer', 'dikemasCount', 'dikirimCount', 'reviewCount', 'menungguPembayaranCount', 'totalHutang', 'jumlahNotaBelumLunas'));
     }
 
     public function transaksiDiterima($id)
@@ -256,5 +271,50 @@ class CustomerController extends Controller
         ]);
 
         return redirect('/transaksi')->with('success', 'Retur berhasil diajukan.');
+    }
+
+    public function detailHutang()
+    {
+        $user = Session::get('user');
+        $customerId = $user['id'];
+        // Ambil semua invoice customer
+        $invoices = \App\Models\HInvoice::where('customer_id', $customerId)
+            ->with(['payments' => function($q) {
+                $q->where('is_paid', 0);
+            }])
+            ->get();
+        // Filter hanya yang payment method 'cod' atau 'hutang' dan is_paid=0, payment tidak null
+        $filtered = $invoices->filter(function($inv) {
+            $p = $inv->payments->first();
+            return $p && in_array($p->method, ['cod', 'hutang']) && $p->is_paid == 0;
+        });
+        $totalHutang = $filtered->sum(function($inv) {
+            return $inv->grand_total - ($inv->paid_amount ?? 0);
+        });
+        return view('hutang-detail', [
+            'invoices' => $filtered,
+            'totalHutang' => $totalHutang
+        ]);
+    }
+
+    public function uploadPelunasanHutang(Request $request)
+    {
+        $user = Session::get('user');
+        $customerId = $user['id'];
+        $request->validate([
+            'amount_paid' => 'required|numeric|min:1000',
+            'payment_date' => 'required|date',
+            'payment_proof' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'notes' => 'nullable|string',
+        ]);
+        $proofPath = $request->file('payment_proof')->store('debt_proofs', 'public');
+        // Simpan ke debt_payments (tanpa relasi purchase_order, bisa tambahkan invoice_id jika perlu)
+        \App\Models\DebtPayment::create([
+            // 'purchase_order_id' => null, // jika ada relasi ke invoice, tambahkan di sini
+            'payment_date' => $request->payment_date,
+            'amount_paid' => $request->amount_paid,
+            'notes' => $request->notes . ' | Bukti: ' . basename($proofPath),
+        ]);
+        return redirect()->route('profile.hutang')->with('success', 'Bukti pembayaran hutang berhasil diupload, menunggu verifikasi.');
     }
 }

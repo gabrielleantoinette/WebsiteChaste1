@@ -16,5 +16,6 @@ class PaymentModel extends Model
         'status',
         'amount',
         'snap_token',
+        'is_paid',
     ];
 }
