@@ -169,9 +169,13 @@
                 {{-- shipping cost --}}
                 <input type="hidden" id="shippingCostValue" name="shipping_cost">
 
+                @if (!empty($disableCheckout) && $disableCheckout)
+                    <div class="mb-4 text-red-600 font-semibold">Checkout dinonaktifkan karena hutang melebihi Rp 10.000.000 atau ada hutang jatuh tempo yang belum dilunasi.</div>
+                @endif
                 <!-- Tombol Bayar -->
                 <button id="pay-button" type="submit"
-                    class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">
+                    class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded @if(!empty($disableCheckout) && $disableCheckout) opacity-50 cursor-not-allowed @endif"
+                    @if(!empty($disableCheckout) && $disableCheckout) disabled @endif>
                     Bayar
                 </button>
             </div>

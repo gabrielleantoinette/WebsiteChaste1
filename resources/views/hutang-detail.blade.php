@@ -25,6 +25,7 @@
                         <th class="border px-2 py-1">Total</th>
                         <th class="border px-2 py-1">Sisa Hutang</th>
                         <th class="border px-2 py-1">Status</th>
+                        <th class="border px-2 py-1">Jatuh Tempo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,6 +37,17 @@
                             <td class="border px-2 py-1">Rp {{ number_format($inv->grand_total, 0, ',', '.') }}</td>
                             <td class="border px-2 py-1">Rp {{ number_format($inv->grand_total - ($inv->paid_amount ?? 0), 0, ',', '.') }}</td>
                             <td class="border px-2 py-1">Belum Lunas</td>
+                            <td class="border px-2 py-1">
+                                @php $p = $inv->payments->first(); @endphp
+                                @if($p && $p->method == 'hutang')
+                                    {{ $inv->created_at->addMonth()->format('d-m-Y') }}
+                                    @if(now()->gt($inv->created_at->addMonth()) && ($inv->grand_total - ($inv->paid_amount ?? 0)) > 0)
+                                        <span class="text-red-500 font-bold ml-1">(Terlambat)</span>
+                                    @endif
+                                @else
+                                    -
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr><td colspan="6" class="text-center py-2">Tidak ada hutang aktif.</td></tr>

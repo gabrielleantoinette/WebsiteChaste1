@@ -284,6 +284,11 @@ class InvoiceController extends Controller
             ]);
         }
 
+        // Hapus item keranjang yang sudah di-checkout
+        if (!empty($cartIds)) {
+            DB::table('cart')->whereIn('id', $cartIds)->delete();
+        }
+
         session()->put('last_invoice_id', $newInvoiceId);
         return redirect()->route('order.success');
     }

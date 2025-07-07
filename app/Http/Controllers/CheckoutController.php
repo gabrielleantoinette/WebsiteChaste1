@@ -104,6 +104,25 @@ class CheckoutController extends Controller
             );
         }
 
+        // Cek limit hutang dan jatuh tempo
+        $hutangInvoices = \App\Models\HInvoice::where('customer_id', $customerId)
+            ->with(['payments' => function($q) {
+                $q->where('is_paid', 0);
+            }])
+            ->get();
+        $filteredHutang = $hutangInvoices->filter(function($inv) {
+            $p = $inv->payments->first();
+            return $p && in_array($p->method, ['cod', 'hutang']) && $p->is_paid == 0;
+        });
+        $totalHutangAktif = $filteredHutang->sum(function($inv) {
+            return $inv->grand_total - ($inv->paid_amount ?? 0);
+        });
+        $adaHutangTerlambat = $filteredHutang->contains(function($inv) {
+            $p = $inv->payments->first();
+            return $p && $p->method == 'hutang' && now()->gt($inv->created_at->addMonth()) && ($inv->grand_total - ($inv->paid_amount ?? 0)) > 0;
+        });
+        $disableCheckout = $totalHutangAktif >= 10000000 || $adaHutangTerlambat;
+
         // midtrans
         // $customer = Customer::find(Session::get('user')['id']);
 
@@ -140,6 +159,7 @@ class CheckoutController extends Controller
             'subtotalProduk' => $subtotalProduk,
             'subtotalPengiriman' => $subtotalPengiriman,
             'alamat_default_user' => $alamat_default_user,
+            'disableCheckout' => $disableCheckout,
             // 'snapToken' => $snapToken,
             // 'orderId' => $newOrder->id
         ]);
