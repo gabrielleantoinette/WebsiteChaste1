@@ -31,8 +31,19 @@
         {{-- Form Edit Profil --}}
         <div class="border rounded-xl p-6 md:p-10 space-y-6 bg-white shadow-sm">
             <h2 class="text-xl font-bold mb-4">Profil Saya</h2>
-            <form class="space-y-4">
+            <form class="space-y-4" method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan profil?')">
                 @csrf
+                <div class="flex flex-col items-center mb-6">
+                    @if ($customer->profile_picture)
+                        <img src="{{ asset('storage/photos/' . $customer->profile_picture) }}" alt="Foto Profil" class="w-30 h-30 rounded-full object-cover" style="width:120px;height:120px;">
+                    @else
+                        <div class="w-30 h-30 rounded-full bg-gray-200 flex items-center justify-center text-4xl font-bold text-gray-500" style="width:120px;height:120px;">
+                            {{ strtoupper(substr($customer->name,0,1)) }}
+                        </div>
+                    @endif
+                    <label for="profile_picture" class="mt-3 inline-block bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded cursor-pointer text-sm">Ubah Foto Profil</label>
+                    <input type="file" name="profile_picture" id="profile_picture" class="hidden">
+                </div>
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
                     <input type="text" name="name" id="name"
@@ -47,6 +58,39 @@
                     <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
                     <input type="text" name="phone" id="phone"
                         class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->phone }}">
+                </div>
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                    <input type="text" name="address" id="address"
+                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->address }}">
+                </div>
+                <div>
+                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1">Kota</label>
+                    <input type="text" name="city" id="city"
+                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->city }}">
+                </div>
+                <div>
+                    <label for="province" class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
+                    <input type="text" name="province" id="province"
+                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->province }}">
+                </div>
+                <div>
+                    <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
+                    <input type="text" name="postal_code" id="postal_code"
+                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->postal_code }}">
+                </div>
+                <div>
+                    <label for="birth_date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir</label>
+                    <input type="date" name="birth_date" id="birth_date"
+                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->birth_date }}">
+                </div>
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                    <select name="gender" id="gender" class="w-full border border-gray-300 rounded-md px-4 py-2">
+                        <option value="" disabled {{ $customer->gender == null ? 'selected' : '' }}>Pilih</option>
+                        <option value="Laki-laki" {{ $customer->gender == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                        <option value="Perempuan" {{ $customer->gender == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                    </select>
                 </div>
                 <div class="relative">
                     <input type="password" name="password" id="password"

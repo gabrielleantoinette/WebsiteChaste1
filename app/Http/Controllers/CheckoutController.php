@@ -93,7 +93,16 @@ class CheckoutController extends Controller
         }
 
         $subtotalPengiriman = 0; // default 0, berubah saat user pilih ekspedisi
-        $alamat_default_user = session()->get('customer_address', '');
+        $alamat_default_user = '';
+        $customer = Customer::find($customerId);
+        if ($customer) {
+            $alamat_default_user = trim(
+                ($customer->address ? $customer->address : '') .
+                ($customer->city ? ', ' . $customer->city : '') .
+                ($customer->province ? ', ' . $customer->province : '') .
+                ($customer->postal_code ? ' ' . $customer->postal_code : '')
+            );
+        }
 
         // midtrans
         // $customer = Customer::find(Session::get('user')['id']);

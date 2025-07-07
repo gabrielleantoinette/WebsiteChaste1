@@ -76,6 +76,7 @@ Route::middleware([LoggedIn::class])->group(function () {
 
 
     Route::get('/profile', [CustomerController::class, 'viewProfile'])->name('profile');
+    Route::post('/profile', [CustomerController::class, 'updateCustomerAction'])->name('profile.update');
 
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout/invoice', [InvoiceController::class, 'storeFromCheckout'])->name('checkout.invoice'); // ini tidak dipakai lagi

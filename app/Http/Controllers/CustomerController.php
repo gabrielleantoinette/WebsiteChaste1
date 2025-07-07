@@ -43,15 +43,44 @@ class CustomerController extends Controller
         return view('admin.customers.detail', compact('customer'));
     }
 
-    public function updateCustomerAction(Request $request, $id)
+    public function updateCustomerAction(Request $request, $id = null)
     {
+        if (!$id) {
+            $user = Session::get('user');
+            $id = $user['id'];
+        }
         $customer = Customer::find($id);
-        $customer->name = $request->name;
-        $customer->email = $request->email;
-        $customer->password = $request->password;
-        $customer->phone = $request->phone;
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'province' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:255',
+            'birth_date' => 'nullable|date',
+            'gender' => 'nullable|string|max:255',
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'password' => 'nullable|string|max:255',
+        ]);
+
+        $customer->fill($validated);
+        if ($request->filled('password')) {
+            $customer->password = $request->password; // hash jika perlu
+        }
+        if ($request->hasFile('profile_picture')) {
+            $profile_picture = $request->file('profile_picture')->store('photos', 'public');
+            $customer->profile_picture = basename($profile_picture);
+        }
         $customer->save();
-        return redirect('/admin/customers/detail/' . $id);
+
+        // Redirect sesuai asal update
+        if ($request->route()->getName() === 'profile.update') {
+            return redirect()->route('profile')->with('success', 'Profil berhasil diperbarui!');
+        } else {
+            return redirect('/admin/customers/detail/' . $id)->with('success', 'Customer berhasil diperbarui!');
+        }
     }
 
 
