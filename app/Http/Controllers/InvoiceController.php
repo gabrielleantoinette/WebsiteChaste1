@@ -201,6 +201,7 @@ class InvoiceController extends Controller
         $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
 
         $subtotalProduk = 0;
+        $cartIds = [];
         if ($request->has('cart_ids')) {
             $cartIds = $request->cart_ids;
             $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
@@ -270,11 +271,13 @@ class InvoiceController extends Controller
             $newPayment->snap_token = $snapToken;
             $newPayment->save();
 
+            // Simpan cartIds ke session untuk dihapus setelah payment sukses
+            session()->put('cart_ids_to_delete', $cartIds);
             return redirect()->route('checkout.midtrans.payment', ['snapToken' => $snapToken, 'paymentId' => $newPayment->id]);
         }
 
-        // Tambahkan: untuk metode hutang/cod, insert ke tabel payment
-        if (in_array($paymentMethod, ['cod', 'hutang'])) {
+        // Tambahkan: untuk metode hutang/cod/transfer_bank, insert ke tabel payment
+        if (in_array($paymentMethod, ['cod', 'hutang', 'transfer_bank'])) {
             PaymentModel::create([
                 'invoice_id' => $newInvoiceId,
                 'method' => $paymentMethod,
@@ -284,7 +287,7 @@ class InvoiceController extends Controller
             ]);
         }
 
-        // Hapus item keranjang yang sudah di-checkout
+        // Hapus item keranjang yang sudah di-checkout (untuk cod/hutang/transfer_bank)
         if (!empty($cartIds)) {
             DB::table('cart')->whereIn('id', $cartIds)->delete();
         }
@@ -309,6 +312,18 @@ class InvoiceController extends Controller
         $payment = PaymentModel::find($paymentId);
         $payment->is_paid = $paymentStatus == 'success' ? true : false;
         $payment->save();
+
+        // Set session last_invoice_id agar halaman sukses tidak error
+        session()->put('last_invoice_id', $payment->invoice_id);
+
+        // Hapus cart setelah pembayaran sukses (midtrans)
+        if ($paymentStatus == 'success' && session()->has('cart_ids_to_delete')) {
+            $cartIds = session('cart_ids_to_delete');
+            if (!empty($cartIds)) {
+                DB::table('cart')->whereIn('id', $cartIds)->delete();
+            }
+            session()->forget('cart_ids_to_delete');
+        }
 
         // TODO Update Invoice setelah payment berhasil.
 

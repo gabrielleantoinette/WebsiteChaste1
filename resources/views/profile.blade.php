@@ -65,14 +65,16 @@
                         class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->address }}">
                 </div>
                 <div>
-                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1">Kota</label>
-                    <input type="text" name="city" id="city"
-                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->city }}">
+                    <label for="province" class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
+                    <select name="province" id="province" class="w-full border border-gray-300 rounded-md px-4 py-2" required>
+                        <option value="">Pilih Provinsi</option>
+                    </select>
                 </div>
                 <div>
-                    <label for="province" class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
-                    <input type="text" name="province" id="province"
-                        class="w-full border border-gray-300 rounded-md px-4 py-2" value="{{ $customer->province }}">
+                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1">Kota</label>
+                    <select name="city" id="city" class="w-full border border-gray-300 rounded-md px-4 py-2" required>
+                        <option value="">Pilih Kota/Kabupaten</option>
+                    </select>
                 </div>
                 <div>
                     <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
@@ -203,6 +205,43 @@
                 `;
             }
         }
+
+        fetch('/indonesia_wilayah.json')
+  .then(res => res.json())
+  .then(data => {
+    const provinsiSelect = document.getElementById('province');
+    const kotaSelect = document.getElementById('city');
+    const selectedProv = "{{ $customer->province }}";
+    const selectedKota = "{{ $customer->city }}";
+
+    // Isi dropdown provinsi
+    Object.keys(data).forEach(prov => {
+      const opt = document.createElement('option');
+      opt.value = prov;
+      opt.textContent = prov;
+      if (prov === selectedProv) opt.selected = true;
+      provinsiSelect.appendChild(opt);
+    });
+
+    // Jika sudah ada provinsi, isi kota
+    function fillKota(prov) {
+      kotaSelect.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>';
+      if (data[prov]) {
+        data[prov].forEach(kota => {
+          const opt = document.createElement('option');
+          opt.value = kota;
+          opt.textContent = kota;
+          if (kota === selectedKota) opt.selected = true;
+          kotaSelect.appendChild(opt);
+        });
+      }
+    }
+    if (selectedProv) fillKota(selectedProv);
+
+    provinsiSelect.addEventListener('change', function() {
+      fillKota(this.value);
+    });
+  });
     </script>
 </body>
 

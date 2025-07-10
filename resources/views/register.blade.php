@@ -57,14 +57,18 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Kota</label>
-                            <input type="text" name="city"
+                            <label class="block text-sm font-medium text-gray-700">Provinsi</label>
+                            <select name="province" id="province" required
                                 class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                                <option value="">Pilih Provinsi</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Provinsi</label>
-                            <input type="text" name="province"
+                            <label class="block text-sm font-medium text-gray-700">Kota</label>
+                            <select name="city" id="city" required
                                 class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                                <option value="">Pilih Kota/Kabupaten</option>
+                            </select>
                         </div>
                     </div>
 
@@ -100,6 +104,34 @@
 
     <!-- Footer -->
     @include('layouts.footer')
+
+    <script>
+fetch('/indonesia_wilayah.json')
+  .then(res => res.json())
+  .then(data => {
+    const provinsiSelect = document.getElementById('province');
+    const kotaSelect = document.getElementById('city');
+    // Isi dropdown provinsi
+    Object.keys(data).forEach(prov => {
+      const opt = document.createElement('option');
+      opt.value = prov;
+      opt.textContent = prov;
+      provinsiSelect.appendChild(opt);
+    });
+    // Saat provinsi dipilih, isi dropdown kota
+    provinsiSelect.addEventListener('change', function() {
+      kotaSelect.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>';
+      if (data[this.value]) {
+        data[this.value].forEach(kota => {
+          const opt = document.createElement('option');
+          opt.value = kota;
+          opt.textContent = kota;
+          kotaSelect.appendChild(opt);
+        });
+      }
+    });
+  });
+</script>
 
 </body>
 
