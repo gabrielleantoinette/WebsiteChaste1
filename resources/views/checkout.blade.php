@@ -143,9 +143,12 @@
                     <div>
                         <label class="flex items-center space-x-2">
                             <input type="radio" name="payment_method" value="hutang" class="accent-teal-600"
-                                onchange="showPaymentInfo()">
+                                onchange="showPaymentInfo()" id="hutang" {{ !$bolehHutang ? 'disabled' : '' }}>
                             <span>Bayar Nanti (Hutang)</span>
                         </label>
+                        @if(!$bolehHutang)
+                            <span class="text-xs text-red-500 ml-2">Minimal 1x transaksi lunas untuk bisa hutang</span>
+                        @endif
                     </div>
                 </div>
 
@@ -173,7 +176,7 @@
                     <div class="mb-4 text-red-600 font-semibold">Checkout dinonaktifkan karena hutang melebihi Rp 10.000.000 atau ada hutang jatuh tempo yang belum dilunasi.</div>
                 @endif
                 <!-- Tombol Bayar -->
-                <button id="pay-button" type="submit"
+                <button id="btnBayar" type="submit"
                     class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded @if(!empty($disableCheckout) && $disableCheckout) opacity-50 cursor-not-allowed @endif"
                     @if(!empty($disableCheckout) && $disableCheckout) disabled @endif>
                     Bayar
@@ -235,6 +238,30 @@
                 paymentInfo.innerHTML = '';
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const hutangRadio = document.getElementById('hutang');
+            const btnBayar = document.getElementById('btnBayar');
+            if (hutangRadio && hutangRadio.disabled) {
+                hutangRadio.addEventListener('click', function(e) {
+                    e.preventDefault();
+                });
+            }
+            // Disable button jika hutang dipilih tapi tidak boleh
+            document.querySelectorAll('input[name=payment_method]').forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (hutangRadio && hutangRadio.checked && hutangRadio.disabled) {
+                        btnBayar.disabled = true;
+                    } else {
+                        btnBayar.disabled = false;
+                    }
+                });
+            });
+            // Inisialisasi: jika hutang terpilih dan disabled, button disable
+            if (hutangRadio && hutangRadio.checked && hutangRadio.disabled) {
+                btnBayar.disabled = true;
+            }
+        });
     </script>
 </body>
 

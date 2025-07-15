@@ -200,6 +200,11 @@ class InvoiceController extends Controller
         // cari apakah ini pesanan pertama customer?
         $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
 
+        // Tidak boleh hutang jika first order
+        if ($paymentMethod == 'hutang' && $isFirstOrder) {
+            return redirect()->back()->with('error', 'Anda harus minimal 1x transaksi lunas sebelum boleh berhutang.');
+        }
+
         $subtotalProduk = 0;
         $cartIds = [];
         if ($request->has('cart_ids')) {
@@ -234,6 +239,7 @@ class InvoiceController extends Controller
             'dp_amount' => $isFirstOrder ? $grandTotal / 2 : 0,
             'grand_total' => $grandTotal,
             'shipping_cost' => $shippingCost ?? 0,
+            'due_date' => now()->addDays(30), // <-- otomatis 30 hari dari sekarang
             'created_at' => now(),
             'updated_at' => now(),
         ]);

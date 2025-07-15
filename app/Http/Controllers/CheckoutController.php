@@ -104,6 +104,11 @@ class CheckoutController extends Controller
             );
         }
 
+        // Cek apakah customer sudah pernah transaksi lunas/diterima
+        $bolehHutang = \App\Models\HInvoice::where('customer_id', $customerId)
+            ->whereIn('status', ['lunas', 'diterima'])
+            ->exists();
+
         // Cek limit hutang dan jatuh tempo
         $hutangInvoices = \App\Models\HInvoice::where('customer_id', $customerId)
             ->with(['payments' => function($q) {
@@ -130,6 +135,7 @@ class CheckoutController extends Controller
             'subtotalPengiriman' => $subtotalPengiriman,
             'alamat_default_user' => $alamat_default_user,
             'disableCheckout' => $disableCheckout,
+            'bolehHutang' => $bolehHutang,
         ]);
     }
 }

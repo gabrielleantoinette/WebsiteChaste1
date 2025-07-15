@@ -32,34 +32,34 @@
             </div>
         </div>
     </div>
-    <div class="bg-white p-8 rounded-xl shadow border border-gray-100">
-        <h2 class="text-lg font-bold mb-4 text-gray-800">Reminder Hutang Jatuh Tempo <span class="font-normal text-gray-500">(3 Hari ke Depan)</span></h2>
-        @if($hutangJatuhTempo->isEmpty())
-            <p class="text-gray-500 text-center py-8">Tidak ada hutang yang jatuh tempo dalam 3 hari ke depan.</p>
-        @else
+    <div class="bg-white rounded-xl shadow p-6 mt-8">
+        <h2 class="text-lg font-semibold mb-4 text-gray-800">Reminder Hutang Jatuh Tempo <span class="font-normal text-gray-500">(3 Hari ke Depan)</span></h2>
         <div class="overflow-x-auto">
-            <table class="min-w-full text-sm border rounded-xl overflow-hidden">
-                <thead>
-                    <tr class="bg-teal-50 text-teal-700">
-                        <th class="px-6 py-3 border-b">Nama Customer</th>
-                        <th class="px-6 py-3 border-b">Kode Invoice</th>
-                        <th class="px-6 py-3 border-b">Jatuh Tempo</th>
-                        <th class="px-6 py-3 border-b">Sisa Hutang</th>
+            <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm mt-2">
+                <thead class="bg-teal-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-teal-700">Nama Customer</th>
+                        <th class="px-4 py-2 text-left font-semibold text-teal-700">Kode Invoice</th>
+                        <th class="px-4 py-2 text-left font-semibold text-teal-700">Jatuh Tempo</th>
+                        <th class="px-4 py-2 text-left font-semibold text-teal-700">Sisa Hutang</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($hutangJatuhTempo as $inv)
-                    <tr class="hover:bg-teal-50 transition">
-                        <td class="px-6 py-3 border-b">{{ $inv->customer->name ?? '-' }}</td>
-                        <td class="px-6 py-3 border-b">{{ $inv->code }}</td>
-                        <td class="px-6 py-3 border-b">{{ $inv->due_date }}</td>
-                        <td class="px-6 py-3 border-b font-semibold text-red-600">Rp {{ number_format($inv->grand_total - ($inv->paid_amount ?? 0), 0, ',', '.') }}</td>
-                    </tr>
-                    @endforeach
+                    @forelse($hutangJatuhTempo as $hutang)
+                        <tr class="hover:bg-teal-50 transition">
+                            <td class="px-4 py-2 border-b">{{ $hutang->customer->name ?? '-' }}</td>
+                            <td class="px-4 py-2 border-b">{{ $hutang->code }}</td>
+                            <td class="px-4 py-2 border-b">{{ \Carbon\Carbon::parse($hutang->due_date)->format('d-m-Y') }}</td>
+                            <td class="px-4 py-2 border-b font-bold text-red-600">Rp {{ number_format($hutang->grand_total - ($hutang->paid_amount ?? 0), 0, ',', '.') }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-4 py-6 text-center text-gray-500">Tidak ada hutang yang jatuh tempo dalam 3 hari ke depan.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
-        @endif
     </div>
 </div>
 @endsection 

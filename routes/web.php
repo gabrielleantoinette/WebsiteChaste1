@@ -98,14 +98,7 @@ Route::middleware([LoggedIn::class])->group(function () {
 
 // Prefix Admin untuk Management
 Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
-    Route::get('/', function() {
-        $user = Session::get('user');
-        if ($user && (is_array($user) ? ($user['role'] ?? null) : ($user->role ?? null)) == 'keuangan') {
-            return redirect()->route('keuangan.dashboard');
-        }
-        // Jika bukan keuangan, arahkan ke dashboard umum
-        return view('admin.dashboard');
-    });
+    Route::get('/', [DashboardController::class, 'index']);
 
     Route::get('/admin/keuangan', function() {
         return redirect()->route('keuangan.dashboard');
