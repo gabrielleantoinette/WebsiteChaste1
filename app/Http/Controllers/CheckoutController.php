@@ -123,36 +123,6 @@ class CheckoutController extends Controller
         });
         $disableCheckout = $totalHutangAktif >= 10000000 || $adaHutangTerlambat;
 
-        // midtrans
-        // $customer = Customer::find(Session::get('user')['id']);
-
-        // $newOrder = new OrderModel();
-        // $newOrder->cart_ids = json_encode($cartIds);
-        // $newOrder->customer_id = $customer->id;
-        // $newOrder->payment_method = 'transfer_bank';
-        // $newOrder->address = $alamat_default_user;
-        // $newOrder->save();
-
-        // $payload = [
-        //     'transaction_details' => [
-        //         'order_id'      => $newOrder->created_at->format('YmdHis'),
-        //         'gross_amount'  => $subtotalProduk,
-        //     ],
-        //     'customer_details' => [
-        //         'first_name'    => $customer->name,
-        //         'email'         => $customer->email,
-        //     ],
-        //     'item_details' => [
-        //         [
-        //             'id'       => $newOrder->id,
-        //             'price'    => $subtotalProduk,
-        //             'quantity' => 1,
-        //             'name'     => 'Order ' . $newOrder->id
-        //         ]
-        //     ]
-        // ];
-        // $snapToken = Snap::getSnapToken($payload);
-
         return view('checkout', [
             'produkItems' => $produkItems,
             'customItems' => $customItems,
@@ -160,8 +130,6 @@ class CheckoutController extends Controller
             'subtotalPengiriman' => $subtotalPengiriman,
             'alamat_default_user' => $alamat_default_user,
             'disableCheckout' => $disableCheckout,
-            // 'snapToken' => $snapToken,
-            // 'orderId' => $newOrder->id
         ]);
     }
 }

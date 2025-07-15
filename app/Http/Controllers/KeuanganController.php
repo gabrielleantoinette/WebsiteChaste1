@@ -97,4 +97,20 @@ class KeuanganController extends Controller
 
         return $pdf->download('laporan-keuangan-transaksi-pembeli.pdf');
     }
+
+    public function dashboardKeuangan()
+    {
+        $today = now()->toDateString();
+        $totalTransaksi = \App\Models\HInvoice::whereDate('created_at', $today)->count();
+        $totalPemasukan = \App\Models\HInvoice::whereDate('created_at', $today)->sum('grand_total');
+        $totalPengeluaran = \App\Models\DebtPayment::whereDate('payment_date', $today)->sum('amount_paid');
+
+        $reminderDate = now()->addDays(3)->toDateString();
+        $hutangJatuhTempo = \App\Models\HInvoice::with('customer')
+            ->where('status', '!=', 'lunas')
+            ->whereBetween('due_date', [now()->toDateString(), $reminderDate])
+            ->get();
+
+        return view('admin.dashboardkeuangan', compact('totalTransaksi', 'totalPemasukan', 'totalPengeluaran', 'hutangJatuhTempo'));
+    }
 }

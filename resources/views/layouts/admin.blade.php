@@ -24,7 +24,7 @@
         <h2 class="text-xl font-bold mb-6">CHASTE Master</h2>
 
         <nav class="flex flex-col gap-2 text-sm font-medium">
-            <a href="{{ url('/admin') }}" class="{{ request()->is('admin') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Dashboard</a>
+            <a href="{{ route('keuangan.dashboard') }}" class="{{ request()->routeIs('keuangan.dashboard') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Dashboard</a>
 
             @if (Session::get('user')->role == 'owner')
                 <a href="{{ url('/admin/products') }}" class="{{ request()->is('admin/products*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Produk</a>

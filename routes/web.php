@@ -21,6 +21,7 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 
 Route::get('/', function () {
     return view('welcome');
@@ -97,7 +98,18 @@ Route::middleware([LoggedIn::class])->group(function () {
 
 // Prefix Admin untuk Management
 Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
-    Route::get('/', [DashboardController::class, 'index']);
+    Route::get('/', function() {
+        $user = Session::get('user');
+        if ($user && (is_array($user) ? ($user['role'] ?? null) : ($user->role ?? null)) == 'keuangan') {
+            return redirect()->route('keuangan.dashboard');
+        }
+        // Jika bukan keuangan, arahkan ke dashboard umum
+        return view('admin.dashboard');
+    });
+
+    Route::get('/admin/keuangan', function() {
+        return redirect()->route('keuangan.dashboard');
+    });
 
     Route::prefix('products')->group(function () {
         Route::get('/', [ProductController::class, 'view'])
@@ -209,4 +221,5 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/retur/export-pdf', [LaporanController::class, 'returPDF'])->name('laporan.retur.pdf');
         Route::get('/ratarata/export-pdf', [LaporanController::class, 'rataRataPDF'])->name('laporan.ratarata.pdf');
     });
+    Route::get('/admin/keuangan/dashboard', [\App\Http\Controllers\KeuanganController::class, 'dashboardKeuangan'])->name('keuangan.dashboard');
 });
