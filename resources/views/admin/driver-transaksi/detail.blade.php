@@ -94,11 +94,11 @@
             <form action="{{ url('/admin/invoices/upload-bukti/' . $invoice->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 <div>
-                    <label for="photo" class="block font-medium mb-1">Foto Bukti Kirim (opsional):</label>
+                    <label for="photo" class="block font-medium mb-1">Foto Bukti Kirim:</label>
                     <input type="file" name="photo" accept="image/*" class="border border-gray-300 p-2 rounded w-full">
                 </div>
                 <div>
-                    <label for="signature" class="block font-medium mb-1">Tanda Tangan Penerima (opsional):</label>
+                    <label for="signature" class="block font-medium mb-1">Tanda Tangan Penerima:</label>
                     <input type="file" name="signature" accept="image/*" class="border border-gray-300 p-2 rounded w-full">
                 </div>
                 <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition">Upload Bukti</button>

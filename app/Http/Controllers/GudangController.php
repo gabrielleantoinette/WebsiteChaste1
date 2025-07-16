@@ -49,4 +49,36 @@ class GudangController extends Controller
 
         return redirect()->back()->with('success', 'Berhasil menyiapkan barang');
     }
+
+    // Dashboard Gudang
+    public function dashboardGudang()
+    {
+        $user = Session::get('user');
+        if (!$user || $user->role !== 'gudang') {
+            return redirect('/admin')->with('error', 'Akses ditolak.');
+        }
+        // Pesanan siap diproses
+        $orders = HInvoice::with('customer')
+            ->where('status', 'dikemas')
+            ->where(function($q) use ($user) {
+                $q->whereNull('gudang_id')->orWhere('gudang_id', $user->id);
+            })->get();
+        $siapProsesCount = $orders->count();
+        // Rangkuman produk/terpal perlu disiapkan
+        $produkDisiapkan = [];
+        $totalProdukDisiapkan = 0;
+        foreach ($orders as $order) {
+            foreach ($order->cartItems ?? [] as $item) {
+                $nama = $item->product_name ?? $item->nama_custom ?? 'Produk';
+                $qty = $item->quantity ?? 0;
+                if (!isset($produkDisiapkan[$nama])) {
+                    $produkDisiapkan[$nama] = ['nama' => $nama, 'qty' => 0];
+                }
+                $produkDisiapkan[$nama]['qty'] += $qty;
+                $totalProdukDisiapkan += $qty;
+            }
+        }
+        $produkDisiapkan = array_values($produkDisiapkan);
+        return view('admin.dashboardgudang', compact('orders', 'siapProsesCount', 'totalProdukDisiapkan', 'produkDisiapkan'));
+    }
 }

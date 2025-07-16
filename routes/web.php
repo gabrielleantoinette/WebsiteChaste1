@@ -99,6 +99,9 @@ Route::middleware([LoggedIn::class])->group(function () {
 // Prefix Admin untuk Management
 Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
+    
+    // Dashboard Gudang
+    Route::get('/dashboard-gudang', [GudangController::class, 'dashboardGudang'])->name('gudang.dashboard');
 
     Route::get('/admin/keuangan', function() {
         return redirect()->route('keuangan.dashboard');

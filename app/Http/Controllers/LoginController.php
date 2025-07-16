@@ -27,6 +27,9 @@ class LoginController extends Controller
         if ($employee) {
             if ($employee->password == $request->password) {
                 Session::put('user', $employee);
+                if ($employee->role === 'gudang') {
+                    return redirect('/admin/dashboard-gudang');
+                }
                 return redirect('/admin');
             } else {
                 return back()->with('error', 'Password salah.');
