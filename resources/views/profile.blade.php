@@ -124,35 +124,35 @@
             <div>
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold">Pesanan Saya</h2>
-                    <a href="{{ route('transaksi') }}" class="text-sm text-gray-600 hover:underline">
+                    <a href="{{ url('transaksi') }}" class="text-sm text-gray-600 hover:underline">
                         Lihat Riwayat pesanan &gt;
                     </a>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 text-center gap-6 text-sm">
                     <div>
-                    <a href="{{ route('transaksi.menunggupembayaran') }}" class="block">
+                    <a href="{{ url('transaksi?status=menunggukonfirmasi') }}" class="block">
                         <div class="text-4xl text-[#BBD3D3]">💸</div>
-                        <p class="mt-2 font-semibold">Menunggu Pembayaran</p>
+                        <p class="mt-2 font-semibold">Menunggu Konfirmasi Pembayaran</p>
                         <p>({{ $menungguPembayaranCount }})</p>
                     </a>
                     </div>
                     <div>
-                    <a href="{{ route('transaksi.dikemas') }}" class="block">
+                    <a href="{{ url('transaksi?status=dikemas') }}" class="block">
                         <div class="text-4xl text-[#BBD3D3]">📦</div>
                         <p class="mt-2 font-semibold">Dikemas</p>
                         <p>({{ $dikemasCount }})</p>
                     </a>
                     </div>
                     <div>
-                    <a href="{{ route('transaksi.dikirim') }}" class="block">
+                    <a href="{{ url('transaksi?status=dikirim') }}" class="block">
                         <div class="text-4xl text-[#BBD3D3]">🚚</div>
                         <p class="mt-2 font-semibold">Dikirim</p>
                         <p>({{ $dikirimCount }})</p>
                     </a>
                     </div>
                     <div>
-                    <a href="{{ route('transaksi.beripenilaian') }}" class="block">
+                    <a href="{{ url('transaksi?status=beripenilaian') }}" class="block">
                         <div class="text-4xl text-[#BBD3D3]">⭐</div>
                         <p class="mt-2 font-semibold">Beri Penilaian</p>
                         <p>({{ $reviewCount }})</p>

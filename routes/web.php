@@ -199,6 +199,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     Route::prefix('keuangan')->group(function () {
         Route::get('/', [KeuanganController::class, 'view'])->name('keuangan.view');
         Route::get('/detail/{id}', [KeuanganController::class, 'detail'])->name('keuangan.detail');
+        Route::post('/konfirmasi/{id}', [KeuanganController::class, 'konfirmasi'])->name('keuangan.konfirmasi');
         Route::get('/create', [KeuanganController::class, 'create'])->name('keuangan.create');
         Route::post('/create', [KeuanganController::class, 'store'])->name('keuangan.store');
         Route::get('/keuangan/hutang', [HutangController::class, 'index'])->name('keuangan.hutang.index');

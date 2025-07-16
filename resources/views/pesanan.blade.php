@@ -20,24 +20,30 @@
     <div>
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-bold">Pesanan Saya</h2>
-        <a href="{{ route('transaksi') }}" class="text-sm text-gray-600 hover:underline">Lihat Riwayat pesanan &gt;</a>
+        <a href="{{ url('transaksi') }}" class="text-sm text-gray-600 hover:underline">Lihat Riwayat pesanan &gt;</a>
       </div>
 
       <div class="grid grid-cols-3 text-center gap-6 text-sm">
         <div>
-          <div class="text-4xl text-[#BBD3D3]">📦</div>
-          <p class="mt-2 font-semibold">Dikemas</p>
-          <p>(0)</p>
+          <a href="{{ url('transaksi?status=dikemas') }}" class="block">
+            <div class="text-4xl text-[#BBD3D3]">📦</div>
+            <p class="mt-2 font-semibold">Dikemas</p>
+            <p>(0)</p>
+          </a>
         </div>
         <div>
-          <div class="text-4xl text-[#BBD3D3]">🚚</div>
-          <p class="mt-2 font-semibold">Dikirim</p>
-          <p>(0)</p>
+          <a href="{{ url('transaksi?status=dikirim') }}" class="block">
+            <div class="text-4xl text-[#BBD3D3]">🚚</div>
+            <p class="mt-2 font-semibold">Dikirim</p>
+            <p>(0)</p>
+          </a>
         </div>
         <div>
-          <div class="text-4xl text-[#BBD3D3]">⭐</div>
-          <p class="mt-2 font-semibold">Beri Penilaian</p>
-          <p>(0)</p>
+          <a href="{{ url('transaksi?status=beripenilaian') }}" class="block">
+            <div class="text-4xl text-[#BBD3D3]">⭐</div>
+            <p class="mt-2 font-semibold">Beri Penilaian</p>
+            <p>(0)</p>
+          </a>
         </div>
       </div>
     </div>

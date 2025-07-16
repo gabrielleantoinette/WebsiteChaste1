@@ -28,10 +28,12 @@
         @php
         $statusOptions = [
             '' => 'Semua',
+            'menunggukonfirmasi' => 'Menunggu Konfirmasi Pembayaran',
             'dikemas' => 'Sedang Dikemas',
             'dikirim' => 'Dikirim',
             'diterima' => 'Selesai',
-            'pengembalian' => 'Pengembalian'
+            'pengembalian' => 'Pengembalian',
+            'beripenilaian' => 'Beri Penilaian'
         ];
 
         $currentStatus = request('status');
@@ -44,6 +46,10 @@
                             ->when($key !== '', function ($q) use ($key) {
                                 if ($key === 'dikirim') {
                                     $q->whereIn('status', ['dikirim', 'sampai']);
+                                } else if ($key === 'menunggukonfirmasi') {
+                                    $q->where('status', 'Menunggu Konfirmasi Pembayaran');
+                                } else if ($key === 'beripenilaian') {
+                                    $q->where('status', 'diterima');
                                 } else {
                                     $q->where('status', $key);
                                 }
@@ -52,38 +58,51 @@
             @endphp
 
             <a href="{{ url('transaksi') . ($key !== '' ? '?status=' . $key : '') }}"
-            class="pb-2 whitespace-nowrap {{ $currentStatus === $key ? 'text-red-600 border-b-2 border-red-500' : 'text-gray-800 hover:text-red-500' }}">
+            class="pb-2 whitespace-nowrap transition-colors duration-200 {{ $currentStatus === $key ? 'text-teal-600 border-b-2 border-teal-500 font-semibold' : 'text-gray-800 hover:text-teal-500' }}">
                 {{ $label }}{{ $count > 0 ? ' ('.$count.')' : '' }}
             </a>
         @endforeach
         </div>
 
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Kode Invoice</th>
-                    <th>Tanggal</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($transactions as $transaction)
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto text-sm border border-gray-200">
+                <thead class="bg-gray-100 text-gray-700 sticky top-0 z-10">
                     <tr>
-                        <td>{{ $transaction->id }}</td>
-                        <td>{{ $transaction->code }}</td>
-                        <td>{{ $transaction->created_at }}</td>
-                        <td>Rp {{ number_format($transaction->grand_total) }}</td>
-                        <td>{{ $transaction->status }}</td>
-                        <td>
-                            <a href="{{ route('transaksi.detail', $transaction->id) }}" class="btn btn-primary">Detail</a>
-                        </td>
+                        <th class="px-4 py-3 text-left font-semibold">No</th>
+                        <th class="px-4 py-3 text-left font-semibold">Kode Invoice</th>
+                        <th class="px-4 py-3 text-left font-semibold">Tanggal</th>
+                        <th class="px-4 py-3 text-left font-semibold">Total</th>
+                        <th class="px-4 py-3 text-left font-semibold">Status</th>
+                        <th class="px-4 py-3 text-left font-semibold">Aksi</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach ($transactions as $transaction)
+                        <tr class="border-b border-gray-100 @if($loop->odd) bg-gray-50 @endif hover:bg-teal-50 transition">
+                            <td class="px-4 py-3">{{ $transaction->id }}</td>
+                            <td class="px-4 py-3 font-mono text-teal-700 font-semibold">{{ $transaction->code }}</td>
+                            <td class="px-4 py-3">{{ $transaction->created_at }}</td>
+                            <td class="px-4 py-3 font-semibold">Rp {{ number_format($transaction->grand_total) }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold
+                                    @if(strtolower($transaction->status) == 'dikemas') bg-teal-100 text-teal-700
+                                    @elseif(strtolower($transaction->status) == 'menunggu konfirmasi pembayaran') bg-yellow-100 text-yellow-700
+                                    @elseif(strtolower($transaction->status) == 'selesai' || strtolower($transaction->status) == 'diterima') bg-green-100 text-green-700
+                                    @else bg-gray-200 text-gray-700 @endif">
+                                    {{ ucfirst($transaction->status) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <a href="{{ route('transaksi.detail', $transaction->id) }}"
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-teal-700 transition">
+                                    Detail
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </section>
     <!-- Footer -->
     @include('layouts.footer')

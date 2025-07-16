@@ -190,12 +190,17 @@ class InvoiceController extends Controller
     public function storeFromCheckout(Request $request)
     {
         $customerId = session()->get('customer_id');
-
         $paymentMethod = $request->input('payment_method');
         $shippingCost = $request->input('shipping_cost');
         $alamat = $request->input('address');
-
         $invoiceCode = 'INV-' . date('Ymd') . '-' . Str::random(5);
+        $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
+        // Validasi upload bukti transfer jika transfer bank
+        if ($paymentMethod == 'transfer') {
+            $request->validate([
+                'bukti_transfer' => 'required|image|max:2048',
+            ]);
+        }
 
         // cari apakah ini pesanan pertama customer?
         $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
@@ -227,6 +232,16 @@ class InvoiceController extends Controller
 
         $grandTotal = $subtotalProduk + $shippingCost;
 
+        $statusInvoice = 'Dikemas';
+        if ($paymentMethod == 'transfer') {
+            $statusInvoice = 'Menunggu Konfirmasi Pembayaran';
+        } elseif ($isFirstOrder) {
+            $statusInvoice = 'Menunggu Pembayaran';
+        }
+        $transferProofPath = null;
+        if ($paymentMethod == 'transfer' && $request->hasFile('bukti_transfer')) {
+            $transferProofPath = $request->file('bukti_transfer')->store('bukti_transfer', 'public');
+        }
         // ⬇️ Ubah ini supaya insert sekaligus ambil ID
         $newInvoiceId = DB::table('hinvoice')->insertGetId([
             'code' => $invoiceCode,
@@ -234,7 +249,7 @@ class InvoiceController extends Controller
             'employee_id' => 1,
             'address' => $alamat,
             'is_online' => 0,
-            'status' => $isFirstOrder ? 'Menunggu Pembayaran' : 'Dikemas',
+            'status' => $statusInvoice,
             'is_dp' => $isFirstOrder ? true : false,
             'dp_amount' => $isFirstOrder ? $grandTotal / 2 : 0,
             'grand_total' => $grandTotal,
@@ -242,6 +257,7 @@ class InvoiceController extends Controller
             'due_date' => now()->addDays(30), // <-- otomatis 30 hari dari sekarang
             'created_at' => now(),
             'updated_at' => now(),
+            'transfer_proof' => $transferProofPath,
         ]);
 
         // Midtrans

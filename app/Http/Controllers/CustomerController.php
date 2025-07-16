@@ -134,17 +134,27 @@ class CustomerController extends Controller
     public function viewTransaction(Request $request)
     {
         $user = Session::get('user');
-    
+        $statusMap = [
+            'menunggukonfirmasi' => 'Menunggu Konfirmasi Pembayaran',
+            'dikemas' => 'Dikemas',
+            'dikirim' => ['dikirim', 'sampai'],
+            'diterima' => 'diterima',
+            'pengembalian' => 'pengembalian',
+            'beripenilaian' => 'diterima',
+        ];
         $transactions = HInvoice::where('customer_id', $user['id'])
-            ->when($request->filled('status'), function ($query) use ($request) {
-                if ($request->status === 'dikirim') {
-                    $query->whereIn('status', ['dikirim', 'sampai']);
-                } else {
-                    $query->where('status', $request->status);
+            ->when($request->filled('status'), function ($query) use ($request, $statusMap) {
+                $key = $request->status;
+                if (isset($statusMap[$key])) {
+                    $status = $statusMap[$key];
+                    if (is_array($status)) {
+                        $query->whereIn('status', $status);
+                    } else {
+                        $query->where('status', $status);
+                    }
                 }
             })
             ->get();
-    
         return view('transaction-list', compact('transactions'));
     }
 
@@ -159,7 +169,7 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $customer = Customer::find($user['id']);
 
-        $menungguPembayaranCount = HInvoice::where('customer_id', $user['id'])->where('status', 'Menunggu Pembayaran')->count();
+        $menungguPembayaranCount = HInvoice::where('customer_id', $user['id'])->where('status', 'Menunggu Konfirmasi Pembayaran')->count();
         $dikemasCount = HInvoice::where('customer_id', $user['id'])->where('status', 'Dikemas')->count();
         $dikirimCount = HInvoice::where('customer_id', $user['id'])->whereIn('status', ['dikirim', 'sampai'])->count();
         $reviewCount = HInvoice::where('customer_id', $user['id'])->where('status', 'diterima')->count();

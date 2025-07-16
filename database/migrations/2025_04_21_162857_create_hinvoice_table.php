@@ -33,6 +33,7 @@ return new class extends Migration
             $table->date('received_date')->nullable();
             $table->string('delivery_proof_photo')->nullable();
             $table->string('delivery_signature')->nullable();
+            $table->string('transfer_proof')->nullable();
             $table->timestamps();
         });
     }

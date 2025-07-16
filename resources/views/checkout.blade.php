@@ -21,7 +21,7 @@
         </a>
         <h1 class="text-2xl font-bold mb-6 text-center">Pengiriman & Pembayaran</h1>
 
-        <form action="{{ route('checkout.invoice') }}" method="POST">
+        <form action="{{ route('checkout.invoice') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <!-- Section Alamat -->
@@ -153,7 +153,19 @@
                 </div>
 
                 <!-- DIV KETERANGAN -->
-                <div id="paymentInfo" class="mt-4 hidden bg-teal-50 p-4 rounded text-sm text-gray-700"></div>
+                <div id="paymentInfo" class="mt-4 hidden bg-teal-50 p-4 rounded text-sm text-gray-700">
+                    <div>
+                        <strong>Transfer ke:</strong><br>
+                        Bank BCA - 1234567890<br>
+                        a.n PT. Chaste Gemilang Mandiri<br>
+                        <em>(Dicek Manual)</em>
+                    </div>
+                    <div id="uploadBuktiTransfer" class="mt-4">
+                        <label class="block mb-2 font-medium">Upload Bukti Transfer <span class="text-red-500">*</span></label>
+                        <input type="file" name="bukti_transfer" id="bukti_transfer" accept="image/*" class="block w-full border rounded p-2">
+                        <span id="buktiError" class="text-xs text-red-500 hidden">Bukti transfer wajib diupload.</span>
+                    </div>
+                </div>
             </section>
 
 
@@ -207,13 +219,12 @@
         function showPaymentInfo() {
             const paymentInfo = document.getElementById('paymentInfo');
             const selected = document.querySelector('input[name="payment_method"]:checked');
-
+            const uploadBukti = document.getElementById('uploadBuktiTransfer');
             if (!selected) {
                 paymentInfo.classList.add('hidden');
                 paymentInfo.innerHTML = '';
                 return;
             }
-
             if (selected.value === 'transfer') {
                 paymentInfo.innerHTML = `
                 <div>
@@ -222,20 +233,30 @@
                     a.n PT. Chaste Gemilang Mandiri<br>
                     <em>(Dicek Manual)</em>
                 </div>
-            `;
-                paymentInfo.classList.remove('hidden');
-            } else if (selected.value === 'ewallet') {
-                paymentInfo.innerHTML = `
-                <div>
-                    <strong>Pembayaran melalui Midtrans</strong><br>
-                    Support OVO, DANA, ShopeePay<br>
-                    <em>(Pembayaran Otomatis)</em>
+                <div id="uploadBuktiTransfer" class="mt-4">
+                    <label class="block mb-2 font-medium">Upload Bukti Transfer <span class="text-red-500">*</span></label>
+                    <input type="file" name="bukti_transfer" id="bukti_transfer" accept="image/*" class="block w-full border rounded p-2">
+                    <span id="buktiError" class="text-xs text-red-500 hidden">Bukti transfer wajib diupload.</span>
                 </div>
             `;
                 paymentInfo.classList.remove('hidden');
+                setTimeout(() => { // tunggu render
+                    const btnBayar = document.getElementById('btnBayar');
+                    const buktiInput = document.getElementById('bukti_transfer');
+                    btnBayar.disabled = true;
+                    buktiInput.addEventListener('change', function() {
+                        if (buktiInput.files.length > 0) {
+                            btnBayar.disabled = false;
+                            document.getElementById('buktiError').classList.add('hidden');
+                        } else {
+                            btnBayar.disabled = true;
+                        }
+                    });
+                }, 100);
             } else {
                 paymentInfo.classList.add('hidden');
                 paymentInfo.innerHTML = '';
+                document.getElementById('btnBayar').disabled = false;
             }
         }
 
@@ -260,6 +281,20 @@
             // Inisialisasi: jika hutang terpilih dan disabled, button disable
             if (hutangRadio && hutangRadio.checked && hutangRadio.disabled) {
                 btnBayar.disabled = true;
+            }
+        });
+
+        // Validasi sebelum submit
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const selected = document.querySelector('input[name="payment_method"]:checked');
+            if (selected && selected.value === 'transfer') {
+                const buktiInput = document.getElementById('bukti_transfer');
+                if (!buktiInput || buktiInput.files.length === 0) {
+                    e.preventDefault();
+                    document.getElementById('buktiError').classList.remove('hidden');
+                    buktiInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+                }
             }
         });
     </script>

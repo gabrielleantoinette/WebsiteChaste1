@@ -46,7 +46,19 @@ class KeuanganController extends Controller
 
     public function detail($id)
     {
-        return view('admin.keuangan.detail', compact('id'));
+        $invoice = \App\Models\HInvoice::with('customer')->findOrFail($id);
+        return view('admin.keuangan.detail', compact('invoice'));
+    }
+
+    public function konfirmasi($id)
+    {
+        $invoice = \App\Models\HInvoice::findOrFail($id);
+        if ($invoice->status === 'Menunggu Konfirmasi Pembayaran') {
+            $invoice->status = 'Dikemas';
+            $invoice->save();
+            return redirect()->back()->with('success', 'Pembayaran dikonfirmasi & status diubah menjadi Dikemas!');
+        }
+        return redirect()->back()->with('success', 'Status tidak valid atau sudah diproses.');
     }
 
     public function create()
