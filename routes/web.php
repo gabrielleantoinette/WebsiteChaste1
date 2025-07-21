@@ -102,6 +102,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     
     // Dashboard Gudang
     Route::get('/dashboard-gudang', [GudangController::class, 'dashboardGudang'])->name('gudang.dashboard');
+    Route::get('/dashboard-driver', [DriverController::class, 'dashboardDriver'])->name('driver.dashboard');
 
     Route::get('/admin/keuangan', function() {
         return redirect()->route('keuangan.dashboard');

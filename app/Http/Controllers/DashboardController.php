@@ -65,6 +65,8 @@ class DashboardController extends Controller
             return view('admin.dashboardadmin', compact('pendingOrders', 'lowStocks', 'returCount'));
         } elseif ($role === 'keuangan') {
             return redirect()->route('keuangan.dashboard');
+        } elseif ($role === 'driver') {
+            return redirect('/admin/dashboard-driver');
         } else { // owner atau role lain
             return view('admin.dashboard', compact(
                 'employeeCount', 'customerCount', 'productCount', 'totalPenjualan',

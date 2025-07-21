@@ -30,6 +30,9 @@ class LoginController extends Controller
                 if ($employee->role === 'gudang') {
                     return redirect('/admin/dashboard-gudang');
                 }
+                if ($employee->role === 'driver') {
+                    return redirect('/admin/dashboard-driver');
+                }
                 return redirect('/admin');
             } else {
                 return back()->with('error', 'Password salah.');

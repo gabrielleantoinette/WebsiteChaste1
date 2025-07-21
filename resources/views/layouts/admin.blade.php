@@ -25,7 +25,10 @@
 
         <nav class="flex flex-col gap-2 text-sm font-medium">
             @php $role = Session::get('user')->role ?? ''; @endphp
-            @if ($role == 'keuangan')
+            @if (Session::get('user')->role == 'driver')
+                <a href="{{ url('/admin/dashboard-driver') }}" class="{{ request()->is('admin/dashboard-driver') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Dashboard Driver</a>
+                <a href="{{ url('/admin/driver-transaksi') }}" class="{{ request()->is('admin/driver-transaksi') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Transaksi Kurir</a>
+            @elseif ($role == 'keuangan')
                 <a href="{{ route('keuangan.dashboard') }}" class="{{ request()->routeIs('keuangan.dashboard') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Dashboard</a>
             @elseif ($role == 'gudang')
                 <a href="{{ route('gudang.dashboard') }}" class="{{ request()->routeIs('gudang.dashboard') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Dashboard Gudang</a>
@@ -52,15 +55,6 @@
                 <a href="{{ url('/admin/categories') }}" class="{{ request()->is('admin/categories*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Kategori</a>
                 <a href="{{ url('/admin/customers') }}" class="{{ request()->is('admin/customers*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Pembeli</a>
                 <a href="{{ url('/admin/invoices') }}" class="{{ request()->is('admin/invoices*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Penjualan</a>
-            @endif
-
-            @if (Session::get('user')->role == 'driver')
-                <a href="{{ url('/admin/driver-transaksi') }}" class="{{ request()->is('admin/driver-transaksi') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Transaksi Kurir</a>
-            @endif
-
-            @if (Session::get('user')->role == 'gudang')
-                {{-- Hanya tampilkan Dashboard Gudang, hilangkan Transaksi Gudang --}}
-                {{-- <a href="{{ url('/admin/gudang-transaksi') }}" class="{{ request()->is('admin/gudang-transaksi') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Transaksi Gudang</a> --}}
             @endif
 
             @if (Session::get('user')->role == 'keuangan')

@@ -31,4 +31,28 @@ class DriverController extends Controller
 
         return redirect()->back()->with('success', 'Berhasil menyelesaikan transaksi');
     }
+
+    public function dashboardDriver()
+    {
+        $user = Session::get('user');
+        // Pesanan/retur siap dikirim atau diambil (status: dikirim, retur: status = 'siap diambil')
+        $ordersReady = \App\Models\HInvoice::where('driver_id', $user->id)
+            ->where('status', 'dikirim')
+            ->with(['customer', 'details.product', 'details.variant'])
+            ->get();
+        $returnsReady = \App\Models\Returns::where('status', 'siap diambil')->with(['invoice.customer'])->get();
+
+        // Pengiriman dalam proses (status: dikirim)
+        $ordersInProcess = \App\Models\HInvoice::where('driver_id', $user->id)
+            ->where('status', 'dikirim')
+            ->with(['customer', 'details.product', 'details.variant'])
+            ->get();
+        // History pengiriman selesai (status: sampai)
+        $ordersHistory = \App\Models\HInvoice::where('driver_id', $user->id)
+            ->where('status', 'sampai')
+            ->with(['customer', 'details.product', 'details.variant'])
+            ->get();
+
+        return view('admin.dashboarddriver', compact('ordersReady', 'returnsReady', 'ordersInProcess', 'ordersHistory'));
+    }
 }
