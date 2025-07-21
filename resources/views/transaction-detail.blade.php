@@ -23,7 +23,7 @@
     </div>
         <h1 class="text-2xl font-bold text-center mb-8">Detail Transaksi</h1>
 
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="bg-white rounded-lg shadow p-6 mb-6 text-black">
             <p><strong>Kode Invoice:</strong> {{ $transaction->code }}</p>
             <p><strong>Status:</strong> {{ $transaction->status }}</p>
             <p><strong>Alamat Pengiriman:</strong> {{ $transaction->address }}</p>

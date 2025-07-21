@@ -35,11 +35,11 @@
 
                     <label class="block mb-2 text-sm font-medium text-gray-700">Email</label>
                     <input type="email" name="email" required
-                        class="w-full mb-4 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                        class="w-full mb-4 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
 
                     <label class="block mb-2 text-sm font-medium text-gray-700">Kata Sandi</label>
                     <input type="password" name="password" required
-                        class="w-full mb-6 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                        class="w-full mb-6 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
 
                     <button type="submit"
                         class="w-full bg-[#D9F2F2] hover:bg-teal-200 text-gray-800 font-semibold py-3 rounded-md transition">
@@ -47,7 +47,7 @@
                     </button>
                 </form>
 
-                <div class="text-center text-sm mt-4">
+                <div class="text-center text-sm mt-4 text-black">
                     Belum punya akun?
                     <a href="{{ url('/register') }}" class="text-red-500 font-medium">Daftar sekarang</a>
                 </div>

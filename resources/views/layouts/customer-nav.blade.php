@@ -1,6 +1,6 @@
 <!-- Header -->
 <header class="flex items-center justify-between py-5 border-gray-200 px-[100px]">
-    <a href="{{ url('/') }}" class="text-2xl font-bold tracking-wide">CHASTE</a>
+    <a href="{{ url('/') }}" class="text-2xl font-bold tracking-wide text-black">CHASTE</a>
 
     <!-- Menu Utama -->
     <nav class="hidden md:flex space-x-8 text-sm font-medium">

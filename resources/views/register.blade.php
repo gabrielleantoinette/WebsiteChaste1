@@ -28,45 +28,45 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Email</label>
                         <input type="email" name="email" required
-                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nama</label>
                         <input type="text" name="name" required
-                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nomor Telepon</label>
                         <input type="tel" name="phone" placeholder="+62" required
-                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Kata Sandi</label>
                         <input type="password" name="password" required
-                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Alamat Lengkap</label>
                         <input type="text" name="address"
-                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Provinsi</label>
                             <select name="province" id="province" required
-                                class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                                class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
                                 <option value="">Pilih Provinsi</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Kota</label>
                             <select name="city" id="city" required
-                                class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                                class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
                                 <option value="">Pilih Kota/Kabupaten</option>
                             </select>
                         </div>
@@ -75,13 +75,13 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Kode Pos</label>
                         <input type="text" name="postal_code"
-                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
                         <select name="gender" required
-                            class="w-full mt-1 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-teal-300 outline-none">
+                            class="w-full mt-1 px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
                             <option value="" disabled selected>Pilih jenis kelamin</option>
                             <option value="male">Laki-laki</option>
                             <option value="female">Perempuan</option>

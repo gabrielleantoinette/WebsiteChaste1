@@ -1,71 +1,156 @@
 /* === BODY === */
-body.light {
+body {
     background-color: #ffffff;
     color: #1f1f1f;
-}
-
-body.dark {
-    background-color: #121212;
-    color: #eeeeee;
 }
 
 /* === HEADER & FOOTER === */
-body.dark header,
-body.dark footer {
-    background-color: #003333;
-    color: #f0f0f0;
-}
-
-/* === CARD / BOX AREA === */
-body.dark .card,
-body.dark .box,
-body.dark .content-area {
-    background-color: #1e1e1e;
-    color: #f0f0f0;
-}
-
-/* === INPUT, SELECT, TEXTAREA === */
-body.dark input,
-body.dark select,
-body.dark textarea {
-    background-color: #2a2a2a;
-    color: #f0f0f0;
-    border: 1px solid #008080;
-}
-
-body.light input,
-body.light select,
-body.light textarea {
-    background-color: #ffffff;
+header,
+footer {
+    background-color: #f8f8f8;
     color: #1f1f1f;
 }
 
+/* === CARD / BOX AREA === */
+.card,
+.box,
+.content-area {
+    background-color: #f8f9fa;
+    color: #1f1f1f;
+}
+
+/* === INPUT, SELECT, TEXTAREA TEKS DAN PLACEHOLDER === */
+input,
+select,
+textarea {
+    color: #222 !important;
+    border: 1px solid #222 !important;
+    background: #fff;
+}
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #222 !important;
+    box-shadow: none !important;
+}
+input::placeholder,
+textarea::placeholder {
+    color: #888 !important;
+    opacity: 1;
+}
+
 /* === DATATABLE OVERRIDES === */
-body.dark table.dataTable {
-    background-color: #1e1e1e;
-    color: #f0f0f0;
+table.dataTable {
+    background-color: #f8f9fa;
+    color: #1f1f1f;
 }
-
-body.dark table.dataTable thead {
-    background-color: #004d4d;
-    color: #ccf2f2;
+table.dataTable thead {
+    background-color: #e0f7fa;
+    color: #1f1f1f;
 }
-
-body.dark table.dataTable tbody tr {
-    background-color: #2c2c2c;
-    color: #f0f0f0;
+table.dataTable tbody tr {
+    background-color: #ffffff;
+    color: #1f1f1f;
 }
-
-body.dark .dataTables_wrapper .dataTables_filter input,
-body.dark .dataTables_wrapper .dataTables_length select {
-    background-color: #2a2a2a;
-    color: #f0f0f0;
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+    background-color: #ffffff;
+    color: #1f1f1f;
     border: 1px solid #00cccc;
 }
-
 /* === PAGINATION BUTTONS === */
-body.dark .dataTables_wrapper .dataTables_paginate .paginate_button {
-    background-color: #1f1f1f !important;
-    color: #ccf2f2 !important;
-    border: 1px solid #444;
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    background-color: #f8f9fa !important;
+    color: #008080 !important;
+    border: 1px solid #dee2e6;
+}
+/* Link dan tombol aksen */
+a, .btn-link {
+    color: #007bff;
+}
+a:hover, .btn-link:hover {
+    color: #0056b3;
+}
+.btn-primary, .badge-primary {
+    background: #007bff !important;
+    border-color: #007bff !important;
+    color: #fff !important;
+}
+.btn-secondary, .badge-secondary {
+    background: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #fff !important;
+}
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: #f2f2f2;
+}
+.table-striped > tbody > tr:nth-of-type(even) {
+    background-color: #ffffff;
+}
+.dropdown-menu, .modal-content, .list-group-item {
+    background: #f8f9fa !important;
+    color: #1f1f1f !important;
+    border-color: #dee2e6 !important;
+}
+
+/* === LOGO/BRAND DI NAVBAR === */
+.brand, .logo, .navbar-brand, .navbar .brand, .navbar .logo {
+    color: #222 !important;
+    font-weight: bold;
+    opacity: 1 !important;
+}
+
+/* === LOGO/BRAND DI NAVBAR (CHASTE) === */
+header a.text-2xl.font-bold.tracking-wide {
+    color: #222 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+
+/* === GLOBAL OVERRIDE: SELALU LIGHT MODE, ANTI DARK === */
+html, body {
+    background: #fff !important;
+    color: #222 !important;
+}
+
+h1, h2, h3, h4, h5, h6, span, p, div, label, a, li, th, td {
+    color: #222 !important;
+}
+
+input, select, textarea {
+    background: #fff !important;
+    color: #222 !important;
+    border: 1px solid #222 !important;
+}
+input::placeholder, textarea::placeholder {
+    color: #888 !important;
+    opacity: 1 !important;
+}
+
+header a.text-2xl.font-bold.tracking-wide {
+    color: #222 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+
+.form-hint, .text-hint, .text-muted, .text-gray-400, .text-teal-200, .text-teal-400, .text-teal-500 {
+    color: #222 !important;
+    opacity: 1 !important;
+}
+
+/* Pastikan tidak ada efek dark mode dari browser/OS */
+@media (prefers-color-scheme: dark) {
+  html, body, h1, h2, h3, h4, h5, h6, span, p, div, label, a, li, th, td, input, select, textarea {
+    background: #fff !important;
+    color: #222 !important;
+    border-color: #bdbdbd !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #888 !important;
+    opacity: 1 !important;
+  }
+  header a.text-2xl.font-bold.tracking-wide {
+    color: #222 !important;
+    opacity: 1 !important;
+  }
 }
