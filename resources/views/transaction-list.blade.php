@@ -50,6 +50,8 @@
                                     $q->where('status', 'Menunggu Konfirmasi Pembayaran');
                                 } else if ($key === 'beripenilaian') {
                                     $q->where('status', 'diterima');
+                                } else if ($key === 'pengembalian') {
+                                    $q->where('status', 'retur_diajukan'); // Perbaikan di sini
                                 } else {
                                     $q->where('status', $key);
                                 }
@@ -59,7 +61,7 @@
 
             <a href="{{ url('transaksi') . ($key !== '' ? '?status=' . $key : '') }}"
             class="pb-2 whitespace-nowrap transition-colors duration-200 {{ $currentStatus === $key ? 'text-teal-600 border-b-2 border-teal-500 font-semibold' : 'text-gray-800 hover:text-teal-500' }}">
-                {{ $label }}{{ $count > 0 ? ' ('.$count.')' : '' }}
+                {{ $label }} ({{ $count }})
             </a>
         @endforeach
         </div>
@@ -89,7 +91,7 @@
                                     @elseif(strtolower($transaction->status) == 'menunggu konfirmasi pembayaran') bg-yellow-100 text-yellow-700
                                     @elseif(strtolower($transaction->status) == 'selesai' || strtolower($transaction->status) == 'diterima') bg-green-100 text-green-700
                                     @else bg-gray-200 text-gray-700 @endif">
-                                    {{ ucfirst($transaction->status) }}
+                                    {{ ucwords(str_replace('_', ' ', $transaction->status)) }}
                                 </span>
                             </td>
                             <td class="px-4 py-3">

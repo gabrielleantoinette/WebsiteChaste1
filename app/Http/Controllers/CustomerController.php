@@ -139,7 +139,7 @@ class CustomerController extends Controller
             'dikemas' => 'Dikemas',
             'dikirim' => ['dikirim', 'sampai'],
             'diterima' => 'diterima',
-            'pengembalian' => 'pengembalian',
+            'pengembalian' => 'retur_diajukan', // Ubah dari 'pengembalian' ke 'retur_diajukan'
             'beripenilaian' => 'diterima',
         ];
         $transactions = HInvoice::where('customer_id', $user['id'])
@@ -279,6 +279,13 @@ class CustomerController extends Controller
             'media_path' => $mediaPath,
             'status' => 'diajukan',
         ]);
+
+        // Update status hinvoice menjadi 'retur_diajukan'
+        $invoice = HInvoice::find($id);
+        if ($invoice) {
+            $invoice->status = 'retur_diajukan';
+            $invoice->save();
+        }
 
         return redirect('/transaksi')->with('success', 'Retur berhasil diajukan.');
     }
