@@ -22,7 +22,7 @@
         <div class="bg-white p-5 rounded-lg shadow border border-gray-200">
             <h2 class="text-sm text-gray-600 mb-2">🔁 Permintaan Retur</h2>
             <p class="text-2xl font-bold text-yellow-600">{{ $returCount ?? 0 }}</p>
-            <a href="{{ url('/admin/retur') }}" class="text-sm text-blue-600 hover:underline mt-2 inline-block">Lihat Detail</a>
+            <a href="{{ route('admin.retur.index') }}" class="text-sm text-blue-600 hover:underline mt-2 inline-block">Lihat Detail</a>
         </div>
     </div>
 

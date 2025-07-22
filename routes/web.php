@@ -220,4 +220,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/ratarata/export-pdf', [LaporanController::class, 'rataRataPDF'])->name('laporan.ratarata.pdf');
     });
     Route::get('/admin/keuangan/dashboard', [\App\Http\Controllers\KeuanganController::class, 'dashboardKeuangan'])->name('keuangan.dashboard');
+    Route::get('/admin/retur', [App\Http\Controllers\ReturController::class, 'index'])->name('admin.retur.index');
+    Route::get('/admin/retur/{id}', [App\Http\Controllers\ReturController::class, 'show'])->name('admin.retur.detail');
+    Route::post('/admin/retur/{id}/process', [App\Http\Controllers\ReturController::class, 'process'])->name('admin.retur.process');
 });

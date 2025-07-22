@@ -16,8 +16,9 @@ class OwnerController extends Controller
     public function viewAssignDriver()
     {
         $drivers = Employee::where('role', 'driver')->get();
-        $invoices = HInvoice::all();
-        return view('admin.assign-driver.view', compact('invoices', 'drivers'));
+        $pengirimanNormal = HInvoice::where('status', '!=', 'retur_diajukan')->get();
+        $pengambilanRetur = HInvoice::where('status', 'retur_diajukan')->get();
+        return view('admin.assign-driver.view', compact('pengirimanNormal', 'pengambilanRetur', 'drivers'));
     }
 
     public function assignDriver($id, Request $request)

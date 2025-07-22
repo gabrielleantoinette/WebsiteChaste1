@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HInvoice;
 use App\Models\Customer;
+use App\Models\Employee;
 
 class Returns extends Model
 {
@@ -29,6 +30,12 @@ class Returns extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    // Relasi ke kurir (driver/employee)
+    public function courier()
+    {
+        return $this->belongsTo(Employee::class, 'courier_id');
     }
 }
 

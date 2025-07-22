@@ -55,6 +55,7 @@
                 <a href="{{ url('/admin/categories') }}" class="{{ request()->is('admin/categories*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Kategori</a>
                 <a href="{{ url('/admin/customers') }}" class="{{ request()->is('admin/customers*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Pembeli</a>
                 <a href="{{ url('/admin/invoices') }}" class="{{ request()->is('admin/invoices*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Penjualan</a>
+                <a href="{{ route('admin.retur.index') }}" class="{{ request()->routeIs('admin.retur.index') || request()->routeIs('admin.retur.detail') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Retur</a>
             @endif
 
             @if (Session::get('user')->role == 'keuangan')
