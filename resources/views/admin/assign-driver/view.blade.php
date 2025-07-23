@@ -63,6 +63,7 @@
                 <td>Alamat Pengiriman</td>
                 <td>Tanggal Diterima</td>
                 <td>Status</td>
+                <td>Driver ID</td> <!-- Kolom debug driver_id -->
                 <td>Driver</td>
                 <td>Action</td>
             </tr>
@@ -76,9 +77,16 @@
                     <td>{{ $invoice->address }}</td>
                     <td>{{ $invoice->receive_date }}</td>
                     <td>{{ $invoice->status }}</td>
-                    <td>{{ $invoice->driver ? $invoice->driver->name : 'Belum ada driver' }}</td>
+                    <td>{{ $invoice->driver_id ?? 'NULL' }}</td> <!-- Tampilkan driver_id -->
                     <td>
-                        @if(!$invoice->driver)
+                        @if($invoice->driver_id && $invoice->driver)
+                            {{ $invoice->driver->name }}
+                        @else
+                            Belum ada driver
+                        @endif
+                    </td>
+                    <td>
+                        @if(!$invoice->driver_id)
                         <form method="POST" action="{{ url('/admin/assign-driver/assign/' . $invoice->id) }}">
                             @csrf
                             <div class="flex gap-2">

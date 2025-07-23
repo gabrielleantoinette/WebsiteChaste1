@@ -16,8 +16,8 @@ class OwnerController extends Controller
     public function viewAssignDriver()
     {
         $drivers = Employee::where('role', 'driver')->get();
-        $pengirimanNormal = HInvoice::where('status', '!=', 'retur_diajukan')->get();
-        $pengambilanRetur = HInvoice::where('status', 'retur_diajukan')->get();
+        $pengirimanNormal = HInvoice::whereNotIn('status', ['retur_diajukan', 'retur_diambil'])->get();
+        $pengambilanRetur = HInvoice::whereIn('status', ['retur_diajukan', 'retur_diambil'])->get();
         return view('admin.assign-driver.view', compact('pengirimanNormal', 'pengambilanRetur', 'drivers'));
     }
 
@@ -25,7 +25,14 @@ class OwnerController extends Controller
     {
         $invoice = HInvoice::find($id);
         $invoice->driver_id = $request->driver_id;
-        $invoice->status = 'dikirim';
+        
+        // Beda status untuk pengiriman normal vs retur
+        if ($invoice->status === 'retur_diajukan') {
+            $invoice->status = 'retur_diambil'; // Status khusus untuk retur yang sudah di-assign driver
+        } else {
+            $invoice->status = 'dikirim'; // Status untuk pengiriman normal
+        }
+        
         $invoice->save();
 
         return redirect()->back()->with('success', 'Berhasil memilih driver');

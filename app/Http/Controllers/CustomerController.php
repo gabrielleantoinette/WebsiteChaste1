@@ -280,10 +280,11 @@ class CustomerController extends Controller
             'status' => 'diajukan',
         ]);
 
-        // Update status hinvoice menjadi 'retur_diajukan'
+        // Update status hinvoice menjadi 'retur_diajukan' dan reset driver_id
         $invoice = HInvoice::find($id);
         if ($invoice) {
             $invoice->status = 'retur_diajukan';
+            $invoice->driver_id = null; // Reset driver_id agar owner bisa assign kurir baru
             $invoice->save();
         }
 

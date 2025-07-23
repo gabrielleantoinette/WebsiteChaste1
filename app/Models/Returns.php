@@ -32,10 +32,17 @@ class Returns extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
-    // Relasi ke kurir (driver/employee)
-    public function courier()
+    // Relasi ke driver melalui invoice
+    public function driver()
     {
-        return $this->belongsTo(Employee::class, 'courier_id');
+        return $this->hasOneThrough(
+            Employee::class,
+            HInvoice::class,
+            'id', // Foreign key di hinvoice
+            'id', // Foreign key di employees
+            'invoice_id', // Local key di returns
+            'driver_id' // Local key di hinvoice
+        );
     }
 }
 

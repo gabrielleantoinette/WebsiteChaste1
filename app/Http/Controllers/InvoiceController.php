@@ -298,6 +298,47 @@ class InvoiceController extends Controller
             return redirect()->route('checkout.midtrans.payment', ['snapToken' => $snapToken, 'paymentId' => $newPayment->id]);
         }
 
+        // Simpan detail produk ke tabel dinvoice
+        if (!empty($cartIds)) {
+            $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+            
+            foreach ($carts as $cart) {
+                if ($cart->variant_id) {
+                    // Produk biasa
+                    $product = DB::table('product_variants')
+                        ->join('products', 'product_variants.product_id', '=', 'products.id')
+                        ->where('product_variants.id', $cart->variant_id)
+                        ->select('products.id as product_id', 'products.price')
+                        ->first();
+                    
+                    if ($product) {
+                        DB::table('dinvoice')->insert([
+                            'hinvoice_id' => $newInvoiceId,
+                            'product_id' => $product->product_id,
+                            'variant_id' => $cart->variant_id,
+                            'price' => $product->price,
+                            'quantity' => $cart->quantity,
+                            'subtotal' => $product->price * $cart->quantity,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                } elseif ($cart->kebutuhan_custom) {
+                    // Produk custom - simpan dengan product_id = 0 atau null
+                    DB::table('dinvoice')->insert([
+                        'hinvoice_id' => $newInvoiceId,
+                        'product_id' => 0, // atau null untuk custom
+                        'variant_id' => null,
+                        'price' => $cart->harga_custom,
+                        'quantity' => $cart->quantity,
+                        'subtotal' => $cart->harga_custom * $cart->quantity,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        }
+
         // Tambahkan: untuk metode hutang/cod/transfer_bank, insert ke tabel payment
         if (in_array($paymentMethod, ['cod', 'hutang', 'transfer_bank'])) {
             PaymentModel::create([

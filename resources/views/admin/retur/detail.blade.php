@@ -19,7 +19,7 @@
                     -
                 @endif
             </div>
-            <div class="mb-2"><strong>Kurir Pengambil Retur:</strong> {{ $retur->courier->name ?? '-' }}</div>
+            <div class="mb-2"><strong>Kurir Pengambil Retur:</strong> {{ $retur->driver->name ?? '-' }}</div>
             <div class="mb-2"><strong>Status Retur:</strong> {{ $retur->status }}</div>
         </div>
     </div>
@@ -30,5 +30,12 @@
         <button type="submit" class="btn btn-danger">Proses ke Barang Rusak</button>
     </form>
     @endif
+    
+    <!-- Link ke halaman stok barang rusak -->
+    <div class="mt-3">
+        <a href="{{ route('admin.retur.damaged-products') }}" class="btn btn-info">
+            Lihat Stok Barang Rusak
+        </a>
+    </div>
 </div>
 @endsection 

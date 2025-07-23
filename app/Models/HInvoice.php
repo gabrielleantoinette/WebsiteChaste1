@@ -23,7 +23,7 @@ class HInvoice extends Model
 
     public function driver()
     {
-        return $this->belongsTo(Employee::class, 'driver_id');
+        return $this->belongsTo(Employee::class, 'driver_id')->withDefault(null);
     }
 
     public function accountant()
