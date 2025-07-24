@@ -229,3 +229,6 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
 // Barang Rusak Gudang
 Route::get('/gudang/barang-rusak', [App\Http\Controllers\GudangController::class, 'viewBarangRusak'])->name('gudang.barang-rusak');
 Route::post('/gudang/barang-rusak/{id}/perbaiki', [App\Http\Controllers\GudangController::class, 'perbaikiBarangRusak'])->name('gudang.barang-rusak.perbaiki');
+
+// Upload Foto Bukti Kualitas Barang
+Route::post('/gudang/upload-quality-proof/{id}', [App\Http\Controllers\GudangController::class, 'uploadQualityProof'])->name('gudang.upload-quality-proof');

@@ -7,6 +7,7 @@ use App\Models\Returns;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Models\DamagedProduct;
 use App\Models\Product;
 
@@ -43,14 +44,31 @@ class GudangController extends Controller
         return view('admin.gudang-transaksi.detail', compact('invoice', 'cartItems', 'total'));
     }
 
-    public function assignGudang($id)
+    public function assignGudang(Request $request, $id)
     {
-        $invoice = HInvoice::find($id);
+        $request->validate([
+            'quality_proof_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048'
+        ], [
+            'quality_proof_photo.required' => 'Foto bukti kualitas barang wajib diupload',
+            'quality_proof_photo.image' => 'File harus berupa gambar',
+            'quality_proof_photo.mimes' => 'Format file harus jpeg, png, atau jpg',
+            'quality_proof_photo.max' => 'Ukuran file maksimal 2MB'
+        ]);
+
+        $invoice = HInvoice::findOrFail($id);
         $user = Session::get('user');
         $invoice->gudang_id = $user->id;
+        // Upload file
+        if ($request->hasFile('quality_proof_photo')) {
+            $file = $request->file('quality_proof_photo');
+            $filename = 'quality_proof_' . $invoice->code . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('quality_proofs', $filename, 'public');
+            $invoice->quality_proof_photo = $path;
+        }
+        $invoice->status = 'dikemas';
         $invoice->save();
 
-        return redirect()->back()->with('success', 'Berhasil menyiapkan barang');
+        return redirect()->back()->with('success', 'Berhasil menyiapkan barang dan upload foto bukti kualitas.');
     }
 
     // Dashboard Gudang
