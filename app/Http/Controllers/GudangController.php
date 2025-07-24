@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\HInvoice;
+use App\Models\Returns;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
+use App\Models\DamagedProduct;
+use App\Models\Product;
 
 class GudangController extends Controller
 {
@@ -79,6 +82,42 @@ class GudangController extends Controller
             }
         }
         $produkDisiapkan = array_values($produkDisiapkan);
-        return view('admin.dashboardgudang', compact('orders', 'siapProsesCount', 'totalProdukDisiapkan', 'produkDisiapkan'));
+        
+        // Data returan untuk gudang
+        $returans = Returns::with(['invoice.customer'])
+            ->whereIn('status', ['diajukan', 'diproses'])
+            ->orderByDesc('created_at')
+            ->get();
+        $returanCount = $returans->count();
+        
+        return view('admin.dashboardgudang', compact('orders', 'siapProsesCount', 'totalProdukDisiapkan', 'produkDisiapkan', 'returans', 'returanCount'));
+    }
+
+    // Menampilkan daftar barang rusak untuk staf gudang
+    public function viewBarangRusak()
+    {
+        $damagedProducts = DamagedProduct::with(['product', 'variant', 'retur.invoice.customer'])
+            ->orderByDesc('created_at')
+            ->get();
+        return view('admin.gudang.barang-rusak', compact('damagedProducts'));
+    }
+
+    // Update status barang rusak menjadi diperbaiki dan update stok normal
+    public function perbaikiBarangRusak($id)
+    {
+        $damaged = DamagedProduct::findOrFail($id);
+        if ($damaged->status !== 'rusak') {
+            return redirect()->back()->with('error', 'Barang sudah diperbaiki atau status tidak valid.');
+        }
+        // Update status
+        $damaged->status = 'diperbaiki';
+        $damaged->save();
+        // Update stok normal produk (jika nanti diaktifkan)
+        // $product = Product::find($damaged->product_id);
+        // if ($product) {
+        //     $product->stock += $damaged->quantity;
+        //     $product->save();
+        // }
+        return redirect()->back()->with('success', 'Barang berhasil ditandai sebagai sudah diperbaiki.');
     }
 }

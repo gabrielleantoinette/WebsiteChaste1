@@ -5,7 +5,7 @@
     <h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Gudang</h1>
 
     {{-- Ringkasan Pesanan Siap Proses --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
         <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
             <p class="text-sm text-gray-500 mb-1">Pesanan Siap Diproses</p>
             <p class="text-2xl font-bold text-teal-600">{{ $siapProsesCount ?? 0 }}</p>
@@ -13,6 +13,10 @@
         <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
             <p class="text-sm text-gray-500 mb-1">Total Produk Perlu Disiapkan</p>
             <p class="text-2xl font-bold text-teal-600">{{ $totalProdukDisiapkan ?? 0 }}</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+            <p class="text-sm text-gray-500 mb-1">Returan Perlu Diproses</p>
+            <p class="text-2xl font-bold text-orange-600">{{ $returanCount ?? 0 }}</p>
         </div>
         <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
             <p class="text-sm text-gray-500 mb-1">Tanggal</p>
@@ -52,7 +56,7 @@
     </div>
 
     {{-- Rangkuman Produk/Terpal Perlu Disiapkan --}}
-    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-10">
         <h2 class="text-lg font-semibold text-gray-700 mb-4">Produk/Terpal Perlu Disiapkan</h2>
         <div class="overflow-x-auto">
             <table class="min-w-full table-auto text-sm border border-gray-200">
@@ -70,6 +74,50 @@
                         </tr>
                     @empty
                         <tr><td colspan="2" class="text-center text-gray-500 py-4">Tidak ada produk perlu disiapkan.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- Daftar Returan Perlu Diproses --}}
+    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-700">Returan Perlu Diproses</h2>
+            <a href="{{ route('gudang.barang-rusak') }}" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm transition">
+                Lihat Barang Rusak
+            </a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto text-sm border border-gray-200">
+                <thead class="bg-gray-100 text-gray-700 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold">ID Retur</th>
+                        <th class="px-4 py-3 text-left font-semibold">Customer</th>
+                        <th class="px-4 py-3 text-left font-semibold">Invoice</th>
+                        <th class="px-4 py-3 text-left font-semibold">Status</th>
+                        <th class="px-4 py-3 text-left font-semibold">Tanggal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($returans as $retur)
+                        <tr class="border-b border-gray-100 @if($loop->odd) bg-gray-50 @endif hover:bg-orange-50 transition">
+                            <td class="px-4 py-3 font-mono text-orange-700 font-semibold">#{{ $retur->id }}</td>
+                            <td class="px-4 py-3">{{ $retur->invoice->customer->name ?? '-' }}</td>
+                            <td class="px-4 py-3 font-mono">{{ $retur->invoice->code ?? '-' }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold 
+                                    @if($retur->status === 'diajukan') bg-yellow-100 text-yellow-700
+                                    @elseif($retur->status === 'diproses') bg-blue-100 text-blue-700
+                                    @else bg-gray-100 text-gray-700
+                                    @endif">
+                                    {{ ucfirst($retur->status) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">{{ $retur->created_at->format('d/m/Y H:i') }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6" class="text-center text-gray-500 py-4">Tidak ada returan perlu diproses.</td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -225,3 +225,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     Route::get('/retur/{id}', [App\Http\Controllers\ReturController::class, 'show'])->name('admin.retur.detail');
     Route::post('/retur/{id}/process', [App\Http\Controllers\ReturController::class, 'process'])->name('admin.retur.process');
 });
+
+// Barang Rusak Gudang
+Route::get('/gudang/barang-rusak', [App\Http\Controllers\GudangController::class, 'viewBarangRusak'])->name('gudang.barang-rusak');
+Route::post('/gudang/barang-rusak/{id}/perbaiki', [App\Http\Controllers\GudangController::class, 'perbaikiBarangRusak'])->name('gudang.barang-rusak.perbaiki');
