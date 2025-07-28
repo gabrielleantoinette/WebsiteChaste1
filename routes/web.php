@@ -200,6 +200,13 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/finish/{id}', [DriverController::class, 'finishTransaksi']);
     });
 
+
+
+    Route::prefix('driver-retur')->group(function () {
+        Route::get('/detail/{id}', [DriverController::class, 'detailRetur'])->name('driver-retur.detail');
+        Route::post('/pickup/{id}', [DriverController::class, 'pickupRetur'])->name('driver-retur.pickup');
+    });
+
     Route::prefix('keuangan')->group(function () {
         Route::get('/', [KeuanganController::class, 'view'])->name('keuangan.view');
         Route::get('/detail/{id}', [KeuanganController::class, 'detail'])->name('keuangan.detail');
