@@ -2,7 +2,37 @@
 
 @section('content')
 <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6 text-teal-600">Kelola Transaksi</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-teal-600">Kelola Transaksi</h1>
+        
+        {{-- Tombol Download dengan Dropdown --}}
+        <div class="relative">
+            <button id="downloadBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+                📄 Unduh Laporan
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            
+            {{-- Dropdown Menu --}}
+            <div id="downloadDropdown" class="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50 hidden">
+                <div class="py-2">
+                    <a href="{{ url('/admin/laporan-transaksi/download?filter=' . request('filter', $filter)) }}" 
+                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        📊 Laporan Transaksi
+                    </a>
+                    <a href="{{ url('/admin/laporan-payment-gateway/download?filter=' . request('filter', $filter)) }}" 
+                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        💳 Laporan Payment Gateway
+                    </a>
+                    <a href="{{ url('/admin/laporan-negosiasi/download?filter=' . request('filter', $filter)) }}" 
+                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        🤝 Laporan Negosiasi Harga
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- Filter Waktu & Search --}}
     <div class="mb-6">
@@ -127,4 +157,31 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const downloadBtn = document.getElementById('downloadBtn');
+    const downloadDropdown = document.getElementById('downloadDropdown');
+    
+    // Toggle dropdown saat tombol diklik
+    downloadBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        downloadDropdown.classList.toggle('hidden');
+    });
+    
+    // Tutup dropdown saat klik di luar
+    document.addEventListener('click', function(e) {
+        if (!downloadBtn.contains(e.target) && !downloadDropdown.contains(e.target)) {
+            downloadDropdown.classList.add('hidden');
+        }
+    });
+    
+    // Tutup dropdown saat item dipilih
+    downloadDropdown.addEventListener('click', function(e) {
+        if (e.target.tagName === 'A') {
+            downloadDropdown.classList.add('hidden');
+        }
+    });
+});
+</script>
 @endsection 

@@ -194,6 +194,21 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
 
     Route::get('/transactions', [OwnerController::class, 'transactionsIndex'])->name('owner.transactions.index');
 
+                    // Laporan Transaksi Owner
+                Route::prefix('laporan-transaksi')->group(function () {
+                    Route::get('/download', [OwnerController::class, 'downloadLaporanTransaksi'])->name('owner.laporan.download');
+                });
+
+    // Laporan Payment Gateway
+    Route::prefix('laporan-payment-gateway')->group(function () {
+        Route::get('/download', [OwnerController::class, 'downloadLaporanPaymentGateway'])->name('owner.laporan.payment-gateway');
+    });
+
+    // Laporan Negosiasi
+    Route::prefix('laporan-negosiasi')->group(function () {
+        Route::get('/download', [OwnerController::class, 'downloadLaporanNegosiasi'])->name('owner.laporan.negosiasi');
+    });
+
     Route::prefix('driver-transaksi')->group(function () {
         Route::get('/', [DriverController::class, 'viewTransaksiDriver']);
         Route::get('/detail/{id}', [DriverController::class, 'detailTransaksiDriver'])->name('driver-transaksi.detail');

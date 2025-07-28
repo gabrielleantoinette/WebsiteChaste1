@@ -47,6 +47,7 @@
                 <a href="{{ url('/admin/invoices') }}" class="{{ request()->is('admin/invoices*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Penjualan</a>
                 <a href="{{ url('/admin/transactions') }}" class="{{ request()->is('admin/transactions*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Transaksi</a>
                 <a href="{{ url('/admin/assign-driver') }}" class="{{ request()->is('admin/assign-driver') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Atur Kurir</a>
+
                 <a href="{{ url('/admin/settings') }}" class="{{ request()->is('admin/settings*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Pengaturan Website</a>
             @endif
 
