@@ -4,9 +4,14 @@
 <div class="container mt-4">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold">Kelola Barang Rusak (Gudang)</h2>
-        <a href="{{ route('gudang.dashboard') }}" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition">
-            Kembali ke Dashboard
-        </a>
+        <div class="flex gap-2">
+            <a href="{{ route('gudang.laporan.retur.pdf') }}" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
+                📊 Download Laporan Retur
+            </a>
+            <a href="{{ route('gudang.dashboard') }}" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition">
+                Kembali ke Dashboard
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
