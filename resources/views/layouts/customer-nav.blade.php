@@ -38,6 +38,23 @@
             @endif
         </a>
 
+        @if (session('user'))
+<a href="#" id="notifBell" class="relative hover:text-teal-500">
+    <i class="fas fa-bell text-xl"></i>
+    <div id="customerNotificationBadge" class="notification-badge bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center absolute -top-2 -right-2 shadow-lg animate-pulse" style="display: none;">
+        <span class="count font-bold">0</span>
+    </div>
+    <!-- Popover -->
+    <div id="notifPopover" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 z-50" style="top:2.5rem;">
+        <div class="p-4 border-b border-gray-100 font-semibold text-gray-800 flex justify-between items-center">
+            <span class="text-teal-600">Notifikasi</span>
+            <button id="notifPopoverClose" class="text-gray-400 hover:text-red-500 text-lg transition-colors">&times;</button>
+        </div>
+        <div id="notifPopoverContent" class="max-h-[350px] overflow-y-auto divide-y divide-gray-50"></div>
+    </div>
+</a>
+@endif
+
         <!-- <span>|</span> -->
 
         <!-- <a href="{{ route('pesanan') }}"
@@ -51,3 +68,146 @@
         
     </div>
 </header>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update notification badge on page load
+    updateCustomerNotificationBadge();
+    
+    // Update notification badge every 30 seconds
+    setInterval(updateCustomerNotificationBadge, 30000);
+
+    const bell = document.getElementById('notifBell');
+    const popover = document.getElementById('notifPopover');
+    const popoverContent = document.getElementById('notifPopoverContent');
+    const popoverClose = document.getElementById('notifPopoverClose');
+    let popoverOpen = false;
+
+    function renderNotifList(list, unreadCount) {
+        if (!list.length) {
+            popoverContent.innerHTML = `<div class='p-8 text-center text-gray-400'>
+                <i class="fas fa-bell text-3xl mb-3"></i>
+                <div class="text-sm">Tidak ada notifikasi</div>
+            </div>`;
+            return;
+        }
+        popoverContent.innerHTML = list.map(n => `
+            <div class='p-4 hover:bg-gray-50 transition-colors duration-200 flex gap-3 items-start ${!n.is_read ? 'bg-teal-50' : ''}' data-id="${n.id}">
+                <div class='flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center'>
+                    <i class='${n.icon || 'fas fa-bell'} text-teal-600 text-sm'></i>
+                </div>
+                <div class='flex-1 min-w-0'>
+                    <div class='font-medium text-sm text-gray-800 mb-1'>${n.title}</div>
+                    <div class='text-xs text-gray-600 mb-2 leading-relaxed'>${n.message}</div>
+                    <div class='flex items-center justify-between'>
+                        <div class='text-[10px] text-gray-400'>${n.created_at ? new Date(n.created_at).toLocaleString('id-ID') : ''}</div>
+                        ${!n.is_read ? `<button onclick="markAsRead(${n.id}, event)" class="text-teal-600 hover:text-teal-800 text-xs font-medium transition-colors" data-notification-id="${n.id}">Tandai Dibaca</button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function markAsRead(notificationId, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Disable tombol agar tidak bisa diklik lagi
+        const button = event.target;
+        button.disabled = true;
+        button.textContent = 'Memproses...';
+        button.classList.add('opacity-50');
+        
+        fetch(`/notifications/${notificationId}/mark-read`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the notification item
+                const item = event.target.closest('[data-id]');
+                if (item) {
+                    item.classList.remove('bg-teal-50');
+                    item.classList.add('opacity-75');
+                    // Hapus tombol "Tandai Dibaca" dengan benar
+                    const button = item.querySelector('button');
+                    if (button) {
+                        button.remove();
+                    }
+                }
+                // Update badge count
+                updateCustomerNotificationBadge();
+            }
+        })
+        .catch(error => {
+            console.error('Error marking notification as read:', error);
+            // Re-enable tombol jika error
+            button.disabled = false;
+            button.textContent = 'Tandai Dibaca';
+            button.classList.remove('opacity-50');
+        });
+    }
+
+    if (bell) {
+        bell.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Bell clicked!'); // Debug
+            if (popoverOpen) {
+                popover.classList.add('hidden');
+                popoverOpen = false;
+                return;
+            }
+            fetch('/notifications/latest')
+                .then(res => res.json())
+                .then(data => {
+                    console.log('Notifications data:', data); // Debug
+                    renderNotifList(data.notifications, data.unread_count);
+                    popover.classList.remove('hidden');
+                    popoverOpen = true;
+                })
+                .catch(error => {
+                    console.error('Error fetching notifications:', error);
+                });
+        });
+
+        if (popoverClose) {
+            popoverClose.addEventListener('click', function() {
+                popover.classList.add('hidden');
+                popoverOpen = false;
+            });
+        }
+
+        document.addEventListener('mousedown', function(e) {
+            if (popoverOpen && !popover.contains(e.target) && !bell.contains(e.target)) {
+                popover.classList.add('hidden');
+                popoverOpen = false;
+            }
+        });
+    }
+});
+
+function updateCustomerNotificationBadge() {
+    fetch('/notifications/unread-count')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('customerNotificationBadge');
+            if (badge) {
+                const countSpan = badge.querySelector('.count');
+                if (data.count > 0) {
+                    countSpan.textContent = data.count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error updating customer notification badge:', error);
+        });
+}
+</script>

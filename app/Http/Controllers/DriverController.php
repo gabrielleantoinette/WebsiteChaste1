@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\HInvoice;
 use App\Models\Returns;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -94,6 +95,18 @@ class DriverController extends Controller
         $invoice = HInvoice::find($id);
         $invoice->status = 'sampai';
         $invoice->save();
+
+        // Kirim notifikasi ke customer bahwa pesanan telah diterima
+        $notificationService = app(NotificationService::class);
+        $notificationService->notifyOrderStatus(
+            $invoice->id,
+            $invoice->customer_id,
+            'delivered',
+            [
+                'invoice_code' => $invoice->code,
+                'customer_name' => $invoice->customer->name
+            ]
+        );
 
         return redirect()->back()->with('success', 'Berhasil menyelesaikan transaksi');
     }

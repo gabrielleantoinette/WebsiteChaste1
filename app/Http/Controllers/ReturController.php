@@ -8,6 +8,7 @@ use App\Models\HInvoice;
 use App\Models\DamagedProduct;
 use App\Models\DInvoice;
 use App\Models\Product;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 class ReturController extends Controller
@@ -97,6 +98,14 @@ class ReturController extends Controller
             $retur->save();
             
             \Log::info('Retur status updated to: diproses');
+            
+            // Kirim notifikasi ke gudang tentang retur yang diproses
+            $notificationService = app(NotificationService::class);
+            $notificationService->notifyReturRequest($retur->id, [
+                'customer_name' => $retur->customer->name,
+                'order_id' => $retur->invoice->code,
+                'description' => $retur->description
+            ]);
             
             DB::commit();
             return redirect()->route('admin.retur.detail', $retur->id)

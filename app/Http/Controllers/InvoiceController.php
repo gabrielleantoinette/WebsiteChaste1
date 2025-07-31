@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use App\Models\Cart;
 use App\Models\OrderModel;
 use App\Models\PaymentModel;
+use App\Services\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Midtrans\Config;
 use Midtrans\Snap;
@@ -355,6 +356,48 @@ class InvoiceController extends Controller
             DB::table('cart')->whereIn('id', $cartIds)->delete();
         }
 
+        // Kirim notifikasi pesanan baru ke admin
+        $customer = Customer::find($customerId);
+        $notificationService = app(NotificationService::class);
+        $notificationService->notifyNewOrder($newInvoiceId, [
+            'customer_name' => $customer->name,
+            'invoice_code' => $invoiceCode,
+            'total_amount' => $grandTotal
+        ]);
+
+        // Kirim notifikasi ke customer
+        $customerNotificationMessage = '';
+        $customerNotificationTitle = '';
+        
+        if ($paymentMethod == 'midtrans') {
+            $customerNotificationTitle = 'Pesanan Berhasil Dibuat';
+            $customerNotificationMessage = "Pesanan Anda dengan kode {$invoiceCode} telah berhasil dibuat. Silakan lakukan pembayaran melalui Midtrans.";
+        } elseif ($paymentMethod == 'transfer') {
+            $customerNotificationTitle = 'Pesanan Berhasil Dibuat';
+            $customerNotificationMessage = "Pesanan Anda dengan kode {$invoiceCode} telah berhasil dibuat. Silakan lakukan transfer dan upload bukti pembayaran.";
+        } elseif ($paymentMethod == 'cod') {
+            $customerNotificationTitle = 'Pesanan Berhasil Dibuat';
+            $customerNotificationMessage = "Pesanan Anda dengan kode {$invoiceCode} telah berhasil dibuat. Pembayaran dilakukan saat pengiriman (COD).";
+        } elseif ($paymentMethod == 'hutang') {
+            $customerNotificationTitle = 'Pesanan Berhasil Dibuat';
+            $customerNotificationMessage = "Pesanan Anda dengan kode {$invoiceCode} telah berhasil dibuat dengan pembayaran hutang.";
+        }
+
+        if ($customerNotificationMessage) {
+            $notificationService->sendToCustomer(
+                'order_created',
+                $customerNotificationTitle,
+                $customerNotificationMessage,
+                $customerId,
+                [
+                    'data_type' => 'order',
+                    'data_id' => $newInvoiceId,
+                    'action_url' => "/orders/{$newInvoiceId}",
+                    'priority' => 'normal'
+                ]
+            );
+        }
+
         session()->put('last_invoice_id', $newInvoiceId);
         return redirect()->route('order.success');
     }
@@ -386,6 +429,33 @@ class InvoiceController extends Controller
                 DB::table('cart')->whereIn('id', $cartIds)->delete();
             }
             session()->forget('cart_ids_to_delete');
+        }
+
+        // Kirim notifikasi ke customer jika pembayaran berhasil
+        if ($paymentStatus == 'success') {
+            $invoice = HInvoice::find($payment->invoice_id);
+            $customer = Customer::find($invoice->customer_id);
+            
+            $notificationService = app(NotificationService::class);
+            $notificationService->sendToCustomer(
+                'payment_success',
+                'Pembayaran Berhasil',
+                "Pembayaran untuk pesanan {$invoice->code} telah berhasil dilakukan. Pesanan Anda akan segera diproses.",
+                $customer->id,
+                [
+                    'data_type' => 'order',
+                    'data_id' => $invoice->id,
+                    'action_url' => "/orders/{$invoice->id}",
+                    'priority' => 'high'
+                ]
+            );
+
+            // Kirim notifikasi ke admin tentang pembayaran berhasil
+            $notificationService->notifyPayment($payment->id, [
+                'amount' => $payment->amount,
+                'customer_name' => $customer->name,
+                'invoice_code' => $invoice->code
+            ]);
         }
 
         // TODO Update Invoice setelah payment berhasil.

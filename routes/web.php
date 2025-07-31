@@ -257,3 +257,10 @@ Route::get('/gudang/laporan-retur/export-pdf', [LaporanController::class, 'retur
 
 // Upload Foto Bukti Kualitas Barang
 Route::post('/gudang/upload-quality-proof/{id}', [App\Http\Controllers\GudangController::class, 'uploadQualityProof'])->name('gudang.upload-quality-proof');
+
+// Notification routes (AJAX only)
+Route::prefix('notifications')->middleware([LoggedIn::class])->group(function () {
+    Route::get('/latest', [\App\Http\Controllers\NotificationController::class, 'latest'])->name('notifications.latest');
+    Route::post('/{id}/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+});

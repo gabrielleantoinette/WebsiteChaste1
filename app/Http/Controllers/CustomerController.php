@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Returns;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 
 
@@ -287,6 +288,14 @@ class CustomerController extends Controller
             $invoice->driver_id = null; // Reset driver_id agar owner bisa assign kurir baru
             $invoice->save();
         }
+
+        // Kirim notifikasi retur ke gudang
+        $notificationService = app(NotificationService::class);
+        $notificationService->notifyReturRequest(Returns::latest()->first()->id, [
+            'customer_name' => Session::get('user')['name'],
+            'order_id' => $invoice->code,
+            'description' => $request->description
+        ]);
 
         return redirect('/transaksi')->with('success', 'Retur berhasil diajukan.');
     }

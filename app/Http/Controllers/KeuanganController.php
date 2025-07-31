@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class KeuanganController extends Controller
@@ -56,6 +57,29 @@ class KeuanganController extends Controller
         if ($invoice->status === 'Menunggu Konfirmasi Pembayaran') {
             $invoice->status = 'Dikemas';
             $invoice->save();
+            
+            // Kirim notifikasi pembayaran dikonfirmasi ke admin
+            $notificationService = app(NotificationService::class);
+            $notificationService->notifyPayment($invoice->id, [
+                'amount' => $invoice->grand_total,
+                'customer_name' => $invoice->customer->name,
+                'invoice_code' => $invoice->code
+            ]);
+
+            // Kirim notifikasi ke customer bahwa pembayaran dikonfirmasi
+            $notificationService->sendToCustomer(
+                'payment_confirmed',
+                'Pembayaran Dikonfirmasi',
+                "Pembayaran untuk pesanan {$invoice->code} telah dikonfirmasi. Pesanan Anda sedang diproses.",
+                $invoice->customer_id,
+                [
+                    'data_type' => 'order',
+                    'data_id' => $invoice->id,
+                    'action_url' => "/orders/{$invoice->id}",
+                    'priority' => 'high'
+                ]
+            );
+            
             return redirect()->back()->with('success', 'Pembayaran dikonfirmasi & status diubah menjadi Dikemas!');
         }
         return redirect()->back()->with('success', 'Status tidak valid atau sudah diproses.');

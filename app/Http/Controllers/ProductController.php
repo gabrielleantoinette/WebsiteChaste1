@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -97,6 +98,22 @@ class ProductController extends Controller
         return redirect()
             ->route('admin.products.view')
             ->with('success', 'Minimal price berhasil diupdate.');
+    }
+
+    /**
+     * Cek stok produk dan kirim notifikasi jika stok rendah
+     */
+    private function checkLowStock($productId)
+    {
+        $product = Product::find($productId);
+        if ($product && $product->stock <= 10) { // Threshold stok rendah
+            $notificationService = app(NotificationService::class);
+            $notificationService->notifyLowStock($productId, [
+                'name' => $product->name,
+                'stock' => $product->stock,
+                'min_stock' => 10
+            ]);
+        }
     }
 
     public function createVariant($id)

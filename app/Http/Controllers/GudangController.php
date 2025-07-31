@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\DamagedProduct;
 use App\Models\Product;
+use App\Services\NotificationService;
 
 class GudangController extends Controller
 {
@@ -67,6 +68,18 @@ class GudangController extends Controller
         }
         $invoice->status = 'dikemas';
         $invoice->save();
+
+        // Kirim notifikasi ke customer bahwa pesanan sedang dikemas
+        $notificationService = app(NotificationService::class);
+        $notificationService->notifyOrderStatus(
+            $invoice->id,
+            $invoice->customer_id,
+            'processing',
+            [
+                'invoice_code' => $invoice->code,
+                'customer_name' => $invoice->customer->name
+            ]
+        );
 
         return redirect()->back()->with('success', 'Berhasil menyiapkan barang dan upload foto bukti kualitas.');
     }
