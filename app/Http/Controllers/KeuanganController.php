@@ -79,6 +79,14 @@ class KeuanganController extends Controller
                     'priority' => 'high'
                 ]
             );
+
+            // Kirim notifikasi ke owner tentang action keuangan
+            $notificationService->notifyFinanceAction([
+                'message' => "Keuangan telah mengkonfirmasi pembayaran untuk pesanan {$invoice->code} sebesar Rp " . number_format($invoice->grand_total),
+                'action_id' => $invoice->id,
+                'action_url' => "/admin/keuangan/detail/{$invoice->id}",
+                'priority' => 'high'
+            ]);
             
             return redirect()->back()->with('success', 'Pembayaran dikonfirmasi & status diubah menjadi Dikemas!');
         }

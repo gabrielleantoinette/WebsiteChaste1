@@ -81,6 +81,14 @@ class GudangController extends Controller
             ]
         );
 
+        // Kirim notifikasi ke owner tentang action gudang
+        $notificationService->notifyWarehouseAction([
+            'message' => "Gudang telah menyiapkan pesanan {$invoice->code} untuk customer {$invoice->customer->name}",
+            'action_id' => $invoice->id,
+            'action_url' => "/admin/gudang-transaksi/detail/{$invoice->id}",
+            'priority' => 'normal'
+        ]);
+
         return redirect()->back()->with('success', 'Berhasil menyiapkan barang dan upload foto bukti kualitas.');
     }
 

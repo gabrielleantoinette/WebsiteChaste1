@@ -365,6 +365,14 @@ class InvoiceController extends Controller
             'total_amount' => $grandTotal
         ]);
 
+        // Kirim notifikasi ke owner tentang action customer
+        $notificationService->notifyCustomerAction([
+            'message' => "Customer {$customer->name} telah membuat pesanan baru dengan kode {$invoiceCode}",
+            'action_id' => $newInvoiceId,
+            'action_url' => "/admin/invoices/detail/{$newInvoiceId}",
+            'priority' => 'high'
+        ]);
+
         // Kirim notifikasi ke customer
         $customerNotificationMessage = '';
         $customerNotificationTitle = '';

@@ -11,6 +11,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin</title>
     @vite('resources/css/app.css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
@@ -76,20 +77,6 @@
         <div class="pt-10 border-t text-sm text-gray-600">
             <div class="mb-2">{{ is_array($user) ? $user['name'] : $user->name }}</div>
             <div class="flex items-center justify-between mb-2">
-                <a href="#" id="notifBell" class="text-teal-600 hover:text-teal-800 relative">
-                    <i class="fas fa-bell text-xl"></i>
-                    <div id="notificationBadge" class="notification-badge bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center absolute -top-2 -right-2 shadow-lg animate-pulse" style="display: none;">
-                        <span class="count font-bold">0</span>
-                    </div>
-                    <!-- Popover -->
-                    <div id="notifPopover" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 z-50" style="top:2.5rem;">
-                        <div class="p-4 border-b border-gray-100 font-semibold text-gray-800 flex justify-between items-center">
-                            <span class="text-teal-600">Notifikasi</span>
-                            <button id="notifPopoverClose" class="text-gray-400 hover:text-red-500 text-lg transition-colors">&times;</button>
-                        </div>
-                        <div id="notifPopoverContent" class="max-h-[350px] overflow-y-auto divide-y divide-gray-50"></div>
-                    </div>
-                </a>
                 <a href="{{ url('logout') }}" class="text-red-600 hover:underline">Logout</a>
             </div>
         </div>
@@ -97,6 +84,29 @@
 
     <!-- Konten Utama -->
     <main class="flex-1 bg-white dark:bg-gray-900 text-gray-800 dark:text-white p-8">
+        <!-- Header dengan Notifikasi -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+            
+            <!-- Notifikasi Bell -->
+            <div class="relative">
+                <a href="#" id="notifBell" class="text-teal-600 hover:text-teal-800 relative">
+                    <i class="fas fa-bell text-xl"></i>
+                    <div id="notificationBadge" class="notification-badge bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center absolute -top-2 -right-2 shadow-lg animate-pulse z-50" style="display: none;">
+                        <span class="count font-bold">0</span>
+                    </div>
+                    <!-- Popover -->
+                    <div id="notifPopover" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999]" style="top:2.5rem;">
+                        <div class="p-4 border-b border-gray-100 font-semibold text-gray-800 flex justify-between items-center">
+                            <span class="text-teal-600">Notifikasi</span>
+                            <button id="notifPopoverClose" class="text-gray-400 hover:text-red-500 text-lg transition-colors">&times;</button>
+                        </div>
+                        <div id="notifPopoverContent" class="max-h-[350px] overflow-y-auto divide-y divide-gray-50"></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
         @yield('content')
     </main>
 </div>
@@ -114,6 +124,7 @@
         $('.data-table').DataTable({ order: [] });
         
         // Update notification badge on page load
+        console.log('Document ready, updating notification badge...'); // Debug
         updateNotificationBadge();
         
         // Update notification badge every 30 seconds
@@ -121,17 +132,32 @@
     });
     
     function updateNotificationBadge() {
+        console.log('Updating notification badge...'); // Debug
         fetch('/notifications/unread-count')
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status); // Debug
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Badge data:', data); // Debug
                 const badge = document.getElementById('notificationBadge');
-                const countSpan = badge.querySelector('.count');
-                
-                if (data.count > 0) {
-                    countSpan.textContent = data.count;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
+                console.log('Badge element:', badge); // Debug
+                if (badge) {
+                    const countSpan = badge.querySelector('.count');
+                    console.log('Count span:', countSpan); // Debug
+                    if (countSpan) {
+                        if (data.count > 0) {
+                            countSpan.textContent = data.count;
+                            badge.style.display = 'flex';
+                            console.log('Badge should be visible with count:', data.count); // Debug
+                        } else {
+                            badge.style.display = 'none';
+                            console.log('Badge should be hidden'); // Debug
+                        }
+                    }
                 }
             })
             .catch(error => {
@@ -220,21 +246,40 @@
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Bell clicked!'); // Debug
+                console.log('Popover element:', popover); // Debug
+                console.log('Popover open state:', popoverOpen); // Debug
+                
                 if (popoverOpen) {
                     popover.classList.add('hidden');
                     popoverOpen = false;
                     return;
                 }
                 fetch('/notifications/latest')
-                    .then(res => res.json())
+                    .then(res => {
+                        console.log('Response status:', res.status); // Debug
+                        if (!res.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return res.json();
+                    })
                     .then(data => {
                         console.log('Notifications data:', data); // Debug
+                        console.log('Popover element before show:', popover); // Debug
                         renderNotifList(data.notifications, data.unread_count);
                         popover.classList.remove('hidden');
                         popoverOpen = true;
+                        console.log('Popover should be visible now'); // Debug
                     })
                     .catch(error => {
                         console.error('Error fetching notifications:', error);
+                        // Tampilkan pesan error di popover
+                        popoverContent.innerHTML = `<div class='p-8 text-center text-red-400'>
+                            <i class="fas fa-exclamation-triangle text-3xl mb-3"></i>
+                            <div class="text-sm">Error loading notifications</div>
+                            <div class="text-xs mt-2">${error.message}</div>
+                        </div>`;
+                        popover.classList.remove('hidden');
+                        popoverOpen = true;
                     });
             });
 

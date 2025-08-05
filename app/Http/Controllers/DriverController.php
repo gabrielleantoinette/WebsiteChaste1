@@ -98,6 +98,14 @@ class DriverController extends Controller
 
         // Kirim notifikasi ke customer bahwa pesanan telah diterima
         $notificationService = app(NotificationService::class);
+        
+        // Kirim notifikasi ke owner tentang action driver
+        $notificationService->notifyDriverAction([
+            'message' => "Driver telah menyelesaikan pengiriman pesanan {$invoice->code} ke {$invoice->customer->name}",
+            'action_id' => $invoice->id,
+            'action_url' => "/admin/driver-transaksi/detail/{$invoice->id}",
+            'priority' => 'normal'
+        ]);
         $notificationService->notifyOrderStatus(
             $invoice->id,
             $invoice->customer_id,

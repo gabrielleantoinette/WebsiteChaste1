@@ -41,7 +41,16 @@ class ProductController extends Controller
         }
 
         // 3) Simpan
-        Product::create($data);
+        $product = Product::create($data);
+
+        // 4) Kirim notifikasi ke owner
+        $notificationService = app(NotificationService::class);
+        $notificationService->notifyAdminAction([
+            'message' => "Admin telah menambahkan produk baru: {$product->name}",
+            'action_id' => $product->id,
+            'action_url' => "/admin/products/detail/{$product->id}",
+            'priority' => 'normal'
+        ]);
 
         return redirect()
             ->route('admin.products.view')
@@ -82,6 +91,15 @@ class ProductController extends Controller
 
         // 3) Update
         $product->update($data);
+
+        // 4) Kirim notifikasi ke owner
+        $notificationService = app(NotificationService::class);
+        $notificationService->notifyAdminAction([
+            'message' => "Admin telah mengupdate produk: {$product->name}",
+            'action_id' => $product->id,
+            'action_url' => "/admin/products/detail/{$product->id}",
+            'priority' => 'normal'
+        ]);
 
         return redirect()
             ->route('admin.products.view')

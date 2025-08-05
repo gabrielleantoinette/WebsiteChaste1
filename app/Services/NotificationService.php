@@ -154,6 +154,13 @@ class NotificationService
             'negotiation' => 'fas fa-comments',
             'invoice_created' => 'fas fa-file-invoice',
             'invoice_paid' => 'fas fa-file-invoice-dollar',
+            'sales_report' => 'fas fa-chart-line',
+            'financial_report' => 'fas fa-chart-pie',
+            'admin_action' => 'fas fa-user-cog',
+            'finance_action' => 'fas fa-calculator',
+            'warehouse_action' => 'fas fa-warehouse',
+            'driver_action' => 'fas fa-truck',
+            'customer_action' => 'fas fa-user',
         ];
 
         return $icons[$type] ?? 'fas fa-bell';
@@ -162,15 +169,30 @@ class NotificationService
     // Method khusus untuk setiap jenis notifikasi
 
     /**
-     * Notifikasi pesanan baru untuk admin
+     * Notifikasi pesanan baru untuk admin dan owner
      */
     public function notifyNewOrder($orderId, $orderData)
     {
+        // Kirim ke admin
         $this->sendToRole(
             'order_new',
             'Pesanan Baru',
             "Pesanan baru dengan ID #{$orderId} telah dibuat oleh {$orderData['customer_name']}",
             'admin',
+            [
+                'data_type' => 'order',
+                'data_id' => $orderId,
+                'action_url' => "/admin/orders/{$orderId}",
+                'priority' => 'high'
+            ]
+        );
+
+        // Kirim ke owner
+        $this->sendToRole(
+            'order_new',
+            'Pesanan Baru',
+            "Pesanan baru dengan ID #{$orderId} telah dibuat oleh {$orderData['customer_name']}",
+            'owner',
             [
                 'data_type' => 'order',
                 'data_id' => $orderId,
@@ -226,10 +248,11 @@ class NotificationService
     }
 
     /**
-     * Notifikasi retur untuk gudang
+     * Notifikasi retur untuk gudang dan owner
      */
     public function notifyReturRequest($returId, $returData)
     {
+        // Kirim ke gudang
         $this->sendToRole(
             'retur_request',
             'Permintaan Retur Baru',
@@ -242,18 +265,47 @@ class NotificationService
                 'priority' => 'normal'
             ]
         );
+
+        // Kirim ke owner
+        $this->sendToRole(
+            'retur_request',
+            'Permintaan Retur Baru',
+            "Permintaan retur baru dari {$returData['customer_name']} untuk pesanan #{$returData['order_id']}",
+            'owner',
+            [
+                'data_type' => 'retur',
+                'data_id' => $returId,
+                'action_url' => "/admin/retur/{$returId}",
+                'priority' => 'normal'
+            ]
+        );
     }
 
     /**
-     * Notifikasi stok rendah untuk gudang
+     * Notifikasi stok rendah untuk gudang dan owner
      */
     public function notifyLowStock($productId, $productData)
     {
+        // Kirim ke gudang
         $this->sendToRole(
             'stock_low',
             'Stok Produk Rendah',
             "Stok produk {$productData['name']} tersisa {$productData['stock']} unit",
             'gudang',
+            [
+                'data_type' => 'product',
+                'data_id' => $productId,
+                'action_url' => "/admin/products/{$productId}",
+                'priority' => 'high'
+            ]
+        );
+
+        // Kirim ke owner
+        $this->sendToRole(
+            'stock_low',
+            'Stok Produk Rendah',
+            "Stok produk {$productData['name']} tersisa {$productData['stock']} unit",
+            'owner',
             [
                 'data_type' => 'product',
                 'data_id' => $productId,
@@ -280,6 +332,158 @@ class NotificationService
                 'data_id' => $deliveryId,
                 'action_url' => "/driver/deliveries/{$deliveryId}",
                 'priority' => 'high'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi laporan penjualan untuk owner
+     */
+    public function notifySalesReport($reportData)
+    {
+        $this->sendToRole(
+            'sales_report',
+            'Laporan Penjualan',
+            "Laporan penjualan periode {$reportData['period']} telah selesai. Total penjualan: Rp " . number_format($reportData['total_sales']),
+            'owner',
+            [
+                'data_type' => 'report',
+                'data_id' => $reportData['report_id'],
+                'action_url' => "/admin/reports/sales/{$reportData['report_id']}",
+                'priority' => 'normal'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi laporan keuangan untuk owner
+     */
+    public function notifyFinancialReport($reportData)
+    {
+        $this->sendToRole(
+            'financial_report',
+            'Laporan Keuangan',
+            "Laporan keuangan periode {$reportData['period']} telah selesai. Profit: Rp " . number_format($reportData['profit']),
+            'owner',
+            [
+                'data_type' => 'report',
+                'data_id' => $reportData['report_id'],
+                'action_url' => "/admin/reports/financial/{$reportData['report_id']}",
+                'priority' => 'normal'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi sistem untuk owner
+     */
+    public function notifySystemAlert($alertData)
+    {
+        $this->sendToRole(
+            'system_alert',
+            'Peringatan Sistem',
+            $alertData['message'],
+            'owner',
+            [
+                'data_type' => 'system',
+                'data_id' => $alertData['alert_id'],
+                'action_url' => $alertData['action_url'] ?? null,
+                'priority' => $alertData['priority'] ?? 'normal'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi ketika admin melakukan action
+     */
+    public function notifyAdminAction($actionData)
+    {
+        $this->sendToRole(
+            'admin_action',
+            'Aktivitas Admin',
+            $actionData['message'],
+            'owner',
+            [
+                'data_type' => 'admin_action',
+                'data_id' => $actionData['action_id'],
+                'action_url' => $actionData['action_url'] ?? null,
+                'priority' => $actionData['priority'] ?? 'normal'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi ketika keuangan melakukan action
+     */
+    public function notifyFinanceAction($actionData)
+    {
+        $this->sendToRole(
+            'finance_action',
+            'Aktivitas Keuangan',
+            $actionData['message'],
+            'owner',
+            [
+                'data_type' => 'finance_action',
+                'data_id' => $actionData['action_id'],
+                'action_url' => $actionData['action_url'] ?? null,
+                'priority' => $actionData['priority'] ?? 'normal'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi ketika gudang melakukan action
+     */
+    public function notifyWarehouseAction($actionData)
+    {
+        $this->sendToRole(
+            'warehouse_action',
+            'Aktivitas Gudang',
+            $actionData['message'],
+            'owner',
+            [
+                'data_type' => 'warehouse_action',
+                'data_id' => $actionData['action_id'],
+                'action_url' => $actionData['action_url'] ?? null,
+                'priority' => $actionData['priority'] ?? 'normal'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi ketika driver melakukan action
+     */
+    public function notifyDriverAction($actionData)
+    {
+        $this->sendToRole(
+            'driver_action',
+            'Aktivitas Driver',
+            $actionData['message'],
+            'owner',
+            [
+                'data_type' => 'driver_action',
+                'data_id' => $actionData['action_id'],
+                'action_url' => $actionData['action_url'] ?? null,
+                'priority' => $actionData['priority'] ?? 'normal'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi ketika customer melakukan action
+     */
+    public function notifyCustomerAction($actionData)
+    {
+        $this->sendToRole(
+            'customer_action',
+            'Aktivitas Customer',
+            $actionData['message'],
+            'owner',
+            [
+                'data_type' => 'customer_action',
+                'data_id' => $actionData['action_id'],
+                'action_url' => $actionData['action_url'] ?? null,
+                'priority' => $actionData['priority'] ?? 'normal'
             ]
         );
     }
