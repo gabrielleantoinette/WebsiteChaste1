@@ -229,10 +229,11 @@ class NotificationService
     }
 
     /**
-     * Notifikasi pembayaran untuk keuangan
+     * Notifikasi pembayaran untuk keuangan dan admin
      */
     public function notifyPayment($paymentId, $paymentData)
     {
+        // Kirim ke keuangan
         $this->sendToRole(
             'payment_received',
             'Pembayaran Baru',
@@ -245,10 +246,24 @@ class NotificationService
                 'priority' => 'high'
             ]
         );
+
+        // Kirim ke admin
+        $this->sendToRole(
+            'payment_received',
+            'Pembayaran Baru',
+            "Pembayaran baru sebesar Rp " . number_format($paymentData['amount']) . " telah diterima",
+            'admin',
+            [
+                'data_type' => 'payment',
+                'data_id' => $paymentId,
+                'action_url' => "/admin/payments/{$paymentId}",
+                'priority' => 'high'
+            ]
+        );
     }
 
     /**
-     * Notifikasi retur untuk gudang dan owner
+     * Notifikasi retur untuk gudang, admin, dan owner
      */
     public function notifyReturRequest($returId, $returData)
     {
@@ -258,6 +273,20 @@ class NotificationService
             'Permintaan Retur Baru',
             "Permintaan retur baru dari {$returData['customer_name']} untuk pesanan #{$returData['order_id']}",
             'gudang',
+            [
+                'data_type' => 'retur',
+                'data_id' => $returId,
+                'action_url' => "/admin/retur/{$returId}",
+                'priority' => 'normal'
+            ]
+        );
+
+        // Kirim ke admin
+        $this->sendToRole(
+            'retur_request',
+            'Permintaan Retur Baru',
+            "Permintaan retur baru dari {$returData['customer_name']} untuk pesanan #{$returData['order_id']}",
+            'admin',
             [
                 'data_type' => 'retur',
                 'data_id' => $returId,
@@ -282,7 +311,7 @@ class NotificationService
     }
 
     /**
-     * Notifikasi stok rendah untuk gudang dan owner
+     * Notifikasi stok rendah untuk gudang, admin, dan owner
      */
     public function notifyLowStock($productId, $productData)
     {
@@ -292,6 +321,20 @@ class NotificationService
             'Stok Produk Rendah',
             "Stok produk {$productData['name']} tersisa {$productData['stock']} unit",
             'gudang',
+            [
+                'data_type' => 'product',
+                'data_id' => $productId,
+                'action_url' => "/admin/products/{$productId}",
+                'priority' => 'high'
+            ]
+        );
+
+        // Kirim ke admin
+        $this->sendToRole(
+            'stock_low',
+            'Stok Produk Rendah',
+            "Stok produk {$productData['name']} tersisa {$productData['stock']} unit",
+            'admin',
             [
                 'data_type' => 'product',
                 'data_id' => $productId,

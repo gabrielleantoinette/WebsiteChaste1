@@ -16,6 +16,7 @@
     @vite('resources/css/app.css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
     <link rel="stylesheet" href="{{ asset('css/theme.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body class="{{ $theme }}">
@@ -131,7 +132,8 @@
         setInterval(updateNotificationBadge, 30000);
     });
     
-    function updateNotificationBadge() {
+            // Global function untuk update notification badge
+        window.updateNotificationBadge = function() {
         console.log('Updating notification badge...'); // Debug
         fetch('/notifications/unread-count')
             .then(response => {
@@ -197,9 +199,13 @@
             `).join('');
         }
 
-        function markAsRead(notificationId, event) {
+        // Global function untuk mark as read
+        window.markAsRead = function(notificationId, event) {
             event.preventDefault();
             event.stopPropagation();
+            
+            console.log('=== MARK AS READ CLICKED ===');
+            console.log('Notification ID:', notificationId);
             
             // Disable tombol agar tidak bisa diklik lagi
             const button = event.target;
@@ -207,39 +213,68 @@
             button.textContent = 'Memproses...';
             button.classList.add('opacity-50');
             
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            console.log('CSRF Token:', csrfToken);
+            
+            // Buat form data untuk POST request
+            const formData = new FormData();
+            formData.append('_token', csrfToken || '');
+            
             fetch(`/notifications/${notificationId}/mark-read`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    'Content-Type': 'application/json',
-                }
+                    'X-CSRF-TOKEN': csrfToken || '',
+                    'Accept': 'application/json',
+                },
+                body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data);
+                
                 if (data.success) {
+                    console.log('Success! Updating UI...');
+                    
                     // Update the notification item
                     const item = event.target.closest('[data-id]');
+                    console.log('Notification item:', item);
+                    
                     if (item) {
+                        // Hapus background teal
                         item.classList.remove('bg-teal-50');
+                        // Tambah opacity
                         item.classList.add('opacity-75');
-                        // Hapus tombol "Tandai Dibaca" dengan benar
-                        const button = item.querySelector('button');
-                        if (button) {
-                            button.remove();
+                        
+                        // Hapus tombol "Tandai Dibaca"
+                        const buttonToRemove = item.querySelector('button');
+                        if (buttonToRemove) {
+                            buttonToRemove.remove();
                         }
                     }
+                    
                     // Update badge count
                     updateNotificationBadge();
+                    console.log('Notification marked as read successfully');
+                } else {
+                    console.error('Failed:', data.error);
+                    // Re-enable tombol
+                    button.disabled = false;
+                    button.textContent = 'Tandai Dibaca';
+                    button.classList.remove('opacity-50');
                 }
             })
             .catch(error => {
-                console.error('Error marking notification as read:', error);
-                // Re-enable tombol jika error
+                console.error('Error:', error);
+                // Re-enable tombol
                 button.disabled = false;
                 button.textContent = 'Tandai Dibaca';
                 button.classList.remove('opacity-50');
             });
-        }
+        };
 
         if (bell) {
             bell.addEventListener('click', function(e) {
