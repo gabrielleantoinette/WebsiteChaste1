@@ -100,23 +100,23 @@ class NotificationController extends Controller
                 'is_read' => $notification->is_read
             ]);
 
-            // Untuk admin, kita perlu mengecek berdasarkan role, bukan hanya recipient_id
-            if ($user instanceof \App\Models\Employee && $user->role === 'admin') {
-                \Log::info('User is admin, checking admin permissions');
-                // Admin bisa menandai notifikasi untuk semua admin
-                if ($notification->recipient_type === 'employee' && $notification->recipient_role === 'admin') {
-                    \Log::info('Admin can mark this notification as read');
-                    $result = $this->notificationService->markAsRead($id);
-                    \Log::info('Mark as read result:', ['result' => $result]);
-                    return response()->json(['success' => true]);
-                } else {
-                    \Log::error('Admin cannot mark this notification - wrong recipient type or role', [
-                        'recipient_type' => $notification->recipient_type,
-                        'recipient_role' => $notification->recipient_role
-                    ]);
-                    return response()->json(['error' => 'Unauthorized'], 401);
-                }
+                    // Untuk admin dan keuangan, kita perlu mengecek berdasarkan role, bukan hanya recipient_id
+        if ($user instanceof \App\Models\Employee && ($user->role === 'admin' || $user->role === 'keuangan')) {
+            \Log::info('User is ' . $user->role . ', checking permissions');
+            // Admin dan keuangan bisa menandai notifikasi untuk role mereka masing-masing
+            if ($notification->recipient_type === 'employee' && $notification->recipient_role === $user->role) {
+                \Log::info($user->role . ' can mark this notification as read');
+                $result = $this->notificationService->markAsRead($id);
+                \Log::info('Mark as read result:', ['result' => $result]);
+                return response()->json(['success' => true]);
+            } else {
+                \Log::error($user->role . ' cannot mark this notification - wrong recipient type or role', [
+                    'recipient_type' => $notification->recipient_type,
+                    'recipient_role' => $notification->recipient_role
+                ]);
+                return response()->json(['error' => 'Unauthorized'], 401);
             }
+        }
             
             // Untuk user lain, cek berdasarkan recipient_id
             $recipientType = is_array($user) ? 'customer' : ($user instanceof \App\Models\Employee ? 'employee' : 'customer');
@@ -222,9 +222,9 @@ class NotificationController extends Controller
             return response()->json(['count' => 0]);
         }
 
-        if ($user instanceof \App\Models\Employee && $user->role === 'admin') {
+        if ($user instanceof \App\Models\Employee && ($user->role === 'admin' || $user->role === 'keuangan')) {
             $count = Notification::where('recipient_type', 'employee')
-                ->where('recipient_role', 'admin')
+                ->where('recipient_role', $user->role)
                 ->where('is_read', false)
                 ->count();
         } else {
@@ -246,15 +246,15 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         
-        // Untuk admin, ambil semua notifikasi admin
-        if ($user instanceof \App\Models\Employee && $user->role === 'admin') {
+        // Untuk admin dan keuangan, ambil semua notifikasi role mereka
+        if ($user instanceof \App\Models\Employee && ($user->role === 'admin' || $user->role === 'keuangan')) {
             $notifications = Notification::where('recipient_type', 'employee')
-                ->where('recipient_role', 'admin')
+                ->where('recipient_role', $user->role)
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get();
             $unreadCount = Notification::where('recipient_type', 'employee')
-                ->where('recipient_role', 'admin')
+                ->where('recipient_role', $user->role)
                 ->where('is_read', false)
                 ->count();
         } else {

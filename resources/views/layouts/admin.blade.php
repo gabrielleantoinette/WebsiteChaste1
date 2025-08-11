@@ -71,6 +71,7 @@
                 class="{{ request()->is('admin/keuangan/keuangan/hutang*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">
                     Hutang Supplier
                 </a>
+                <a href="{{ route('keuangan.hutang.create') }}" class="{{ request()->is('admin/keuangan/hutang/create*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Buat Purchase Order</a>
             @endif
         </nav>
 

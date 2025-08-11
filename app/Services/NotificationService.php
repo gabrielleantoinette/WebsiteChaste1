@@ -139,9 +139,12 @@ class NotificationService
             'order_status' => 'fas fa-shipping-fast',
             'order_created' => 'fas fa-shopping-cart',
             'payment_received' => 'fas fa-credit-card',
+            'payment_pending' => 'fas fa-clock',
             'payment_success' => 'fas fa-check-circle',
             'payment_confirmed' => 'fas fa-check-double',
             'payment_failed' => 'fas fa-exclamation-triangle',
+            'invoice_due_date' => 'fas fa-calendar-times',
+            'invoice_due_today' => 'fas fa-exclamation-triangle',
             'retur_request' => 'fas fa-undo-alt',
             'retur_approved' => 'fas fa-check-circle',
             'retur_rejected' => 'fas fa-times-circle',
@@ -258,6 +261,66 @@ class NotificationService
                 'data_id' => $paymentId,
                 'action_url' => "/admin/payments/{$paymentId}",
                 'priority' => 'high'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi pembayaran pending untuk keuangan
+     */
+    public function notifyPaymentPending($invoiceId, $invoiceData)
+    {
+        $this->sendToRole(
+            'payment_pending',
+            'Pembayaran Pending',
+            "Pembayaran pending sebesar Rp " . number_format($invoiceData['amount']) . " dari {$invoiceData['customer_name']} untuk invoice {$invoiceData['invoice_code']}",
+            'keuangan',
+            [
+                'data_type' => 'invoice',
+                'data_id' => $invoiceId,
+                'action_url' => "/admin/keuangan/detail/{$invoiceId}",
+                'priority' => 'high'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi invoice jatuh tempo untuk keuangan
+     */
+    public function notifyInvoiceDueDate($invoiceId, $invoiceData)
+    {
+        $daysLeft = $invoiceData['days_left'];
+        $priority = $daysLeft <= 1 ? 'urgent' : ($daysLeft <= 3 ? 'high' : 'normal');
+        
+        $this->sendToRole(
+            'invoice_due_date',
+            'Invoice Jatuh Tempo',
+            "Invoice {$invoiceData['invoice_code']} dari {$invoiceData['customer_name']} jatuh tempo dalam {$daysLeft} hari. Sisa hutang: Rp " . number_format($invoiceData['remaining_amount']),
+            'keuangan',
+            [
+                'data_type' => 'invoice',
+                'data_id' => $invoiceId,
+                'action_url' => "/admin/keuangan/detail/{$invoiceId}",
+                'priority' => $priority
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi invoice jatuh tempo hari ini untuk keuangan
+     */
+    public function notifyInvoiceDueToday($invoiceId, $invoiceData)
+    {
+        $this->sendToRole(
+            'invoice_due_today',
+            'Invoice Jatuh Tempo Hari Ini',
+            "Invoice {$invoiceData['invoice_code']} dari {$invoiceData['customer_name']} jatuh tempo hari ini! Sisa hutang: Rp " . number_format($invoiceData['remaining_amount']),
+            'keuangan',
+            [
+                'data_type' => 'invoice',
+                'data_id' => $invoiceId,
+                'action_url' => "/admin/keuangan/detail/{$invoiceId}",
+                'priority' => 'urgent'
             ]
         );
     }
