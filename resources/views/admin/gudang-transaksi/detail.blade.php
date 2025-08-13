@@ -10,7 +10,12 @@
             <div class="bg-red-100 text-red-800 px-4 py-2 rounded mb-4">{{ session('error') }}</div>
         @endif
         
-        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Detail Invoice</h1>
+        <div class="flex justify-between items-center mb-6">
+            <a href="{{ url('/admin/gudang-transaksi') }}" class="text-gray-600 hover:text-gray-800 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Detail Invoice</h1>
+        </div>
 
         {{-- Informasi Invoice --}}
         <div class="mb-6">

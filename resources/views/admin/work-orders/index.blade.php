@@ -2,12 +2,17 @@
 
 @section('content')
 <div class="py-6">
+    @php 
+        $user = Session::get('user');
+        $role = is_array($user) ? $user['role'] ?? '' : $user->role ?? '';
+    @endphp
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Surat Perintah Kerja</h1>
-        @php 
-            $user = Session::get('user');
-            $role = is_array($user) ? $user['role'] ?? '' : $user->role ?? '';
-        @endphp
+        <div class="flex items-center space-x-4">
+            <a href="{{ $role === 'gudang' ? route('gudang.dashboard') : url('/admin') }}" class="text-gray-600 hover:text-gray-800 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Surat Perintah Kerja</h1>
+        </div>
         @if(in_array($role, ['admin', 'owner']))
             <a href="{{ route('admin.work-orders.create') }}" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors">
                 <i class="fas fa-plus mr-2"></i>Buat Surat Perintah

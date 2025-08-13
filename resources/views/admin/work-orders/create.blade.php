@@ -2,12 +2,14 @@
 
 @section('content')
 <div class="py-6">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Buat Surat Perintah Kerja</h1>
-        <a href="{{ route('admin.work-orders.index') }}" class="text-teal-600 hover:text-teal-800">
-            <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar
-        </a>
-    </div>
+            <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-4">
+                <a href="{{ route('admin.work-orders.index') }}" class="text-gray-600 hover:text-gray-800 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Kembali
+                </a>
+                <h1 class="text-2xl font-bold text-gray-800">Buat Surat Perintah Kerja</h1>
+            </div>
+        </div>
 
     <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
         <div class="p-6 border-b border-gray-200">

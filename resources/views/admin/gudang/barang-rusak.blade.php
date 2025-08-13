@@ -2,14 +2,16 @@
 
 @section('content')
 <div class="container mt-4">
-    <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold">Kelola Barang Rusak (Gudang)</h2>
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center space-x-4">
+            <a href="{{ route('gudang.dashboard') }}" class="text-gray-600 hover:text-gray-800 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Kelola Barang Rusak</h1>
+        </div>
         <div class="flex gap-2">
             <a href="{{ route('gudang.laporan.retur.pdf') }}" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
                 📊 Download Laporan Retur
-            </a>
-            <a href="{{ route('gudang.dashboard') }}" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition">
-                Kembali ke Dashboard
             </a>
         </div>
     </div>

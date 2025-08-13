@@ -1,8 +1,13 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="flex justify-between mb-5">
-        <h1 class="text-xl font-bold mb-5">Transaksi</h1>
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center space-x-4">
+            <a href="{{ route('gudang.dashboard') }}" class="text-gray-600 hover:text-gray-800 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Transaksi Gudang</h1>
+        </div>
     </div>
     <div class="overflow-x-auto">
         <table id="datatable-gudang" class="min-w-full table-auto text-sm border border-gray-200">
