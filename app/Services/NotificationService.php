@@ -593,4 +593,46 @@ class NotificationService
             ]
         );
     }
+
+    /**
+     * Notifikasi work order baru untuk gudang
+     */
+    public function notifyWorkOrderNew($workOrderId, $workOrderData)
+    {
+        $this->sendToUser(
+            'work_order_new',
+            'Surat Perintah Kerja Baru',
+            "Surat perintah kerja {$workOrderData['code']} telah dibuat untuk Anda",
+            'employee',
+            $workOrderData['assigned_to'],
+            'gudang',
+            [
+                'data_type' => 'work_order',
+                'data_id' => $workOrderId,
+                'action_url' => "/admin/work-orders/{$workOrderId}",
+                'priority' => 'high',
+                'icon' => 'fas fa-clipboard-list'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi update status work order untuk admin
+     */
+    public function notifyWorkOrderStatusUpdate($workOrderId, $workOrderData)
+    {
+        $this->sendToRole(
+            'work_order_update',
+            'Update Status Surat Perintah Kerja',
+            "Surat perintah kerja {$workOrderData['code']} telah diupdate statusnya menjadi {$workOrderData['status']}",
+            'admin',
+            [
+                'data_type' => 'work_order',
+                'data_id' => $workOrderId,
+                'action_url' => "/admin/work-orders/{$workOrderId}",
+                'priority' => 'normal',
+                'icon' => 'fas fa-clipboard-check'
+            ]
+        );
+    }
 } 

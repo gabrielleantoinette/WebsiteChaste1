@@ -39,6 +39,7 @@
                 <a href="{{ route('gudang.dashboard') }}" class="{{ request()->routeIs('gudang.dashboard') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Dashboard Gudang</a>
                 <a href="{{ url('/admin/gudang-transaksi') }}" class="{{ request()->is('admin/gudang-transaksi') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Transaksi Gudang</a>
                 <a href="{{ route('gudang.barang-rusak') }}" class="{{ request()->routeIs('gudang.barang-rusak') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Barang Rusak</a>
+                <a href="{{ route('gudang.work-orders.index') }}" class="{{ request()->routeIs('gudang.work-orders*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Surat Perintah Kerja</a>
             @else
                 <a href="{{ url('/admin') }}" class="{{ request()->is('admin') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Dashboard</a>
             @endif
@@ -63,6 +64,7 @@
                 <a href="{{ url('/admin/customers') }}" class="{{ request()->is('admin/customers*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Pembeli</a>
                 <a href="{{ url('/admin/invoices') }}" class="{{ request()->is('admin/invoices*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Penjualan</a>
                 <a href="{{ route('admin.retur.index') }}" class="{{ request()->routeIs('admin.retur.index') || request()->routeIs('admin.retur.detail') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Retur</a>
+                <a href="{{ route('admin.work-orders.index') }}" class="{{ request()->routeIs('admin.work-orders*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Surat Perintah Kerja</a>
             @endif
 
             @if ($role == 'keuangan')

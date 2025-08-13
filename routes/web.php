@@ -18,6 +18,7 @@ use App\Http\Controllers\HutangController;
 use App\Http\Controllers\NegotiationController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\WorkOrderController;
 use App\Http\Middleware\LoggedIn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -187,6 +188,23 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/assign-gudang/{id}', [GudangController::class, 'assignGudang']);
     });
 
+    // Work Orders Routes
+    Route::prefix('work-orders')->group(function () {
+        // Admin routes
+        Route::get('/', [WorkOrderController::class, 'index'])->name('admin.work-orders.index');
+        Route::get('/create', [WorkOrderController::class, 'create'])->name('admin.work-orders.create');
+        Route::post('/', [WorkOrderController::class, 'store'])->name('admin.work-orders.store');
+        Route::get('/{id}', [WorkOrderController::class, 'show'])->name('admin.work-orders.show');
+        Route::get('/{id}/edit', [WorkOrderController::class, 'edit'])->name('admin.work-orders.edit');
+        Route::put('/{id}', [WorkOrderController::class, 'update'])->name('admin.work-orders.update');
+        
+        // Gudang routes
+        Route::post('/{workOrderId}/items/{itemId}/status', [WorkOrderController::class, 'updateItemStatus'])->name('gudang.work-orders.update-item-status');
+        Route::post('/{id}/status', [WorkOrderController::class, 'updateWorkOrderStatus'])->name('gudang.work-orders.update-status');
+    });
+    
+
+
     Route::prefix('assign-driver')->group(function () {
         Route::get('/', [OwnerController::class, 'viewAssignDriver']);
         Route::post('/assign/{id}', [OwnerController::class, 'assignDriver']);
@@ -246,6 +264,12 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     Route::get('/retur/damaged-products', [App\Http\Controllers\ReturController::class, 'damagedProducts'])->name('admin.retur.damaged-products');
     Route::get('/retur/{id}', [App\Http\Controllers\ReturController::class, 'show'])->name('admin.retur.detail');
     Route::post('/retur/{id}/process', [App\Http\Controllers\ReturController::class, 'process'])->name('admin.retur.process');
+});
+
+// Gudang Work Orders Routes (bisa diakses oleh gudang)
+Route::prefix('gudang/work-orders')->middleware([LoggedIn::class])->group(function () {
+    Route::get('/', [WorkOrderController::class, 'index'])->name('gudang.work-orders.index');
+    Route::get('/{id}', [WorkOrderController::class, 'show'])->name('gudang.work-orders.show');
 });
 
 // Barang Rusak Gudang

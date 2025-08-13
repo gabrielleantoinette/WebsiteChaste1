@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\DamagedProduct;
 use App\Models\Product;
+use App\Models\WorkOrder;
 use App\Services\NotificationService;
 
 class GudangController extends Controller
@@ -129,7 +130,20 @@ class GudangController extends Controller
             ->get();
         $returanCount = $returans->count();
         
-        return view('admin.dashboardgudang', compact('orders', 'siapProsesCount', 'totalProdukDisiapkan', 'produkDisiapkan', 'returans', 'returanCount'));
+        // Data work order untuk gudang
+        $workOrders = WorkOrder::with(['createdBy', 'items'])
+            ->where('assigned_to', $user->id)
+            ->whereIn('status', ['dibuat', 'dikerjakan'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+        $workOrderStats = [
+            'pending' => WorkOrder::where('assigned_to', $user->id)->where('status', 'dibuat')->count(),
+            'in_progress' => WorkOrder::where('assigned_to', $user->id)->where('status', 'dikerjakan')->count(),
+            'completed' => WorkOrder::where('assigned_to', $user->id)->where('status', 'selesai')->count(),
+        ];
+        
+        return view('admin.dashboardgudang', compact('orders', 'siapProsesCount', 'totalProdukDisiapkan', 'produkDisiapkan', 'returans', 'returanCount', 'workOrders', 'workOrderStats'));
     }
 
     // Menampilkan daftar barang rusak untuk staf gudang
