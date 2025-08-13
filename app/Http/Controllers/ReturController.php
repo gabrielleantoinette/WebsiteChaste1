@@ -106,6 +106,8 @@ class ReturController extends Controller
                 'order_id' => $retur->invoice->code,
                 'description' => $retur->description
             ]);
+
+
             
             DB::commit();
             return redirect()->route('admin.retur.detail', $retur->id)

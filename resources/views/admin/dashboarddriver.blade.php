@@ -2,7 +2,15 @@
 
 @section('content')
 <div class="py-6">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Pengiriman (Kurir/Driver)</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Dashboard Pengiriman (Kurir/Driver)</h1>
+        <div class="flex items-center space-x-4">
+            <div class="text-sm text-gray-600">
+                <i class="fas fa-bell mr-2"></i>
+                <span id="notificationCount">0</span> notifikasi baru
+            </div>
+        </div>
+    </div>
 
     {{-- Ringkasan --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">

@@ -635,4 +635,44 @@ class NotificationService
             ]
         );
     }
+
+    /**
+     * Notifikasi pesanan siap kirim untuk driver
+     */
+    public function notifyOrderReadyForDelivery($orderData)
+    {
+        $this->sendToRole(
+            'order_ready_delivery',
+            'Pesanan Siap Kirim',
+            "Pesanan {$orderData['code']} siap untuk dikirim ke {$orderData['customer_name']}",
+            'driver',
+            [
+                'data_type' => 'order',
+                'data_id' => $orderData['id'],
+                'action_url' => "/admin/driver-transaksi/detail/{$orderData['id']}",
+                'priority' => 'high',
+                'icon' => 'fas fa-truck'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi retur siap ambil untuk driver
+     */
+    public function notifyReturnReadyForPickup($returnData)
+    {
+        $this->sendToRole(
+            'return_ready_pickup',
+            'Retur Siap Ambil',
+            "Retur #{$returnData['id']} dari {$returnData['customer_name']} siap untuk diambil",
+            'driver',
+            [
+                'data_type' => 'return',
+                'data_id' => $returnData['id'],
+                'action_url' => "/admin/driver-retur/detail/{$returnData['id']}",
+                'priority' => 'high',
+                'icon' => 'fas fa-undo'
+            ]
+        );
+    }
 } 

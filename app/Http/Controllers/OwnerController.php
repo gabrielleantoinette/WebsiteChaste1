@@ -12,6 +12,7 @@ use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\NegotiationTable;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\NotificationService;
 
 class OwnerController extends Controller
 {
@@ -25,14 +26,29 @@ class OwnerController extends Controller
 
     public function assignDriver($id, Request $request)
     {
-        $invoice = HInvoice::find($id);
+        $invoice = HInvoice::with('customer')->find($id);
         $invoice->driver_id = $request->driver_id;
         
         // Beda status untuk pengiriman normal vs retur
         if ($invoice->status === 'retur_diajukan') {
             $invoice->status = 'retur_diambil'; // Status khusus untuk retur yang sudah di-assign driver
+            
+            // Kirim notifikasi ke driver untuk retur
+            $notificationService = app(NotificationService::class);
+            $notificationService->notifyReturnReadyForPickup([
+                'id' => $invoice->id,
+                'customer_name' => $invoice->customer->name
+            ]);
         } else {
             $invoice->status = 'dikirim'; // Status untuk pengiriman normal
+            
+            // Kirim notifikasi ke driver untuk pengiriman
+            $notificationService = app(NotificationService::class);
+            $notificationService->notifyOrderReadyForDelivery([
+                'id' => $invoice->id,
+                'code' => $invoice->code,
+                'customer_name' => $invoice->customer->name
+            ]);
         }
         
         $invoice->save();

@@ -33,6 +33,7 @@
             @if ($role == 'driver')
                 <a href="{{ url('/admin/dashboard-driver') }}" class="{{ request()->is('admin/dashboard-driver') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Dashboard Driver</a>
                 <a href="{{ url('/admin/driver-transaksi') }}" class="{{ request()->is('admin/driver-transaksi') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Transaksi Kurir</a>
+                <a href="{{ url('/admin/driver-retur') }}" class="{{ request()->is('admin/driver-retur*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Retur Kurir</a>
             @elseif ($role == 'keuangan')
                 <a href="{{ route('keuangan.dashboard') }}" class="{{ request()->routeIs('keuangan.dashboard') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Dashboard</a>
             @elseif ($role == 'gudang')

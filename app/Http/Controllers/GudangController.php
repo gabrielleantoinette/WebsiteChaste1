@@ -90,6 +90,8 @@ class GudangController extends Controller
             'priority' => 'normal'
         ]);
 
+
+
         return redirect()->back()->with('success', 'Berhasil menyiapkan barang dan upload foto bukti kualitas.');
     }
 
