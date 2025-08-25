@@ -37,7 +37,19 @@
       <!-- Detail & Negosiasi -->
       <div class="flex-1 space-y-4">
         <h2 class="text-2xl font-bold text-gray-900">{{ $product->name }} - {{ $product->size }}</h2>
-        <p class="text-gray-600">Rp {{ number_format($product->price,0,',','.') }} <span class="text-sm">(Harga Satuan)</span></p>
+        <p class="text-gray-600">Rp {{ number_format($product->price,0,',','.') }} <span class="text-sm">(Harga Normal)</span></p>
+        
+        @if($product->min_buying_stock && $product->min_buying_stock > 1)
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <p class="text-sm text-blue-800">
+                    💡 <strong>Info:</strong> Tawar menawar tersedia untuk pembelian minimal {{ $product->min_buying_stock }} pcs
+                </p>
+            </div>
+        @endif
+        
+        <p class="text-sm text-gray-600">
+            💡 <strong>Tips Negosiasi:</strong> Tawar 10-30% dari harga normal untuk hasil terbaik
+        </p>
 
         <!-- Form Tawar -->
         <form action="{{ route('produk.negosiasi.tawar', $product) }}" method="POST" class="mt-4 space-y-2">
@@ -50,7 +62,7 @@
               name="harga" 
               min="1" 
               required
-              placeholder="Masukkan harga tawar..."
+              placeholder="Contoh: Rp {{ number_format($product->price * 0.8, 0, ',', '.') }}"
               class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
               value="{{ old('harga') }}"
             />
@@ -78,18 +90,20 @@
                 @endphp
 
                 @if($neg->$cust !== null)
-                  <li class="flex justify-between">
-                    <span class="font-medium">You #{{ $i }}:</span>
-                    <span>Rp {{ number_format($neg->$cust,0,',','.') }}</span>
+                  <li class="flex justify-between items-center py-2 border-b border-gray-100">
+                    <div>
+                      <span class="font-medium text-gray-800">Tawaran Anda #{{ $i }}:</span>
+                      <div class="text-sm text-gray-600">Rp {{ number_format($neg->$cust,0,',','.') }}</div>
+                    </div>
                   </li>
-                  <li class="flex justify-between">
-                    <span class="font-medium">System #{{ $i }}:</span>
-                    <span>
-                      Rp {{ number_format($neg->$sell,0,',','.') }}
-                      @if($neg->status==='final' && $i===3)
-                        <span class="text-red-600 font-bold ml-2">FINAL</span>
-                      @endif
-                    </span>
+                  <li class="flex justify-between items-center py-2">
+                    <div>
+                      <span class="font-medium text-gray-800">Counter Offer #{{ $i }}:</span>
+                      <div class="text-sm text-teal-600 font-semibold">Rp {{ number_format($neg->$sell,0,',','.') }}</div>
+                    </div>
+                    @if($neg->status==='final' && $i===3)
+                      <span class="text-red-600 font-bold text-sm bg-red-100 px-2 py-1 rounded">FINAL</span>
+                    @endif
                   </li>
                 @endif
               @endforeach
@@ -106,7 +120,7 @@
                             ? 'bg-teal-100 text-teal-800 hover:bg-teal-200'
                             : 'bg-gray-200 text-gray-500 cursor-not-allowed' }}"
                   {{ $neg->status!=='final' ? 'disabled' : '' }}>
-            Deal
+            Deal @if($neg->status==='final') - Rp {{ number_format($neg->final_price,0,',','.') }} @endif
           </button>
 
           <!-- Tambah ke Keranjang -->

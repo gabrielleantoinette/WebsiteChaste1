@@ -108,6 +108,13 @@ class ProductController extends Controller
 
     public function updateMinPriceAction(Request $request, $id)
     {
+        // Hanya owner yang boleh update min_price
+        if (Session::get('user')->role !== 'owner') {
+            return redirect()
+                ->route('admin.products.view')
+                ->with('error', 'Anda tidak memiliki akses untuk mengubah harga minimal.');
+        }
+
         $request->validate(['min_price' => 'required|numeric|min:0']);
         $product = Product::findOrFail($id);
         $product->min_price = $request->input('min_price');
@@ -116,6 +123,25 @@ class ProductController extends Controller
         return redirect()
             ->route('admin.products.view')
             ->with('success', 'Minimal price berhasil diupdate.');
+    }
+
+    public function updateMinBuyingStockAction(Request $request, $id)
+    {
+        // Hanya owner yang boleh update min_buying_stock
+        if (Session::get('user')->role !== 'owner') {
+            return redirect()
+                ->route('admin.products.view')
+                ->with('error', 'Anda tidak memiliki akses untuk mengubah minimal quantity.');
+        }
+
+        $request->validate(['min_buying_stock' => 'required|integer|min:1']);
+        $product = Product::findOrFail($id);
+        $product->min_buying_stock = $request->input('min_buying_stock');
+        $product->save();
+
+        return redirect()
+            ->route('admin.products.view')
+            ->with('success', 'Minimal quantity untuk tawar menawar berhasil diupdate.');
     }
 
     /**

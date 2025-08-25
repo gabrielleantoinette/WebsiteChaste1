@@ -21,6 +21,9 @@ class NegotiationController extends Controller
              'product_id' => $product->id]
         );
 
+        // Untuk saat ini, biarkan semua bisa akses halaman negosiasi
+        // Validasi quantity akan dilakukan di frontend dan saat checkout
+
         return view('negosiasi', [
             'product' => $product,
             'neg'     => $neg,
@@ -56,15 +59,49 @@ class NegotiationController extends Controller
             return back()->with('error', 'Sudah mencapai maksimal 3 kali tawar.');
         }
 
-        // Logika sistem merespons
-        $min = $product->min_price;  // kolom min_price harus ada di products
+        // Logika sistem merespons yang lebih fleksibel
+        $min = $product->min_price ?? ($product->price * 0.65); // Default 65% dari harga normal (lebih rendah)
         $max = $product->price;
-
-        if ($offer <= $min) {
-            $response = $offer;
+        
+        // Validasi tawaran customer (tidak reveal harga minimal)
+        if ($offer < ($max * 0.5)) {
+            return back()->with('error', "Tawaran terlalu rendah. Silakan tawar minimal 50% dari harga normal.");
+        }
+        
+        if ($offer >= $max) {
+            return back()->with('error', "Tawaran sudah mencapai atau melebihi harga normal. Tidak perlu tawar lagi.");
+        }
+        
+        // Logika counter offer yang lebih dinamis
+        $discountPercentage = (($max - $offer) / $max) * 100;
+        
+        // Sistem akan counter berdasarkan seberapa agresif tawaran customer
+        if ($discountPercentage >= 40) {
+            // Tawaran sangat agresif (diskon >40%), counter dengan diskon 15-20%
+            $counterDiscount = rand(15, 20);
+            $response = (int) ($max * (1 - ($counterDiscount / 100)));
+        } elseif ($discountPercentage >= 25) {
+            // Tawaran agresif (diskon 25-40%), counter dengan diskon 10-15%
+            $counterDiscount = rand(10, 15);
+            $response = (int) ($max * (1 - ($counterDiscount / 100)));
+        } elseif ($discountPercentage >= 15) {
+            // Tawaran sedang (diskon 15-25%), counter dengan diskon 5-10%
+            $counterDiscount = rand(5, 10);
+            $response = (int) ($max * (1 - ($counterDiscount / 100)));
         } else {
-            // Contoh counter: setengah jalan
-            $response = (int) ceil($max - (($max - $offer) / 2));
+            // Tawaran ringan (diskon <15%), counter dengan diskon 3-5%
+            $counterDiscount = rand(3, 5);
+            $response = (int) ($max * (1 - ($counterDiscount / 100)));
+        }
+        
+        // Pastikan response tidak lebih rendah dari tawaran customer
+        if ($response <= $offer) {
+            $response = (int) ($offer + ($max * 0.02)); // Tambah 2% dari harga normal
+        }
+        
+        // Pastikan response tidak di bawah harga minimal
+        if ($response < $min) {
+            $response = (int) $min;
         }
 
         // Simpan ke kolom attempt berikutnya

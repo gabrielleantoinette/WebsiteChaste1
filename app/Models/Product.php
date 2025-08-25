@@ -14,6 +14,7 @@ class Product extends Model
         'image',
         'price',
         'min_price',
+        'min_buying_stock',
         'size',
         'live',
         'category_id',

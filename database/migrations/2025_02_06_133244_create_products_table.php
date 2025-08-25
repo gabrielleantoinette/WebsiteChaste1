@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->integer('price');
             $table->integer('min_price')->nullable();
+            $table->integer('min_buying_stock')->default(1)->comment('Minimal quantity untuk bisa tawar menawar');
             $table->string('size')->nullable();
             $table->string('image')->nullable();
             $table->boolean('live')->default(false);

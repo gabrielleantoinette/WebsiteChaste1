@@ -35,6 +35,8 @@ class DatabaseSeeder extends Seeder
             'name' => 'Terpal A5',
             'description' => 'Description 1',
             'price' => 1000,
+            'min_price' => 650,
+            'min_buying_stock' => 5,
             'size' => '2x3',
             'live' => 1,
         ]);
@@ -43,6 +45,8 @@ class DatabaseSeeder extends Seeder
             'name' => 'Terpal A5',
             'description' => 'Description 1',
             'price' => 2000,
+            'min_price' => 1300,
+            'min_buying_stock' => 3,
             'size' => '3x4',
             'live' => 1,
         ]);
@@ -51,6 +55,8 @@ class DatabaseSeeder extends Seeder
             'name' => 'Terpal A5',
             'description' => 'Description 1',
             'price' => 3000,
+            'min_price' => 1950,
+            'min_buying_stock' => 2,
             'size' => '4x6',
             'live' => 1,
         ]);

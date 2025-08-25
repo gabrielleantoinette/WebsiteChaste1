@@ -344,4 +344,40 @@ class CustomerController extends Controller
         ]);
         return redirect()->route('profile.hutang')->with('success', 'Bukti pembayaran hutang berhasil diupload, menunggu verifikasi.');
     }
+
+    // Method untuk mengecek status hutang customer
+    public static function checkCustomerDebtStatus($customerId)
+    {
+        $hutangInvoices = \App\Models\HInvoice::where('customer_id', $customerId)
+            ->with(['payments' => function($q) {
+                $q->where('is_paid', 0);
+            }])
+            ->get();
+        
+        $filteredHutang = $hutangInvoices->filter(function($inv) {
+            $p = $inv->payments->first();
+            return $p && in_array($p->method, ['cod', 'hutang']) && $p->is_paid == 0;
+        });
+        
+        $totalHutangAktif = $filteredHutang->sum(function($inv) {
+            return $inv->grand_total - ($inv->paid_amount ?? 0);
+        });
+        
+        $limitHutang = 10000000; // 10 juta
+        $melebihiLimit = $totalHutangAktif >= $limitHutang;
+        
+        $adaHutangTerlambat = $filteredHutang->contains(function($inv) {
+            $p = $inv->payments->first();
+            return $p && $p->method == 'hutang' && now()->gt($inv->created_at->addMonth()) && ($inv->grand_total - ($inv->paid_amount ?? 0)) > 0;
+        });
+        
+        return [
+            'totalHutangAktif' => $totalHutangAktif,
+            'limitHutang' => $limitHutang,
+            'melebihiLimit' => $melebihiLimit,
+            'adaHutangTerlambat' => $adaHutangTerlambat,
+            'sisaLimit' => $limitHutang - $totalHutangAktif,
+            'disableCheckout' => $melebihiLimit || $adaHutangTerlambat
+        ];
+    }
 }

@@ -126,7 +126,13 @@ class CheckoutController extends Controller
             $p = $inv->payments->first();
             return $p && $p->method == 'hutang' && now()->gt($inv->created_at->addMonth()) && ($inv->grand_total - ($inv->paid_amount ?? 0)) > 0;
         });
-        $disableCheckout = $totalHutangAktif >= 10000000 || $adaHutangTerlambat;
+        
+        // Validasi limit hutang 10 juta
+        $limitHutang = 10000000; // 10 juta
+        $totalHutangSetelahTransaksi = $totalHutangAktif + $subtotalProduk;
+        $melebihiLimit = $totalHutangSetelahTransaksi > $limitHutang;
+        
+        $disableCheckout = $totalHutangAktif >= $limitHutang || $adaHutangTerlambat || $melebihiLimit;
 
         return view('checkout', [
             'produkItems' => $produkItems,
@@ -136,6 +142,9 @@ class CheckoutController extends Controller
             'alamat_default_user' => $alamat_default_user,
             'disableCheckout' => $disableCheckout,
             'bolehHutang' => $bolehHutang,
+            'totalHutangAktif' => $totalHutangAktif,
+            'limitHutang' => $limitHutang,
+            'melebihiLimit' => $melebihiLimit,
         ]);
     }
 }

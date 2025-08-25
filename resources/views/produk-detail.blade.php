@@ -28,6 +28,11 @@
 
             <!-- Details Section -->
             <div class="md:w-1/2 p-8 space-y-6">
+                @if(session('error'))
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <p class="text-sm text-red-800">{{ session('error') }}</p>
+                    </div>
+                @endif
                 <h1 class="text-3xl font-bold text-gray-800">
                     {{ $product->name }}
                     <span class="text-lg text-gray-600">({{ $product->size }})</span>
@@ -35,6 +40,9 @@
                 <p class="text-xl text-teal-600 font-semibold">
                     Rp {{ number_format($product->price, 0, ',', '.') }}
                     <span class="text-sm text-gray-500">/ unit</span>
+                </p>
+                <p class="text-sm text-gray-600">
+                    💡 <strong>Tips:</strong> Anda bisa tawar 10-30% dari harga normal
                 </p>
                 <p class="text-gray-600">{{ $product->description }}</p>
 
@@ -69,10 +77,24 @@
                             class="flex-1 bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition">
                             Tambah ke Keranjang
                         </button>
-                        <a href="{{ route('produk.negosiasi', $product) }}"
-                            class="flex-1 text-center bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition">
-                            Tawar Harga
-                        </a>
+                        
+                        @if($product->min_buying_stock && $product->min_buying_stock > 1)
+                            <div class="flex-1 text-center">
+                                <a href="{{ route('produk.negosiasi', $product) }}" 
+                                   id="tawarButton"
+                                   class="block bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition">
+                                    Tawar Harga
+                                </a>
+                                <p class="text-xs text-gray-500 mt-1" id="tawarInfo">
+                                    Minimal {{ $product->min_buying_stock }} pcs untuk tawar menawar
+                                </p>
+                            </div>
+                        @else
+                            <a href="{{ route('produk.negosiasi', $product) }}"
+                                class="flex-1 text-center bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition">
+                                Tawar Harga
+                            </a>
+                        @endif
                     </div>
                 </form>
             </div>
@@ -82,12 +104,54 @@
     @include('layouts.footer')
 
     <script>
+        const minBuyingStock = {{ $product->min_buying_stock ?? 1 }};
+        
         function changeQty(amount) {
             const input = document.getElementById('qtyInput');
             let val = parseInt(input.value) || 1;
             val = Math.max(val + amount, 1);
             input.value = val;
+            checkTawarButton();
         }
+        
+        function checkTawarButton() {
+            const qtyInput = document.getElementById('qtyInput');
+            const tawarButton = document.getElementById('tawarButton');
+            const tawarInfo = document.getElementById('tawarInfo');
+            
+            if (!tawarButton || !tawarInfo) return;
+            
+            const currentQty = parseInt(qtyInput.value) || 1;
+            
+            if (currentQty >= minBuyingStock) {
+                // Quantity cukup, enable tombol
+                tawarButton.classList.remove('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+                tawarButton.classList.add('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
+                tawarButton.style.pointerEvents = 'auto';
+                tawarInfo.classList.remove('text-red-500');
+                tawarInfo.classList.add('text-gray-500');
+                tawarInfo.textContent = `Minimal ${minBuyingStock} pcs untuk tawar menawar`;
+            } else {
+                // Quantity tidak cukup, disable tombol
+                tawarButton.classList.remove('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
+                tawarButton.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+                tawarButton.style.pointerEvents = 'none';
+                tawarInfo.classList.remove('text-gray-500');
+                tawarInfo.classList.add('text-red-500');
+                tawarInfo.textContent = `Minimal ${minBuyingStock} pcs untuk tawar menawar (quantity tidak cukup)`;
+            }
+        }
+        
+        // Check saat halaman load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkTawarButton();
+            
+            // Check saat input berubah
+            const qtyInput = document.getElementById('qtyInput');
+            if (qtyInput) {
+                qtyInput.addEventListener('input', checkTawarButton);
+            }
+        });
     </script>
 </body>
 

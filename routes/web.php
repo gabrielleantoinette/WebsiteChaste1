@@ -122,6 +122,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/detail/{id}/variants/create', [ProductController::class, 'createVariantAction']);
 
         Route::post('/detail/{id}/min-price', [ProductController::class, 'updateMinPriceAction']);
+        Route::post('/detail/{id}/min-buying-stock', [ProductController::class, 'updateMinBuyingStockAction']);
     });
 
     Route::prefix('settings')->group(function () {

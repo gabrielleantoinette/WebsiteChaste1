@@ -145,11 +145,22 @@
                     <div>
                         <label class="flex items-center space-x-2">
                             <input type="radio" name="payment_method" value="hutang" class="accent-teal-600"
-                                onchange="showPaymentInfo()" id="hutang" {{ !$bolehHutang ? 'disabled' : '' }}>
+                                onchange="showPaymentInfo()" id="hutang" 
+                                {{ !$bolehHutang || $melebihiLimit ? 'disabled' : '' }}>
                             <span>Bayar Nanti (Hutang)</span>
                         </label>
                         @if(!$bolehHutang)
                             <span class="text-xs text-red-500 ml-2">Minimal 1x transaksi lunas untuk bisa hutang</span>
+                        @elseif($melebihiLimit)
+                            <span class="text-xs text-red-500 ml-2">Total hutang akan melebihi limit Rp 10.000.000</span>
+                        @endif
+                        
+                        @if($bolehHutang && !$melebihiLimit)
+                            <div class="mt-2 text-xs text-gray-600">
+                                <div>Hutang saat ini: Rp {{ number_format($totalHutangAktif, 0, ',', '.') }}</div>
+                                <div>Limit hutang: Rp {{ number_format($limitHutang, 0, ',', '.') }}</div>
+                                <div>Sisa limit: Rp {{ number_format($limitHutang - $totalHutangAktif, 0, ',', '.') }}</div>
+                            </div>
                         @endif
                     </div>
                 </div>

@@ -206,9 +206,23 @@ class InvoiceController extends Controller
         // cari apakah ini pesanan pertama customer?
         $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
 
-        // Tidak boleh hutang jika first order
-        if ($paymentMethod == 'hutang' && $isFirstOrder) {
-            return redirect()->back()->with('error', 'Anda harus minimal 1x transaksi lunas sebelum boleh berhutang.');
+        // Validasi limit hutang 10 juta untuk customer langganan
+        if ($paymentMethod == 'hutang') {
+            if ($isFirstOrder) {
+                return redirect()->back()->with('error', 'Anda harus minimal 1x transaksi lunas sebelum boleh berhutang.');
+            }
+            
+            // Hitung total hutang customer saat ini
+            $totalHutangSaatIni = HInvoice::where('customer_id', $customerId)
+                ->whereHas('payments', function($q) {
+                    $q->where('method', 'hutang')->where('is_paid', 0);
+                })
+                ->sum('grand_total');
+            
+            $limitHutang = 10000000; // 10 juta
+            if (($totalHutangSaatIni + $grandTotal) > $limitHutang) {
+                return redirect()->back()->with('error', 'Total hutang Anda akan melebihi limit Rp 10.000.000. Silakan lunasi hutang terlebih dahulu atau pilih metode pembayaran lain.');
+            }
         }
 
         // Validasi stok sebelum membuat transaksi
