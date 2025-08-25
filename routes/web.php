@@ -20,6 +20,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\WorkOrderController;
 use App\Http\Middleware\LoggedIn;
+use App\Http\Middleware\GudangRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -275,6 +276,11 @@ Route::prefix('gudang/work-orders')->middleware([LoggedIn::class])->group(functi
 // Barang Rusak Gudang
 Route::get('/gudang/barang-rusak', [App\Http\Controllers\GudangController::class, 'viewBarangRusak'])->name('gudang.barang-rusak');
 Route::post('/gudang/barang-rusak/{id}/perbaiki', [App\Http\Controllers\GudangController::class, 'perbaikiBarangRusak'])->name('gudang.barang-rusak.perbaiki');
+
+// Stok Barang Gudang
+Route::get('/gudang/stok-barang', [App\Http\Controllers\GudangController::class, 'viewStokBarang'])->name('gudang.stok-barang')->middleware([LoggedIn::class, 'gudang.role']);
+Route::get('/gudang/laporan-stok', [App\Http\Controllers\GudangController::class, 'laporanStokHarian'])->name('gudang.laporan-stok')->middleware([LoggedIn::class, 'gudang.role']);
+Route::get('/gudang/laporan-stok/export-pdf', [App\Http\Controllers\GudangController::class, 'exportLaporanStokPDF'])->name('gudang.laporan-stok.pdf')->middleware([LoggedIn::class, 'gudang.role']);
 
 // Laporan Retur untuk Gudang
 Route::get('/gudang/laporan-retur/export-pdf', [LaporanController::class, 'returPDF'])->name('gudang.laporan.retur.pdf')->middleware([LoggedIn::class]);

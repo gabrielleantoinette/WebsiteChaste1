@@ -211,6 +211,14 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', 'Anda harus minimal 1x transaksi lunas sebelum boleh berhutang.');
         }
 
+        // Validasi stok sebelum membuat transaksi
+        if (!empty($cartIds)) {
+            $stockValidation = $this->validateStockAvailability($cartIds);
+            if (!$stockValidation['valid']) {
+                return redirect()->back()->with('error', $stockValidation['message']);
+            }
+        }
+
         $subtotalProduk = 0;
         $cartIds = [];
         if ($request->has('cart_ids')) {
@@ -340,6 +348,11 @@ class InvoiceController extends Controller
             }
         }
 
+        // Kurangi stok untuk transaksi non-midtrans
+        if (!empty($cartIds)) {
+            $this->reduceStockFromCart($cartIds);
+        }
+
         // Tambahkan: untuk metode hutang/cod/transfer_bank, insert ke tabel payment
         if (in_array($paymentMethod, ['cod', 'hutang', 'transfer_bank'])) {
             PaymentModel::create([
@@ -434,7 +447,16 @@ class InvoiceController extends Controller
         if ($paymentStatus == 'success' && session()->has('cart_ids_to_delete')) {
             $cartIds = session('cart_ids_to_delete');
             if (!empty($cartIds)) {
-                DB::table('cart')->whereIn('id', $cartIds)->delete();
+                // Validasi stok sebelum mengurangi (untuk memastikan tidak ada perubahan stok selama proses pembayaran)
+                $stockValidation = $this->validateStockAvailability($cartIds);
+                if ($stockValidation['valid']) {
+                    // Kurangi stok sebelum menghapus cart
+                    $this->reduceStockFromCart($cartIds);
+                    DB::table('cart')->whereIn('id', $cartIds)->delete();
+                } else {
+                    // Jika stok tidak cukup, kembalikan pembayaran atau handle sesuai kebijakan
+                    \Log::error("Stok tidak cukup setelah pembayaran midtrans: " . $stockValidation['message']);
+                }
             }
             session()->forget('cart_ids_to_delete');
         }
@@ -542,5 +564,69 @@ class InvoiceController extends Controller
         $invoice->save();
 
         return redirect()->back()->with('success', 'Bukti kirim berhasil diupload.');
+    }
+
+    private function validateStockAvailability($cartIds)
+    {
+        $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+        $insufficientStock = [];
+
+        foreach ($carts as $cart) {
+            if ($cart->variant_id) {
+                $productVariant = DB::table('product_variants')
+                    ->join('products', 'product_variants.product_id', '=', 'products.id')
+                    ->where('product_variants.id', $cart->variant_id)
+                    ->select('products.name', 'product_variants.color', 'product_variants.stock')
+                    ->first();
+
+                if ($productVariant) {
+                    if ($productVariant->stock < $cart->quantity) {
+                        $insufficientStock[] = "{$productVariant->name} - {$productVariant->color} (Stok: {$productVariant->stock}, Diminta: {$cart->quantity})";
+                    }
+                }
+            }
+            // Untuk produk custom, tidak perlu validasi stok
+        }
+
+        if (!empty($insufficientStock)) {
+            return [
+                'valid' => false,
+                'message' => 'Stok tidak mencukupi untuk produk berikut: ' . implode(', ', $insufficientStock)
+            ];
+        }
+
+        return ['valid' => true, 'message' => ''];
+    }
+
+    private function reduceStockFromCart($cartIds)
+    {
+        $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+        foreach ($carts as $cart) {
+            if ($cart->variant_id) {
+                // Ambil stok saat ini dari product_variants
+                $productVariant = DB::table('product_variants')
+                    ->where('id', $cart->variant_id)
+                    ->first();
+
+                if ($productVariant && $productVariant->stock >= $cart->quantity) {
+                    // Kurangi stok
+                    DB::table('product_variants')
+                        ->where('id', $cart->variant_id)
+                        ->update([
+                            'stock' => $productVariant->stock - $cart->quantity
+                        ]);
+                    
+                    // Log pengurangan stok
+                    \Log::info("Stok berkurang: Product Variant ID {$cart->variant_id}, Qty: {$cart->quantity}, Stok baru: " . ($productVariant->stock - $cart->quantity));
+                } else {
+                    // Log error jika stok tidak cukup
+                    \Log::error("Stok tidak cukup: Product Variant ID {$cart->variant_id}, Stok tersedia: {$productVariant->stock}, Qty diminta: {$cart->quantity}");
+                }
+            } elseif ($cart->kebutuhan_custom) {
+                // Untuk produk custom, stok tidak dikelola di tabel product_variants
+                // Stok custom biasanya dikelola secara terpisah atau tidak ada stok
+                \Log::info("Produk custom tidak mengurangi stok: {$cart->kebutuhan_custom}");
+            }
+        }
     }
 }

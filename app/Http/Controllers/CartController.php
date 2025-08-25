@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -25,16 +24,38 @@ class CartController extends Controller
 
         $user = Session::get('user');
 
+        // Validasi stok sebelum menambahkan ke cart
+        $productVariant = DB::table('product_variants')
+            ->join('products', 'product_variants.product_id', '=', 'products.id')
+            ->where('product_variants.id', $variantId)
+            ->select('products.name', 'product_variants.color', 'product_variants.stock')
+            ->first();
+
+        if (!$productVariant) {
+            return redirect()->back()->with('error', 'Produk tidak ditemukan.');
+        }
+
+        // Cek apakah sudah ada di cart
         $cartExist = Cart::where('user_id', $user['id'])->where('variant_id', $variantId)->first();
+        $totalQuantity = $quantity;
+        
+        if ($cartExist) {
+            $totalQuantity += $cartExist->quantity;
+        }
+
+        // Validasi stok
+        if ($productVariant->stock < $totalQuantity) {
+            return redirect()->back()->with('error', "Stok tidak mencukupi. Stok tersedia: {$productVariant->stock}, Total yang diminta: {$totalQuantity}");
+        }
 
         if ($cartExist) {
             $cartExist->quantity += $quantity;
 
             if ($cartExist->quantity <= 0) {
                 $cartExist->delete();
+            } else {
+                $cartExist->save();
             }
-
-            $cartExist->save();
         } else {
             Cart::create([
                 'user_id' => $user['id'],
@@ -43,7 +64,7 @@ class CartController extends Controller
             ]);
         }
 
-        return redirect()->route('keranjang');
+        return redirect()->route('keranjang')->with('success', 'Produk berhasil ditambahkan ke keranjang.');
     }
 
     public function addCustomItem(Request $request)

@@ -88,9 +88,17 @@
     <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-10">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-semibold text-gray-700">Returan Perlu Diproses</h2>
-            <a href="{{ route('gudang.barang-rusak') }}" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm transition">
-                Lihat Barang Rusak
-            </a>
+            <div class="flex space-x-2">
+                <a href="{{ route('gudang.stok-barang') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition">
+                    📦 Stok Barang
+                </a>
+                <a href="{{ route('gudang.laporan-stok') }}" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition">
+                    📊 Laporan Stok
+                </a>
+                <a href="{{ route('gudang.barang-rusak') }}" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm transition">
+                    Lihat Barang Rusak
+                </a>
+            </div>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full table-auto text-sm border border-gray-200">

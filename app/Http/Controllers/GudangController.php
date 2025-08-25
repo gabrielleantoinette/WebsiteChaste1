@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\DamagedProduct;
 use App\Models\Product;
 use App\Models\WorkOrder;
+use App\Models\CustomMaterial;
 use App\Services\NotificationService;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class GudangController extends Controller
 {
@@ -39,7 +41,7 @@ class GudangController extends Controller
     
         // Hitung total manual
         $total = $cartItems->reduce(function ($carry, $item) {
-            $price = $item->product_price ?? $item->harga_custom;
+            $price = $item->product_price ?? $item->harga_custom ?? 0;
             return $carry + ($price * $item->quantity);
         }, 0);
     
@@ -114,7 +116,7 @@ class GudangController extends Controller
         $totalProdukDisiapkan = 0;
         foreach ($orders as $order) {
             foreach ($order->cartItems ?? [] as $item) {
-                $nama = $item->product_name ?? $item->nama_custom ?? 'Produk';
+                $nama = $item->product_name ?? $item->kebutuhan_custom ?? 'Produk';
                 $qty = $item->quantity ?? 0;
                 if (!isset($produkDisiapkan[$nama])) {
                     $produkDisiapkan[$nama] = ['nama' => $nama, 'qty' => 0];
@@ -174,5 +176,355 @@ class GudangController extends Controller
         //     $product->save();
         // }
         return redirect()->back()->with('success', 'Barang berhasil ditandai sebagai sudah diperbaiki.');
+    }
+
+    // Halaman Stok Barang
+    public function viewStokBarang()
+    {
+        $products = Product::with(['variants', 'category'])
+            ->where('live', true)
+            ->orderBy('name')
+            ->get();
+
+        $customMaterials = \App\Models\CustomMaterial::with(['variants'])
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.gudang.stok-barang', compact('products', 'customMaterials'));
+    }
+
+    // Laporan Stok Harian
+    public function laporanStokHarian(Request $request)
+    {
+        $periode = $request->get('periode', 'harian');
+        $tanggal = $request->get('tanggal', '2025-08-25');
+        
+        // Set tanggal berdasarkan periode
+        switch ($periode) {
+            case 'harian':
+                $startDate = $tanggal;
+                $endDate = $tanggal;
+                break;
+            case 'mingguan':
+                $startDate = now()->startOfWeek()->format('Y-m-d');
+                $endDate = now()->endOfWeek()->format('Y-m-d');
+                break;
+            case 'bulanan':
+                $startDate = now()->startOfMonth()->format('Y-m-d');
+                $endDate = now()->endOfMonth()->format('Y-m-d');
+                break;
+            case 'tahunan':
+                $startDate = now()->startOfYear()->format('Y-m-d');
+                $endDate = now()->endOfYear()->format('Y-m-d');
+                break;
+            default:
+                $startDate = $tanggal;
+                $endDate = $tanggal;
+        }
+
+        // Data stok saat ini
+        $stokSaatIni = $this->getStokSaatIni();
+        
+        // Data stok masuk
+        $stokMasuk = $this->getStokMasuk($startDate, $endDate);
+        
+        // Data stok keluar
+        $stokKeluar = $this->getStokKeluar($startDate, $endDate);
+
+        return view('admin.gudang.laporan-stok', compact(
+            'stokSaatIni', 
+            'stokMasuk', 
+            'stokKeluar', 
+            'periode', 
+            'tanggal', 
+            'startDate', 
+            'endDate'
+        ));
+    }
+
+    // Export PDF Laporan Stok
+    public function exportLaporanStokPDF(Request $request)
+    {
+        $periode = $request->get('periode', 'harian');
+        $tanggal = $request->get('tanggal', '2025-08-25');
+        
+        // Set tanggal berdasarkan periode
+        switch ($periode) {
+            case 'harian':
+                $startDate = $tanggal;
+                $endDate = $tanggal;
+                $judulPeriode = 'Harian - ' . date('d/m/Y', strtotime($tanggal));
+                break;
+            case 'mingguan':
+                $startDate = now()->startOfWeek()->format('Y-m-d');
+                $endDate = now()->endOfWeek()->format('Y-m-d');
+                $judulPeriode = 'Mingguan - ' . date('d/m/Y', strtotime($startDate)) . ' s/d ' . date('d/m/Y', strtotime($endDate));
+                break;
+            case 'bulanan':
+                $startDate = now()->startOfMonth()->format('Y-m-d');
+                $endDate = now()->endOfMonth()->format('Y-m-d');
+                $judulPeriode = 'Bulanan - ' . date('F Y', strtotime($startDate));
+                break;
+            case 'tahunan':
+                $startDate = now()->startOfYear()->format('Y-m-d');
+                $endDate = now()->endOfYear()->format('Y-m-d');
+                $judulPeriode = 'Tahunan - ' . date('Y', strtotime($startDate));
+                break;
+            default:
+                $startDate = $tanggal;
+                $endDate = $tanggal;
+                $judulPeriode = 'Harian - ' . date('d/m/Y', strtotime($tanggal));
+        }
+
+        $stokSaatIni = $this->getStokSaatIni();
+        $stokMasuk = $this->getStokMasuk($startDate, $endDate);
+        $stokKeluar = $this->getStokKeluar($startDate, $endDate);
+
+        $pdf = Pdf::loadView('exports.laporan_stok_pdf', compact(
+            'stokSaatIni', 
+            'stokMasuk', 
+            'stokKeluar', 
+            'judulPeriode', 
+            'startDate', 
+            'endDate'
+        ));
+
+        return $pdf->download('laporan-stok-' . $periode . '-' . date('Y-m-d') . '.pdf');
+    }
+
+    // Helper method untuk mendapatkan stok saat ini
+    private function getStokSaatIni()
+    {
+        // Stok produk regular
+        $products = Product::with(['variants', 'category'])
+            ->where('live', true)
+            ->get()
+            ->map(function ($product) {
+                $totalStock = $product->variants->sum('stock');
+                return [
+                    'id' => $product->id,
+                    'nama' => $product->name,
+                    'kategori' => $product->category->name ?? 'Tanpa Kategori',
+                    'tipe' => 'Produk Regular',
+                    'stok' => $totalStock,
+                    'variants' => $product->variants->map(function ($variant) {
+                        return [
+                            'warna' => $variant->color,
+                            'stok' => $variant->stock
+                        ];
+                    })
+                ];
+            });
+
+        // Stok custom materials
+        $customMaterials = \App\Models\CustomMaterial::with(['variants'])
+            ->get()
+            ->map(function ($material) {
+                $totalStock = $material->variants->sum('stock');
+                return [
+                    'id' => $material->id,
+                    'nama' => $material->name,
+                    'kategori' => 'Custom Material',
+                    'tipe' => 'Custom Material',
+                    'stok' => $totalStock,
+                    'variants' => $material->variants->map(function ($variant) {
+                        return [
+                            'warna' => $variant->color,
+                            'stok' => $variant->stock
+                        ];
+                    })
+                ];
+            });
+
+        return $products->concat($customMaterials);
+    }
+
+    // Helper method untuk mendapatkan stok masuk
+    private function getStokMasuk($startDate, $endDate)
+    {
+        $stokMasuk = [];
+
+        // Stok masuk dari work orders selesai
+        $workOrdersSelesai = WorkOrder::with(['items'])
+            ->where('status', 'selesai')
+            ->whereBetween('completed_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->get();
+
+        foreach ($workOrdersSelesai as $wo) {
+            foreach ($wo->items as $item) {
+                $key = 'Work Order ' . $wo->code;
+                if (!isset($stokMasuk[$key])) {
+                    $stokMasuk[$key] = [
+                        'sumber' => $key,
+                        'tanggal' => $wo->completed_at,
+                        'tipe' => 'Produksi',
+                        'items' => []
+                    ];
+                }
+                
+                $namaMaterial = $item->size_material ? "Material: {$item->size_material}" : "Material";
+                $detailWarna = $item->color ? " - Warna: {$item->color}" : "";
+                $namaLengkap = $namaMaterial . $detailWarna;
+                
+                $keterangan = 'Produksi Selesai';
+                if ($item->remarks) {
+                    $keterangan .= " - {$item->remarks}";
+                }
+                
+                $stokMasuk[$key]['items'][] = [
+                    'nama' => $namaLengkap,
+                    'qty' => $item->completed_quantity,
+                    'keterangan' => $keterangan
+                ];
+            }
+        }
+
+        // Stok masuk dari retur yang diterima
+        $returDiterima = Returns::with(['invoice.customer'])
+            ->where('status', 'selesai')
+            ->whereBetween('updated_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->get();
+
+        foreach ($returDiterima as $retur) {
+            $key = 'Retur #' . $retur->id;
+            $customerName = $retur->invoice->customer->name ?? 'Customer';
+            
+            $keterangan = "Retur dari {$customerName}";
+            if ($retur->description) {
+                $keterangan .= " - {$retur->description}";
+            }
+            
+            $stokMasuk[$key] = [
+                'sumber' => $key,
+                'tanggal' => $retur->updated_at,
+                'tipe' => 'Retur Customer',
+                'items' => [
+                    [
+                        'nama' => "Barang Retur dari {$customerName}",
+                        'qty' => 1,
+                        'keterangan' => $keterangan
+                    ]
+                ]
+            ];
+        }
+
+        return collect($stokMasuk)->sortBy('tanggal');
+    }
+
+    // Helper method untuk mendapatkan stok keluar
+    private function getStokKeluar($startDate, $endDate)
+    {
+        $stokKeluar = [];
+
+        // Stok keluar dari penjualan (menggunakan dinvoice)
+        $penjualan = DB::table('dinvoice')
+            ->join('hinvoice', 'dinvoice.hinvoice_id', '=', 'hinvoice.id')
+            ->leftJoin('product_variants', 'dinvoice.variant_id', '=', 'product_variants.id')
+            ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
+            ->whereBetween('hinvoice.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->whereIn('hinvoice.status', ['dibayar', 'dikemas', 'dikirim', 'selesai', 'sampai'])
+            ->select(
+                'hinvoice.code as invoice_code',
+                'hinvoice.created_at',
+                'dinvoice.quantity',
+                'products.name as product_name',
+                'product_variants.color as product_color',
+                'dinvoice.price as harga_custom'
+            )
+            ->get();
+
+        foreach ($penjualan as $item) {
+            $key = 'Penjualan ' . $item->invoice_code;
+            if (!isset($stokKeluar[$key])) {
+                $stokKeluar[$key] = [
+                    'sumber' => $key,
+                    'tanggal' => $item->created_at,
+                    'tipe' => 'Penjualan',
+                    'items' => []
+                ];
+            }
+
+            // Buat nama produk yang lebih detail
+            if ($item->product_name) {
+                $namaProduk = $item->product_name;
+                $detailWarna = $item->product_color ? " - Warna: {$item->product_color}" : "";
+                $namaLengkap = $namaProduk . $detailWarna;
+            } else {
+                $namaLengkap = 'Produk Custom';
+            }
+
+            $stokKeluar[$key]['items'][] = [
+                'nama' => $namaLengkap,
+                'qty' => $item->quantity,
+                'keterangan' => 'Penjualan'
+            ];
+        }
+
+        // Stok keluar dari work orders (bahan baku)
+        $workOrdersBahan = WorkOrder::with(['items'])
+            ->whereIn('status', ['dibuat', 'dikerjakan', 'selesai'])
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->get();
+
+        foreach ($workOrdersBahan as $wo) {
+            $key = 'Work Order Bahan ' . $wo->code;
+            if (!isset($stokKeluar[$key])) {
+                $stokKeluar[$key] = [
+                    'sumber' => $key,
+                    'tanggal' => $wo->created_at,
+                    'tipe' => 'Bahan Baku',
+                    'items' => []
+                ];
+            }
+            foreach ($wo->items as $item) {
+                $namaMaterial = $item->size_material ? "Material: {$item->size_material}" : "Material";
+                $detailWarna = $item->color ? " - Warna: {$item->color}" : "";
+                $namaLengkap = $namaMaterial . $detailWarna;
+                
+                $keterangan = 'Work Order';
+                if ($item->remarks) {
+                    $keterangan .= " - {$item->remarks}";
+                }
+                
+                $stokKeluar[$key]['items'][] = [
+                    'nama' => $namaLengkap,
+                    'qty' => $item->quantity,
+                    'keterangan' => $keterangan
+                ];
+            }
+        }
+
+        // Stok keluar dari barang rusak
+        $barangRusak = DamagedProduct::with(['product', 'variant', 'retur'])
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->get();
+
+        foreach ($barangRusak as $rusak) {
+            $key = 'Barang Rusak #' . $rusak->id;
+            
+            $namaProduk = $rusak->product->name ?? 'Produk';
+            $detailWarna = $rusak->variant && $rusak->variant->color ? " - Warna: {$rusak->variant->color}" : "";
+            $namaLengkap = $namaProduk . $detailWarna;
+            
+            $keterangan = 'Barang Rusak';
+            if ($rusak->damage_description) {
+                $keterangan .= " - {$rusak->damage_description}";
+            }
+            
+            $stokKeluar[$key] = [
+                'sumber' => $key,
+                'tanggal' => $rusak->created_at,
+                'tipe' => 'Barang Rusak',
+                'items' => [
+                    [
+                        'nama' => $namaLengkap,
+                        'qty' => $rusak->quantity,
+                        'keterangan' => $keterangan
+                    ]
+                ]
+            ];
+        }
+
+        return collect($stokKeluar)->sortBy('tanggal');
     }
 }
