@@ -1,39 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <title>Laporan Stok {{ $judulPeriode }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
-            line-height: 1.4;
             color: #333;
+            margin: 30px;
         }
-        .header {
+
+        h1 {
             text-align: center;
+            color: teal;
+            font-size: 20px;
             margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: bold;
+
+        h3 {
+            color: #555;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            font-size: 14px;
         }
-        .header p {
-            margin: 5px 0;
-            font-size: 12px;
-        }
-        .summary {
-            margin-bottom: 20px;
-        }
+
         .summary-grid {
             display: table;
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
         }
+
         .summary-cell {
             display: table-cell;
             width: 25%;
@@ -42,107 +40,121 @@
             text-align: center;
             vertical-align: top;
         }
-        .summary-cell h3 {
+
+        .summary-cell h4 {
             margin: 0 0 5px 0;
             font-size: 10px;
             color: #666;
         }
+
         .summary-cell .value {
             font-size: 16px;
             font-weight: bold;
-            color: #333;
         }
+
+        .stok-saat-ini { color: #2563eb; }
+        .stok-masuk { color: #059669; }
+        .stok-keluar { color: #dc2626; }
+        .sisa-stok { color: #7c3aed; }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
         }
-        th, td {
-            border: 1px solid #ddd;
+
+        th {
+            background-color: #e0f7f7;
+            color: #333;
             padding: 8px;
             text-align: left;
             font-size: 10px;
         }
-        th {
-            background-color: #f5f5f5;
-            font-weight: bold;
+
+        td {
+            padding: 8px;
+            border: 1px solid #ccc;
+            font-size: 10px;
         }
-        .section-title {
-            font-size: 14px;
-            font-weight: bold;
-            margin: 20px 0 10px 0;
-            color: #333;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
+
+        .text-right {
+            text-align: right;
         }
+
+        .text-center {
+            text-align: center;
+        }
+
         .status-low {
-            color: #d32f2f;
+            color: #dc2626;
             font-weight: bold;
         }
-        .status-medium {
-            color: #f57c00;
-            font-weight: bold;
-        }
+
         .status-good {
-            color: #388e3c;
+            color: #059669;
             font-weight: bold;
         }
+
         .variant-item {
             margin: 2px 0;
             font-size: 9px;
         }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+
         .page-break {
             page-break-before: always;
         }
+
         .footer {
             margin-top: 30px;
             text-align: center;
             font-size: 10px;
             color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>LAPORAN STOK {{ strtoupper($judulPeriode) }}</h1>
-        <p>PT. Chaste Gemilang Mandiri</p>
-        <p>Dicetak pada: {{ date('d/m/Y H:i:s') }}</p>
-        <p>Periode: {{ $judulPeriode }}</p>
-    </div>
+    <h1>Laporan Stok {{ $judulPeriode }}</h1>
 
     {{-- Ringkasan --}}
-    <div class="summary">
-        <div class="section-title">RINGKASAN STOK</div>
-        <div class="summary-grid">
-            <div class="summary-cell">
-                <h3>Total Stok Saat Ini</h3>
-                <div class="value">{{ $stokSaatIni->sum('stok') }}</div>
-            </div>
-            <div class="summary-cell">
-                <h3>Stok Masuk</h3>
-                <div class="value status-good">{{ $stokMasuk->sum(function($item) { return collect($item['items'])->sum('qty'); }) }}</div>
-            </div>
-            <div class="summary-cell">
-                <h3>Stok Keluar</h3>
-                <div class="value status-low">{{ $stokKeluar->sum(function($item) { return collect($item['items'])->sum('qty'); }) }}</div>
-            </div>
-            <div class="summary-cell">
-                <h3>Sisa Stok</h3>
-                <div class="value">{{ $stokSaatIni->sum('stok') + $stokMasuk->sum(function($item) { return collect($item['items'])->sum('qty'); }) - $stokKeluar->sum(function($item) { return collect($item['items'])->sum('qty'); }) }}</div>
+    <div class="summary-grid">
+        <div class="summary-cell">
+            <h4>Stok Saat Ini</h4>
+            <div class="value stok-saat-ini">{{ number_format($stokSaatIni->sum('stok')) }}</div>
+        </div>
+        <div class="summary-cell">
+            <h4>Stok Masuk</h4>
+            <div class="value stok-masuk">{{ number_format($stokMasuk->sum(function($item) { return collect($item['items'])->sum('qty'); })) }}</div>
+        </div>
+        <div class="summary-cell">
+            <h4>Stok Keluar</h4>
+            <div class="value stok-keluar">{{ number_format($stokKeluar->sum(function($item) { return collect($item['items'])->sum('qty'); })) }}</div>
+        </div>
+        <div class="summary-cell">
+            <h4>Sisa Stok</h4>
+            <div class="value sisa-stok">
+                {{ number_format($stokSaatIni->sum('stok') + $stokMasuk->sum(function($item) { return collect($item['items'])->sum('qty'); }) - $stokKeluar->sum(function($item) { return collect($item['items'])->sum('qty'); })) }}
             </div>
         </div>
     </div>
 
     {{-- Stok Saat Ini --}}
-    <div class="page-break"></div>
-    <div class="section-title">STOK SAAT INI</div>
+    <h3>Stok Saat Ini</h3>
     <table>
         <thead>
             <tr>
-                <th>Nama Produk/Material</th>
+                <th>Produk</th>
                 <th>Kategori</th>
                 <th>Tipe</th>
-                <th>Total Stok</th>
+                <th class="text-right">Total Stok</th>
                 <th>Detail Variant</th>
             </tr>
         </thead>
@@ -152,8 +164,8 @@
                     <td><strong>{{ $item['nama'] }}</strong></td>
                     <td>{{ $item['kategori'] }}</td>
                     <td>{{ $item['tipe'] }}</td>
-                    <td class="{{ $item['stok'] <= 10 ? 'status-low' : ($item['stok'] <= 50 ? 'status-medium' : 'status-good') }}">
-                        {{ $item['stok'] }}
+                    <td class="text-right {{ $item['stok'] <= 10 ? 'status-low' : 'status-good' }}">
+                        {{ number_format($item['stok']) }}
                     </td>
                     <td>
                         @forelse ($item['variants'] as $variant)
@@ -161,22 +173,21 @@
                                 {{ $variant['warna'] }}: {{ $variant['stok'] }}
                             </div>
                         @empty
-                            <span style="color: #999;">Tidak ada variant</span>
+                            <span class="empty-state">Tidak ada variant</span>
                         @endforelse
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" style="text-align: center; color: #999;">Tidak ada data stok.</td>
+                    <td colspan="5" class="empty-state">Tidak ada data stok</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 
     {{-- Stok Masuk --}}
+    <h3>Stok Masuk</h3>
     @if($stokMasuk->count() > 0)
-        <div class="page-break"></div>
-        <div class="section-title">STOK MASUK</div>
         <table>
             <thead>
                 <tr>
@@ -184,7 +195,7 @@
                     <th>Tanggal</th>
                     <th>Tipe</th>
                     <th>Items</th>
-                    <th>Total Qty</th>
+                    <th class="text-right">Total Qty</th>
                 </tr>
             </thead>
             <tbody>
@@ -196,22 +207,24 @@
                         <td>
                             @foreach ($masuk['items'] as $item)
                                 <div class="variant-item">
-                                    <strong>{{ $item['nama'] }}</strong><br>
-                                    <span style="color: #666;">{{ $item['keterangan'] }}</span>
+                                    {{ $item['nama'] }} ({{ $item['qty'] }})
                                 </div>
                             @endforeach
                         </td>
-                        <td class="status-good">{{ collect($masuk['items'])->sum('qty') }}</td>
+                        <td class="text-right status-good">
+                            {{ collect($masuk['items'])->sum('qty') }}
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
+    @else
+        <div class="empty-state">Tidak ada stok masuk dalam periode ini</div>
     @endif
 
     {{-- Stok Keluar --}}
+    <h3>Stok Keluar</h3>
     @if($stokKeluar->count() > 0)
-        <div class="page-break"></div>
-        <div class="section-title">STOK KELUAR</div>
         <table>
             <thead>
                 <tr>
@@ -219,7 +232,7 @@
                     <th>Tanggal</th>
                     <th>Tipe</th>
                     <th>Items</th>
-                    <th>Total Qty</th>
+                    <th class="text-right">Total Qty</th>
                 </tr>
             </thead>
             <tbody>
@@ -231,21 +244,24 @@
                         <td>
                             @foreach ($keluar['items'] as $item)
                                 <div class="variant-item">
-                                    <strong>{{ $item['nama'] }}</strong><br>
-                                    <span style="color: #666;">{{ $item['keterangan'] }}</span>
+                                    {{ $item['nama'] }} ({{ $item['qty'] }})
                                 </div>
                             @endforeach
                         </td>
-                        <td class="status-low">{{ collect($keluar['items'])->sum('qty') }}</td>
+                        <td class="text-right status-low">
+                            {{ collect($keluar['items'])->sum('qty') }}
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
+    @else
+        <div class="empty-state">Tidak ada stok keluar dalam periode ini</div>
     @endif
 
     <div class="footer">
-        <p>Laporan ini dibuat secara otomatis oleh sistem PT. Chaste Gemilang Mandiri</p>
-        <p>Untuk informasi lebih lanjut, silakan hubungi tim gudang</p>
+        <p>Laporan dibuat pada {{ now()->format('d F Y H:i') }}</p>
+        <p>Sistem Informasi Mahasiswa iSTTS</p>
     </div>
 </body>
 </html>
