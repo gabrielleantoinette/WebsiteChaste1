@@ -285,7 +285,7 @@ class InvoiceController extends Controller
                 'item_details' => [
                     [
                         'id'       => $newInvoiceId,
-                        'price'    => $isFirstOrder ? $grandTotal / 2 : $grandTotal,
+                        'price'    => $grandTotal,
                         'quantity' => 1,
                         'name'     => 'Invoice ' . $invoiceCode
                     ]
@@ -298,7 +298,7 @@ class InvoiceController extends Controller
             $newPayment->method = 'midtrans';
             $newPayment->type = $isFirstOrder ? 'dp' : 'full';
             $newPayment->is_paid = false;
-            $newPayment->amount = $isFirstOrder ? $grandTotal / 2 : $grandTotal;
+            $newPayment->amount = $grandTotal;
             $newPayment->snap_token = $snapToken;
             $newPayment->save();
 
@@ -488,7 +488,59 @@ class InvoiceController extends Controller
             ]);
         }
 
-        // TODO Update Invoice setelah payment berhasil.
+        // Update Invoice setelah payment berhasil
+        if ($paymentStatus == 'success') {
+            $invoice = HInvoice::find($payment->invoice_id);
+            if ($invoice) {
+                $invoice->status = 'dibayar';
+                $invoice->is_paid = 1;
+                $invoice->paid_amount = $payment->amount;
+                $invoice->save();
+                
+                // Buat data dinvoice jika belum ada
+                $existingDInvoice = DB::table('dinvoice')->where('hinvoice_id', $invoice->id)->first();
+                if (!$existingDInvoice && session()->has('cart_ids_to_delete')) {
+                    $cartIds = session('cart_ids_to_delete');
+                    $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+                    
+                    foreach ($carts as $cart) {
+                        if ($cart->variant_id) {
+                            // Produk biasa
+                            $product = DB::table('product_variants')
+                                ->join('products', 'product_variants.product_id', '=', 'products.id')
+                                ->where('product_variants.id', $cart->variant_id)
+                                ->select('products.id as product_id', 'products.price')
+                                ->first();
+                            
+                            if ($product) {
+                                DB::table('dinvoice')->insert([
+                                    'hinvoice_id' => $invoice->id,
+                                    'product_id' => $product->product_id,
+                                    'variant_id' => $cart->variant_id,
+                                    'price' => $product->price,
+                                    'quantity' => $cart->quantity,
+                                    'subtotal' => $product->price * $cart->quantity,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]);
+                            }
+                        } elseif ($cart->kebutuhan_custom) {
+                            // Produk custom
+                            DB::table('dinvoice')->insert([
+                                'hinvoice_id' => $invoice->id,
+                                'product_id' => 0,
+                                'variant_id' => null,
+                                'price' => $cart->harga_custom,
+                                'quantity' => $cart->quantity,
+                                'subtotal' => $cart->harga_custom * $cart->quantity,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
 
         return redirect()->route('order.success');
     }
