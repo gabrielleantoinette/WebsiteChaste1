@@ -293,5 +293,6 @@ Route::post('/gudang/upload-quality-proof/{id}', [App\Http\Controllers\GudangCon
 Route::prefix('notifications')->middleware([LoggedIn::class])->group(function () {
     Route::get('/latest', [\App\Http\Controllers\NotificationController::class, 'latest'])->name('notifications.latest');
     Route::post('/{id}/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
 });

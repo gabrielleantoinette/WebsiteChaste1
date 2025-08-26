@@ -182,6 +182,22 @@ class DriverController extends Controller
                 $retur->status = 'selesai';
                 $retur->save();
             }
+
+            // Kirim notifikasi ke customer bahwa retur telah selesai diambil
+            $notificationService = app(NotificationService::class);
+            $notificationService->sendToCustomer(
+                'return_completed',
+                'Retur Selesai Diambil',
+                "Retur untuk pesanan {$invoice->code} telah selesai diambil oleh tim kami. Terima kasih atas kerjasamanya.",
+                $invoice->customer_id,
+                [
+                    'data_type' => 'return',
+                    'data_id' => $invoice->id,
+                    'action_url' => "/retur/{$invoice->id}",
+                    'priority' => 'normal',
+                    'icon' => 'fas fa-check-double'
+                ]
+            );
             
             return redirect()->back()->with('success', 'Pengambilan retur berhasil diselesaikan.');
         } catch (\Exception $e) {

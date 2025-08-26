@@ -1,3 +1,6 @@
+<!-- CSRF Token -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 <!-- Header -->
 <header class="flex items-center justify-between py-5 border-gray-200 px-[100px]">
     <a href="{{ url('/') }}" class="text-2xl font-bold tracking-wide text-black">CHASTE</a>
@@ -48,7 +51,10 @@
     <div id="notifPopover" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 z-50" style="top:2.5rem;">
         <div class="p-4 border-b border-gray-100 font-semibold text-gray-800 flex justify-between items-center">
             <span class="text-teal-600">Notifikasi</span>
-            <button id="notifPopoverClose" class="text-gray-400 hover:text-red-500 text-lg transition-colors">&times;</button>
+            <div class="flex items-center gap-2">
+                <button id="markAllAsRead" class="text-xs text-teal-600 hover:text-teal-800 font-medium transition-colors">Tandai Semua Dibaca</button>
+                <button id="notifPopoverClose" class="text-gray-400 hover:text-red-500 text-lg transition-colors">&times;</button>
+            </div>
         </div>
         <div id="notifPopoverContent" class="max-h-[350px] overflow-y-auto divide-y divide-gray-50"></div>
     </div>
@@ -112,21 +118,30 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault();
         event.stopPropagation();
         
+        console.log('Mark as read clicked for notification:', notificationId); // Debug
+        
         // Disable tombol agar tidak bisa diklik lagi
         const button = event.target;
         button.disabled = true;
         button.textContent = 'Memproses...';
         button.classList.add('opacity-50');
         
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        console.log('CSRF Token:', csrfToken); // Debug
+        
         fetch(`/notifications/${notificationId}/mark-read`, {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'X-CSRF-TOKEN': csrfToken,
                 'Content-Type': 'application/json',
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status); // Debug
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data); // Debug
             if (data.success) {
                 // Update the notification item
                 const item = event.target.closest('[data-id]');
@@ -139,8 +154,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         button.remove();
                     }
                 }
-                // Update badge count
+                
+                // Update badge count dari server
                 updateCustomerNotificationBadge();
+            } else {
+                console.error('Mark as read failed:', data); // Debug
+                // Re-enable tombol jika error
+                button.disabled = false;
+                button.textContent = 'Tandai Dibaca';
+                button.classList.remove('opacity-50');
             }
         })
         .catch(error => {
@@ -182,6 +204,57 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
+        // Handle mark all as read
+        const markAllAsReadBtn = document.getElementById('markAllAsRead');
+        if (markAllAsReadBtn) {
+            markAllAsReadBtn.addEventListener('click', function() {
+                // Disable tombol
+                markAllAsReadBtn.disabled = true;
+                markAllAsReadBtn.textContent = 'Memproses...';
+                markAllAsReadBtn.classList.add('opacity-50');
+                
+                fetch('/notifications/mark-all-read', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update semua item notifikasi
+                        const items = popoverContent.querySelectorAll('[data-id]');
+                        items.forEach(item => {
+                            item.classList.remove('bg-teal-50');
+                            item.classList.add('opacity-75');
+                            const button = item.querySelector('button');
+                            if (button) {
+                                button.remove();
+                            }
+                        });
+                        
+                        // Sembunyikan badge
+                        const badge = document.getElementById('customerNotificationBadge');
+                        if (badge) {
+                            badge.style.display = 'none';
+                            badge.classList.remove('animate-pulse');
+                        }
+                        
+                        // Update counter
+                        updateCustomerNotificationBadge();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking all notifications as read:', error);
+                    // Re-enable tombol jika error
+                    markAllAsReadBtn.disabled = false;
+                    markAllAsReadBtn.textContent = 'Tandai Semua Dibaca';
+                    markAllAsReadBtn.classList.remove('opacity-50');
+                });
+            });
+        }
+
         document.addEventListener('mousedown', function(e) {
             if (popoverOpen && !popover.contains(e.target) && !bell.contains(e.target)) {
                 popover.classList.add('hidden');
@@ -198,11 +271,16 @@ function updateCustomerNotificationBadge() {
             const badge = document.getElementById('customerNotificationBadge');
             if (badge) {
                 const countSpan = badge.querySelector('.count');
+                console.log('Updating badge count to:', data.count); // Debug
                 if (data.count > 0) {
                     countSpan.textContent = data.count;
                     badge.style.display = 'flex';
+                    // Tambahkan animasi pulse jika ada notifikasi baru
+                    badge.classList.add('animate-pulse');
                 } else {
+                    countSpan.textContent = '0';
                     badge.style.display = 'none';
+                    badge.classList.remove('animate-pulse');
                 }
             }
         })

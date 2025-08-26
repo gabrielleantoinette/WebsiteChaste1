@@ -107,6 +107,12 @@ class ReturController extends Controller
                 'description' => $retur->description
             ]);
 
+            // Kirim notifikasi ke customer bahwa retur sedang diproses
+            $notificationService->notifyReturnProcessed($retur->id, $retur->customer_id, [
+                'order_id' => $retur->invoice->code,
+                'description' => $retur->description
+            ]);
+
 
             
             DB::commit();

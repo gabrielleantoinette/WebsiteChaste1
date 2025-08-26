@@ -232,6 +232,66 @@ class NotificationService
     }
 
     /**
+     * Notifikasi pesanan baru untuk customer
+     */
+    public function notifyOrderCreated($orderId, $customerId, $orderData)
+    {
+        $this->sendToCustomer(
+            'order_created',
+            'Pesanan Berhasil Dibuat',
+            "Pesanan Anda dengan ID #{$orderId} telah berhasil dibuat. Total pembayaran: Rp " . number_format($orderData['total_amount'], 0, ',', '.'),
+            $customerId,
+            [
+                'data_type' => 'order',
+                'data_id' => $orderId,
+                'action_url' => "/transaksi/detail/{$orderId}",
+                'priority' => 'high',
+                'icon' => 'fas fa-shopping-bag'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi pembayaran diterima untuk customer
+     */
+    public function notifyPaymentReceived($paymentId, $customerId, $paymentData)
+    {
+        $this->sendToCustomer(
+            'payment_received',
+            'Pembayaran Diterima',
+            "Pembayaran Anda sebesar Rp " . number_format($paymentData['amount'], 0, ',', '.') . " telah diterima dan diproses.",
+            $customerId,
+            [
+                'data_type' => 'payment',
+                'data_id' => $paymentId,
+                'action_url' => "/transaksi/detail/{$paymentData['order_id']}",
+                'priority' => 'high',
+                'icon' => 'fas fa-credit-card'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi pembayaran pending untuk customer
+     */
+    public function notifyPaymentPending($invoiceId, $customerId, $invoiceData)
+    {
+        $this->sendToCustomer(
+            'payment_pending',
+            'Pembayaran Pending',
+            "Pembayaran Anda sebesar Rp " . number_format($invoiceData['amount'], 0, ',', '.') . " sedang menunggu konfirmasi.",
+            $customerId,
+            [
+                'data_type' => 'invoice',
+                'data_id' => $invoiceId,
+                'action_url' => "/transaksi/menunggu-pembayaran",
+                'priority' => 'normal',
+                'icon' => 'fas fa-clock'
+            ]
+        );
+    }
+
+    /**
      * Notifikasi pembayaran untuk keuangan dan admin
      */
     public function notifyPayment($paymentId, $paymentData)
@@ -266,9 +326,132 @@ class NotificationService
     }
 
     /**
+     * Notifikasi pengiriman untuk customer
+     */
+    public function notifyOrderShipped($orderId, $customerId, $orderData)
+    {
+        $this->sendToCustomer(
+            'order_shipped',
+            'Pesanan Dikirim',
+            "Pesanan Anda dengan ID #{$orderId} telah dikirim oleh kurir. Estimasi tiba dalam 1-3 hari kerja.",
+            $customerId,
+            [
+                'data_type' => 'order',
+                'data_id' => $orderId,
+                'action_url' => "/transaksi/detail/{$orderId}",
+                'priority' => 'high',
+                'icon' => 'fas fa-truck'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi pesanan diterima untuk customer
+     */
+    public function notifyOrderDelivered($orderId, $customerId, $orderData)
+    {
+        $this->sendToCustomer(
+            'order_delivered',
+            'Pesanan Diterima',
+            "Pesanan Anda dengan ID #{$orderId} telah diterima. Silakan berikan penilaian untuk pengalaman berbelanja Anda.",
+            $customerId,
+            [
+                'data_type' => 'order',
+                'data_id' => $orderId,
+                'action_url' => "/transaksi/beri-penilaian",
+                'priority' => 'normal',
+                'icon' => 'fas fa-check-circle'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi retur diproses untuk customer
+     */
+    public function notifyReturnProcessed($returnId, $customerId, $returnData)
+    {
+        $this->sendToCustomer(
+            'return_processed',
+            'Retur Diproses',
+            "Permintaan retur Anda untuk pesanan #{$returnData['order_id']} sedang diproses oleh tim kami.",
+            $customerId,
+            [
+                'data_type' => 'return',
+                'data_id' => $returnId,
+                'action_url' => "/retur/{$returnId}",
+                'priority' => 'normal',
+                'icon' => 'fas fa-undo-alt'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi retur disetujui untuk customer
+     */
+    public function notifyReturnApproved($returnId, $customerId, $returnData)
+    {
+        $this->sendToCustomer(
+            'return_approved',
+            'Retur Disetujui',
+            "Permintaan retur Anda untuk pesanan #{$returnData['order_id']} telah disetujui. Tim kami akan menghubungi Anda untuk pengambilan barang.",
+            $customerId,
+            [
+                'data_type' => 'return',
+                'data_id' => $returnId,
+                'action_url' => "/retur/{$returnId}",
+                'priority' => 'high',
+                'icon' => 'fas fa-check'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi retur ditolak untuk customer
+     */
+    public function notifyReturnRejected($returnId, $customerId, $returnData)
+    {
+        $this->sendToCustomer(
+            'return_rejected',
+            'Retur Ditolak',
+            "Permintaan retur Anda untuk pesanan #{$returnData['order_id']} tidak dapat diproses. Alasan: {$returnData['reason']}",
+            $customerId,
+            [
+                'data_type' => 'return',
+                'data_id' => $returnId,
+                'action_url' => "/retur/{$returnId}",
+                'priority' => 'high',
+                'icon' => 'fas fa-times-circle'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi hutang jatuh tempo untuk customer
+     */
+    public function notifyDebtDueDate($invoiceId, $customerId, $invoiceData)
+    {
+        $daysLeft = $invoiceData['days_left'];
+        $priority = $daysLeft <= 1 ? 'urgent' : ($daysLeft <= 3 ? 'high' : 'normal');
+        
+        $this->sendToCustomer(
+            'debt_due_date',
+            'Hutang Jatuh Tempo',
+            "Hutang Anda sebesar Rp " . number_format($invoiceData['remaining_amount'], 0, ',', '.') . " jatuh tempo dalam {$daysLeft} hari.",
+            $customerId,
+            [
+                'data_type' => 'invoice',
+                'data_id' => $invoiceId,
+                'action_url' => "/profile/hutang",
+                'priority' => $priority,
+                'icon' => 'fas fa-exclamation-triangle'
+            ]
+        );
+    }
+
+    /**
      * Notifikasi pembayaran pending untuk keuangan
      */
-    public function notifyPaymentPending($invoiceId, $invoiceData)
+    public function notifyPaymentPendingForFinance($invoiceId, $invoiceData)
     {
         $this->sendToRole(
             'payment_pending',
@@ -280,6 +463,46 @@ class NotificationService
                 'data_id' => $invoiceId,
                 'action_url' => "/admin/keuangan/detail/{$invoiceId}",
                 'priority' => 'high'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi promo untuk customer
+     */
+    public function notifyPromo($customerId, $promoData)
+    {
+        $this->sendToCustomer(
+            'promo',
+            'Promo Spesial',
+            $promoData['message'],
+            $customerId,
+            [
+                'data_type' => 'promo',
+                'data_id' => $promoData['id'],
+                'action_url' => $promoData['action_url'] ?? "/produk",
+                'priority' => 'normal',
+                'icon' => 'fas fa-gift'
+            ]
+        );
+    }
+
+    /**
+     * Notifikasi stok tersedia untuk customer (untuk produk yang di-wishlist)
+     */
+    public function notifyStockAvailable($productId, $customerId, $productData)
+    {
+        $this->sendToCustomer(
+            'stock_available',
+            'Stok Tersedia',
+            "Produk {$productData['name']} yang Anda tunggu sudah tersedia kembali!",
+            $customerId,
+            [
+                'data_type' => 'product',
+                'data_id' => $productId,
+                'action_url' => "/produk/{$productId}",
+                'priority' => 'normal',
+                'icon' => 'fas fa-box'
             ]
         );
     }

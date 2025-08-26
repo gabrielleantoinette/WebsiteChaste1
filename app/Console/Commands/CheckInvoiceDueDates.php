@@ -49,6 +49,12 @@ class CheckInvoiceDueDates extends Command
                     'customer_name' => $invoice->customer->name ?? 'Unknown Customer',
                     'remaining_amount' => $remainingAmount
                 ]);
+
+                // Kirim notifikasi ke customer
+                $notificationService->notifyDebtDueDate($invoice->id, $invoice->customer_id, [
+                    'days_left' => 0,
+                    'remaining_amount' => $remainingAmount
+                ]);
                 
                 $this->info("Sent due today notification for invoice {$invoice->code}");
             }
@@ -72,6 +78,12 @@ class CheckInvoiceDueDates extends Command
                 $notificationService->notifyInvoiceDueDate($invoice->id, [
                     'invoice_code' => $invoice->code,
                     'customer_name' => $invoice->customer->name ?? 'Unknown Customer',
+                    'days_left' => $daysLeft,
+                    'remaining_amount' => $remainingAmount
+                ]);
+
+                // Kirim notifikasi ke customer
+                $notificationService->notifyDebtDueDate($invoice->id, $invoice->customer_id, [
                     'days_left' => $daysLeft,
                     'remaining_amount' => $remainingAmount
                 ]);

@@ -129,13 +129,31 @@ class NotificationController extends Controller
                 'notification_recipient_id' => $notification->recipient_id
             ]);
             
-            if ($notification->recipient_type !== $recipientType || $notification->recipient_id !== $recipientId) {
-                \Log::error('User cannot mark this notification - permission denied');
-                return response()->json(['error' => 'Unauthorized'], 401);
+            // Untuk customer, cek berdasarkan recipient_id saja
+            if ($recipientType === 'customer') {
+                if ($notification->recipient_type !== 'customer' || $notification->recipient_id != $recipientId) {
+                    \Log::error('Customer cannot mark this notification - permission denied');
+                    return response()->json(['error' => 'Unauthorized'], 401);
+                }
+            } else {
+                // Untuk employee, cek berdasarkan recipient_id
+                if ($notification->recipient_type !== $recipientType || $notification->recipient_id !== $recipientId) {
+                    \Log::error('User cannot mark this notification - permission denied');
+                    return response()->json(['error' => 'Unauthorized'], 401);
+                }
             }
 
             $result = $this->notificationService->markAsRead($id);
             \Log::info('Mark as read result:', ['result' => $result]);
+            
+            // Debug: Log notification setelah diupdate
+            $updatedNotification = Notification::find($id);
+            \Log::info('Notification after update:', [
+                'id' => $updatedNotification->id,
+                'is_read' => $updatedNotification->is_read,
+                'read_at' => $updatedNotification->read_at
+            ]);
+            
             return response()->json(['success' => true]);
             
         } catch (\Exception $e) {

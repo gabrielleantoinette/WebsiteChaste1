@@ -39,6 +39,12 @@ class OwnerController extends Controller
                 'id' => $invoice->id,
                 'customer_name' => $invoice->customer->name
             ]);
+
+            // Kirim notifikasi ke customer bahwa retur disetujui
+            $notificationService->notifyReturnApproved($invoice->id, $invoice->customer_id, [
+                'order_id' => $invoice->code,
+                'customer_name' => $invoice->customer->name
+            ]);
         } else {
             $invoice->status = 'dikirim'; // Status untuk pengiriman normal
             
@@ -47,6 +53,12 @@ class OwnerController extends Controller
             $notificationService->notifyOrderReadyForDelivery([
                 'id' => $invoice->id,
                 'code' => $invoice->code,
+                'customer_name' => $invoice->customer->name
+            ]);
+
+            // Kirim notifikasi ke customer bahwa pesanan dikirim
+            $notificationService->notifyOrderShipped($invoice->id, $invoice->customer_id, [
+                'invoice_code' => $invoice->code,
                 'customer_name' => $invoice->customer->name
             ]);
         }
