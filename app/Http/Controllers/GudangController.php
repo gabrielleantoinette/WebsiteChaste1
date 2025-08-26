@@ -205,7 +205,9 @@ class GudangController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.gudang.stok-barang', compact('products', 'customMaterials'));
+        $rawMaterials = \App\Models\RawMaterial::orderBy('name')->get();
+
+        return view('admin.gudang.stok-barang', compact('products', 'customMaterials', 'rawMaterials'));
     }
 
     // Laporan Stok Harian
@@ -353,7 +355,21 @@ class GudangController extends Controller
                 ];
             });
 
-        return $products->concat($customMaterials);
+        // Stok bahan baku
+        $rawMaterials = \App\Models\RawMaterial::get()
+            ->map(function ($material) {
+                return [
+                    'id' => $material->id,
+                    'nama' => $material->name,
+                    'ukuran' => '-',
+                    'kategori' => 'Bahan Baku',
+                    'tipe' => 'Bahan Baku',
+                    'stok' => $material->stock,
+                    'variants' => []
+                ];
+            });
+
+        return $products->concat($customMaterials)->concat($rawMaterials);
     }
 
     // Helper method untuk mendapatkan stok masuk

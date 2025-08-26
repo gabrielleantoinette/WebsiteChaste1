@@ -196,6 +196,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/', [WorkOrderController::class, 'index'])->name('admin.work-orders.index');
         Route::get('/create', [WorkOrderController::class, 'create'])->name('admin.work-orders.create');
         Route::post('/', [WorkOrderController::class, 'store'])->name('admin.work-orders.store');
+        Route::post('/test', [WorkOrderController::class, 'testStore'])->name('admin.work-orders.test');
         Route::get('/{id}', [WorkOrderController::class, 'show'])->name('admin.work-orders.show');
         Route::get('/{id}/edit', [WorkOrderController::class, 'edit'])->name('admin.work-orders.edit');
         Route::put('/{id}', [WorkOrderController::class, 'update'])->name('admin.work-orders.update');
@@ -262,6 +263,14 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/ratarata/export-pdf', [LaporanController::class, 'rataRataPDF'])->name('laporan.ratarata.pdf');
     });
     Route::get('/admin/keuangan/dashboard', [\App\Http\Controllers\KeuanganController::class, 'dashboardKeuangan'])->name('keuangan.dashboard');
+    
+    // Admin Raw Material Stock Management
+    Route::get('/admin/raw-material-stock', [App\Http\Controllers\AdminController::class, 'viewRawMaterialStock'])->name('admin.raw-material-stock');
+Route::post('/admin/raw-material-stock/create', [App\Http\Controllers\AdminController::class, 'createRawMaterial'])->name('admin.raw-material-stock.create');
+Route::put('/admin/raw-material-stock/{id}/update', [App\Http\Controllers\AdminController::class, 'updateRawMaterialStock'])->name('admin.raw-material-stock.update');
+Route::post('/admin/raw-material-stock/{id}/add', [App\Http\Controllers\AdminController::class, 'addRawMaterialStock'])->name('admin.raw-material-stock.add');
+Route::post('/admin/raw-material-stock/{id}/reduce', [App\Http\Controllers\AdminController::class, 'reduceRawMaterialStock'])->name('admin.raw-material-stock.reduce');
+    
     Route::get('/retur', [App\Http\Controllers\ReturController::class, 'index'])->name('admin.retur.index');
     Route::get('/retur/damaged-products', [App\Http\Controllers\ReturController::class, 'damagedProducts'])->name('admin.retur.damaged-products');
     Route::get('/retur/{id}', [App\Http\Controllers\ReturController::class, 'show'])->name('admin.retur.detail');

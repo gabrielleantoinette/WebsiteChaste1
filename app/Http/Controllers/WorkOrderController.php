@@ -51,8 +51,24 @@ class WorkOrderController extends Controller
         }
 
         $gudangEmployees = Employee::where('role', 'gudang')->get();
+        $rawMaterials = \App\Models\RawMaterial::orderBy('name')->get();
         
-        return view('admin.work-orders.create', compact('gudangEmployees'));
+        return view('admin.work-orders.create', compact('gudangEmployees', 'rawMaterials'));
+    }
+
+    /**
+     * Test method untuk debugging
+     */
+    public function testStore(Request $request)
+    {
+        \Log::info('Test store method called');
+        \Log::info('Request data:', $request->all());
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Test method berhasil dipanggil',
+            'data' => $request->all()
+        ]);
     }
 
     /**
@@ -62,6 +78,17 @@ class WorkOrderController extends Controller
     {
         // Debug: Log request data
         \Log::info('Work Order Store Request:', $request->all());
+        
+        // Debug: Check if items exist
+        if (!$request->has('items') || empty($request->items)) {
+            \Log::error('No items found in request');
+            return back()->with('error', 'Minimal harus ada 1 item dalam surat perintah kerja.')->withInput();
+        }
+        
+        // Debug: Log each item
+        foreach ($request->items as $index => $item) {
+            \Log::info("Item {$index}:", $item);
+        }
         
         $user = Session::get('user');
         if (!$user || !in_array($user->role, ['admin', 'owner'])) {
@@ -75,7 +102,8 @@ class WorkOrderController extends Controller
                 'description' => 'nullable|string',
                 'assigned_to' => 'required|exists:employees,id',
                 'items' => 'required|array|min:1',
-                'items.*.size_material' => 'required|string',
+                'items.*.raw_material_id' => 'required|exists:raw_materials,id',
+                'items.*.size' => 'required|string',
                 'items.*.color' => 'required|string',
                 'items.*.quantity' => 'required|integer|min:1',
                 'items.*.remarks' => 'nullable|string',
@@ -88,6 +116,17 @@ class WorkOrderController extends Controller
         DB::beginTransaction();
         try {
             \Log::info('Starting database transaction...');
+            
+            // Validate user session
+            if (!$user) {
+                throw new \Exception('User session tidak valid');
+            }
+            
+            // Check if assigned_to exists
+            $assignedEmployee = Employee::find($request->assigned_to);
+            if (!$assignedEmployee) {
+                throw new \Exception('Staff gudang tidak ditemukan');
+            }
             
             // Generate kode surat perintah
             $lastOrder = WorkOrder::orderBy('id', 'desc')->first();
@@ -116,16 +155,29 @@ class WorkOrderController extends Controller
             \Log::info('Creating work order items...');
             foreach ($request->items as $index => $item) {
                 \Log::info('Creating item ' . ($index + 1) . ':', $item);
+                
+                // Ambil data bahan baku
+                $rawMaterial = \App\Models\RawMaterial::find($item['raw_material_id']);
+                if (!$rawMaterial) {
+                    throw new \Exception('Bahan baku dengan ID ' . $item['raw_material_id'] . ' tidak ditemukan');
+                }
+                
                 $itemData = [
                     'work_order_id' => $workOrder->id,
-                    'size_material' => $item['size_material'],
+                    'raw_material_id' => $item['raw_material_id'],
+                    'size_material' => $rawMaterial->name . ' ' . $item['size'], // Gabungkan nama bahan + ukuran
                     'color' => $item['color'],
                     'quantity' => $item['quantity'],
                     'remarks' => $item['remarks'] ?? null,
                     'status' => 'pending'
                 ];
-                $workOrderItem = WorkOrderItem::create($itemData);
-                \Log::info('Item created:', ['id' => $workOrderItem->id]);
+                
+                try {
+                    $workOrderItem = WorkOrderItem::create($itemData);
+                    \Log::info('Item created:', ['id' => $workOrderItem->id]);
+                } catch (\Exception $e) {
+                    throw new \Exception('Gagal membuat item ' . ($index + 1) . ': ' . $e->getMessage());
+                }
             }
 
             // Kirim notifikasi ke gudang
@@ -139,7 +191,27 @@ class WorkOrderController extends Controller
 
             DB::commit();
             \Log::info('Database transaction committed successfully');
-            return redirect()->route('admin.work-orders.index')->with('success', 'Surat perintah kerja berhasil dibuat.');
+            
+            // Debug: Log success
+            \Log::info('Work order created successfully with ID: ' . $workOrder->id);
+            
+            // For debugging, return JSON response first
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Surat perintah kerja berhasil dibuat',
+                    'work_order_id' => $workOrder->id,
+                    'code' => $workOrder->code
+                ]);
+            }
+            
+            // Try redirect with error handling
+            try {
+                return redirect('/admin/work-orders')->with('success', 'Surat perintah kerja berhasil dibuat dengan kode: ' . $workOrder->code);
+            } catch (\Exception $e) {
+                \Log::error('Redirect error:', ['message' => $e->getMessage()]);
+                return back()->with('success', 'Surat perintah kerja berhasil dibuat dengan kode: ' . $workOrder->code);
+            }
 
         } catch (\Exception $e) {
             \Log::error('Error in work order creation:', [
@@ -149,7 +221,10 @@ class WorkOrderController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             DB::rollback();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            
+            // Return with more specific error message
+            $errorMessage = 'Terjadi kesalahan saat membuat surat perintah kerja: ' . $e->getMessage();
+            return back()->with('error', $errorMessage)->withInput();
         }
     }
 
@@ -256,6 +331,9 @@ class WorkOrderController extends Controller
                 'status' => 'selesai',
                 'completed_at' => now()
             ]);
+            
+            // Update stok bahan baku dan produk ketika work order selesai
+            $this->updateStockOnWorkOrderComplete($workOrder);
         } elseif ($request->status === 'in_progress' && $workOrder->status === 'dibuat') {
             $workOrder->update([
                 'status' => 'dikerjakan',
@@ -292,6 +370,9 @@ class WorkOrderController extends Controller
             $workOrder->update(['started_at' => now()]);
         } elseif ($request->status === 'selesai') {
             $workOrder->update(['completed_at' => now()]);
+            
+            // Update stok bahan baku dan produk ketika work order selesai
+            $this->updateStockOnWorkOrderComplete($workOrder);
         }
 
         // Kirim notifikasi ke admin
@@ -302,5 +383,82 @@ class WorkOrderController extends Controller
         ]);
 
         return back()->with('success', 'Status surat perintah kerja berhasil diupdate.');
+    }
+
+    /**
+     * Update stok bahan baku dan produk ketika work order selesai
+     */
+    private function updateStockOnWorkOrderComplete($workOrder)
+    {
+        DB::beginTransaction();
+        try {
+            foreach ($workOrder->items as $item) {
+                if ($item->status === 'completed' && $item->completed_quantity > 0) {
+                    // Hitung kebutuhan bahan baku (dalam meter persegi)
+                    $kebutuhanBahanBaku = $item->completed_quantity * $this->calculateMaterialNeeded($item->size_material);
+                    
+                    // Update stok bahan baku (kurangi)
+                    $this->updateRawMaterialStock($item->size_material, $kebutuhanBahanBaku, 'decrease');
+                    
+                    // Update stok produk (tambah)
+                    $this->updateProductStock($item->size_material, $item->color, $item->completed_quantity, 'increase');
+                }
+            }
+            
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Log::error('Error updating stock on work order complete: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Hitung kebutuhan bahan baku berdasarkan ukuran
+     */
+    private function calculateMaterialNeeded($sizeMaterial)
+    {
+        // Parse ukuran (misal: "3x4" = 12 meter persegi)
+        if (preg_match('/(\d+)x(\d+)/', $sizeMaterial, $matches)) {
+            $panjang = (int)$matches[1];
+            $lebar = (int)$matches[2];
+            return $panjang * $lebar;
+        }
+        return 0;
+    }
+
+    /**
+     * Update stok bahan baku
+     */
+    private function updateRawMaterialStock($materialName, $quantity, $action)
+    {
+        $material = \App\Models\RawMaterial::where('name', 'LIKE', "%{$materialName}%")->first();
+        if ($material) {
+            if ($action === 'decrease') {
+                $material->stock = max(0, $material->stock - $quantity);
+            } else {
+                $material->stock += $quantity;
+            }
+            $material->save();
+        }
+    }
+
+    /**
+     * Update stok produk
+     */
+    private function updateProductStock($sizeMaterial, $color, $quantity, $action)
+    {
+        // Cari produk berdasarkan ukuran dan warna
+        $product = \App\Models\Product::where('size', $sizeMaterial)->first();
+        if ($product) {
+            $variant = $product->variants()->where('color', $color)->first();
+            if ($variant) {
+                if ($action === 'increase') {
+                    $variant->stock += $quantity;
+                } else {
+                    $variant->stock = max(0, $variant->stock - $quantity);
+                }
+                $variant->save();
+            }
+        }
     }
 }

@@ -61,6 +61,7 @@
             @endif
 
             @if ($role == 'admin')
+                <a href="{{ route('admin.raw-material-stock') }}" class="{{ request()->routeIs('admin.raw-material-stock*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Bahan Baku</a>
                 <a href="{{ url('/admin/products') }}" class="{{ request()->is('admin/products*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Produk</a>
                 <a href="{{ url('/admin/custom-materials') }}" class="{{ request()->is('admin/custom-materials*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Bahan Custom</a>
                 <a href="{{ url('/admin/categories') }}" class="{{ request()->is('admin/categories*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Kategori</a>

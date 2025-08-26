@@ -8,6 +8,7 @@ class WorkOrderItem extends Model
 {
     protected $fillable = [
         'work_order_id',
+        'raw_material_id',
         'size_material',
         'color',
         'quantity',
@@ -20,6 +21,11 @@ class WorkOrderItem extends Model
     public function workOrder()
     {
         return $this->belongsTo(WorkOrder::class);
+    }
+
+    public function rawMaterial()
+    {
+        return $this->belongsTo(RawMaterial::class);
     }
 
     public function getStatusLabelAttribute()

@@ -16,7 +16,7 @@
             <h2 class="text-lg font-semibold text-gray-700">Form Surat Perintah Kerja</h2>
         </div>
 
-        <form action="{{ route('admin.work-orders.store') }}" method="POST" class="p-6">
+        <form action="/admin/work-orders" method="POST" class="p-6" id="workOrderForm">
             @csrf
             
             <!-- Informasi Umum -->
@@ -119,19 +119,33 @@
             </button>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Ukuran + Bahan *</label>
-                <input type="text" name="items[INDEX][size_material]" 
+                <label class="block text-sm font-medium text-gray-700 mb-2">Bahan Baku *</label>
+                <select name="items[INDEX][raw_material_id]" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        required>
+                    <option value="">Pilih Bahan Baku</option>
+                    @foreach($rawMaterials as $material)
+                        <option value="{{ $material->id }}" data-color="{{ $material->color }}">
+                            {{ $material->name }} ({{ $material->color }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ukuran *</label>
+                <input type="text" name="items[INDEX][size]" 
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                       placeholder="Contoh: A2 2x3" required>
+                       placeholder="Contoh: 2x3, 3x4" required>
             </div>
             
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Warna *</label>
                 <input type="text" name="items[INDEX][color]" 
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                       placeholder="Contoh: BS Cap GSY" required>
+                       placeholder="Warna akan terisi otomatis" readonly>
             </div>
             
             <div>
@@ -172,6 +186,16 @@ document.addEventListener('DOMContentLoaded', function() {
         removeBtn.addEventListener('click', function() {
             itemDiv.remove();
             updateItemNumbers();
+        });
+        
+        // Add material selection functionality
+        const materialSelect = itemDiv.querySelector('select[name*="[raw_material_id]"]');
+        const colorInput = itemDiv.querySelector('input[name*="[color]"]');
+        
+        materialSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const color = selectedOption.getAttribute('data-color');
+            colorInput.value = color || '';
         });
         
         itemsContainer.appendChild(itemDiv);

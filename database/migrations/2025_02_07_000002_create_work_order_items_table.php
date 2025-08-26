@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('work_order_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('work_order_id');
+            $table->unsignedBigInteger('raw_material_id'); // ID bahan baku
             $table->string('size_material'); // Ukuran + Bahan (contoh: A2 2x3)
             $table->string('color'); // Warna (contoh: BS Cap GSY)
             $table->integer('quantity'); // Jumlah yang dipotong
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->timestamps();
             
             $table->foreign('work_order_id')->references('id')->on('work_orders')->onDelete('cascade');
+            $table->foreign('raw_material_id')->references('id')->on('raw_materials')->onDelete('cascade');
         });
     }
 

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class RawMaterial extends Model
 {
-    protected $fillable = ['name', 'unit', 'default_price'];
+    protected $fillable = ['name', 'color', 'unit', 'default_price', 'stock'];
 
     public function orderItems()
     {

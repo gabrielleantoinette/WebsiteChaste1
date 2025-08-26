@@ -22,7 +22,7 @@
     </div>
 
     {{-- Ringkasan Stok --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
         <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
             <p class="text-sm text-gray-500 mb-1">Total Produk</p>
             <p class="text-2xl font-bold text-blue-600">{{ $products->count() }}</p>
@@ -32,17 +32,23 @@
             <p class="text-2xl font-bold text-purple-600">{{ $customMaterials->count() }}</p>
         </div>
         <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+            <p class="text-sm text-gray-500 mb-1">Total Bahan Baku</p>
+            <p class="text-2xl font-bold text-orange-600">{{ $rawMaterials->count() }}</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
             <p class="text-sm text-gray-500 mb-1">Total Stok Tersedia</p>
             <p class="text-2xl font-bold text-green-600">
                 {{ $products->sum(function($p) { return $p->variants->sum('stock'); }) + 
-                   $customMaterials->sum(function($c) { return $c->variants->sum('stock'); }) }}
+                   $customMaterials->sum(function($c) { return $c->variants->sum('stock'); }) + 
+                   $rawMaterials->sum('stock') }}
             </p>
         </div>
         <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
             <p class="text-sm text-gray-500 mb-1">Stok Rendah (≤10)</p>
             <p class="text-2xl font-bold text-red-600">
                 {{ $products->sum(function($p) { return $p->variants->where('stock', '<=', 10)->count(); }) + 
-                   $customMaterials->sum(function($c) { return $c->variants->where('stock', '<=', 10)->count(); }) }}
+                   $customMaterials->sum(function($c) { return $c->variants->where('stock', '<=', 10)->count(); }) + 
+                   $rawMaterials->where('stock', '<=', 10)->count() }}
             </p>
         </div>
     </div>
@@ -103,6 +109,53 @@
                         </tr>
                     @empty
                         <tr><td colspan="5" class="text-center text-gray-500 py-4">Tidak ada produk regular.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- Bahan Baku --}}
+    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-8">
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Bahan Baku</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto text-sm border border-gray-200">
+                <thead class="bg-gray-100 text-gray-700 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold">Nama Bahan Baku</th>
+                        <th class="px-4 py-3 text-left font-semibold">Unit</th>
+                        <th class="px-4 py-3 text-left font-semibold">Stok (m²)</th>
+                        <th class="px-4 py-3 text-left font-semibold">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($rawMaterials as $material)
+                        <tr class="border-b border-gray-100 @if($loop->odd) bg-gray-50 @endif hover:bg-orange-50 transition">
+                            <td class="px-4 py-3 font-semibold">{{ $material->name }}</td>
+                            <td class="px-4 py-3">{{ $material->unit ?? '-' }}</td>
+                            <td class="px-4 py-3 font-bold text-lg">
+                                <span class="{{ $material->stock <= 10 ? 'text-red-600' : 'text-green-600' }}">
+                                    {{ number_format($material->stock, 2) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                @if($material->stock <= 10)
+                                    <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                                        Stok Rendah
+                                    </span>
+                                @elseif($material->stock <= 50)
+                                    <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                                        Stok Menengah
+                                    </span>
+                                @else
+                                    <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                                        Stok Aman
+                                    </span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="text-center text-gray-500 py-4">Tidak ada bahan baku.</td></tr>
                     @endforelse
                 </tbody>
             </table>
