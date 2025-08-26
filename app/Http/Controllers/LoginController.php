@@ -50,6 +50,7 @@ class LoginController extends Controller
                     'id' => $customer->id,
                     'name' => $customer->name,
                     'email' => $customer->email,
+                    'role' => 'customer',
                 ],
                 'isLoggedIn' => true,
                 'customer_id' => $customer->id,
@@ -94,7 +95,12 @@ class LoginController extends Controller
         $customer->save();
 
 
-        Session::put('user', $customer);
+        Session::put('user', [
+            'id' => $customer->id,
+            'name' => $customer->name,
+            'email' => $customer->email,
+            'role' => 'customer',
+        ]);
 
         return redirect('/');
     }

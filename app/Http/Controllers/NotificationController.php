@@ -75,8 +75,8 @@ class NotificationController extends Controller
                 'user_type' => gettype($user),
                 'is_array' => is_array($user),
                 'is_employee' => $user instanceof \App\Models\Employee,
-                'user_id' => is_array($user) ? $user['id'] : $user->id,
-                'user_role' => is_array($user) ? ($user['role'] ?? 'customer') : $user->role
+                'user_id' => is_array($user) ? ($user['id'] ?? 'no_id') : ($user->id ?? 'no_id'),
+                'user_role' => is_array($user) ? ($user['role'] ?? 'customer') : ($user->role ?? 'customer')
             ]);
             
             if (!$user) {
@@ -137,7 +137,7 @@ class NotificationController extends Controller
                 }
             } else {
                 // Untuk employee, cek berdasarkan recipient_id
-                if ($notification->recipient_type !== $recipientType || $notification->recipient_id !== $recipientId) {
+                if ($notification->recipient_type !== $recipientType || $notification->recipient_id != $recipientId) {
                     \Log::error('User cannot mark this notification - permission denied');
                     return response()->json(['error' => 'Unauthorized'], 401);
                 }

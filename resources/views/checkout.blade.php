@@ -253,12 +253,12 @@
                     <div class="flex justify-between items-center">
                         <span class="text-gray-600">Subtotal Produk</span>
                         <span class="font-semibold text-gray-800" id="productSubtotal">Rp {{ number_format($subtotalProduk, 0, ',', '.') }}</span>
-                    </div>
+                </div>
 
                     <div class="flex justify-between items-center">
                         <span class="text-gray-600">Subtotal Pengiriman</span>
                         <span class="font-semibold text-gray-800" id="shippingCost">Rp 0</span>
-                    </div>
+                </div>
 
                     <div class="border-t border-gray-200 pt-3">
                         <div class="flex justify-between items-center">
@@ -284,7 +284,7 @@
                 <div class="space-y-3">
                     <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
                         <input type="radio" name="payment_method" value="transfer" class="accent-teal-600 mr-3"
-                            required onchange="showPaymentInfo()">
+                                required onchange="showPaymentInfo()">
                         <div class="flex-1">
                             <div class="font-semibold text-gray-800">Transfer Bank</div>
                             <div class="text-sm text-gray-600">Bank BCA</div>
@@ -292,7 +292,7 @@
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                         </svg>
-                    </label>
+                        </label>
 
                     <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
                         <input type="radio" name="payment_method" value="midtrans" class="accent-teal-600 mr-3"
@@ -300,7 +300,7 @@
                         <div class="flex-1">
                             <div class="font-semibold text-gray-800">E-Wallet</div>
                             <div class="text-sm text-gray-600">Virtual Account, Kartu Kredit, OVO, DANA, ShopeePay</div>
-                        </div>
+                    </div>
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                         </svg>
@@ -308,36 +308,36 @@
 
                     <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
                         <input type="radio" name="payment_method" value="cod" class="accent-teal-600 mr-3"
-                            onchange="showPaymentInfo()">
+                                onchange="showPaymentInfo()">
                         <div class="flex-1">
                             <div class="font-semibold text-gray-800">COD</div>
                             <div class="text-sm text-gray-600">Bayar di Tempat</div>
-                        </div>
+                    </div>
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                    </label>
+                        </label>
 
                     <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer {{ !$bolehHutang || $melebihiLimit ? 'opacity-50 cursor-not-allowed' : '' }}">
                         <input type="radio" name="payment_method" value="hutang" class="accent-teal-600 mr-3"
-                            onchange="showPaymentInfo()" id="hutang" 
-                            {{ !$bolehHutang || $melebihiLimit ? 'disabled' : '' }}>
+                                onchange="showPaymentInfo()" id="hutang" 
+                                {{ !$bolehHutang || $melebihiLimit ? 'disabled' : '' }}>
                         <div class="flex-1">
                             <div class="font-semibold text-gray-800">Bayar Nanti</div>
                             <div class="text-sm text-gray-600">Hutang (Limit Rp 10.000.000)</div>
-                            @if(!$bolehHutang)
+                        @if(!$bolehHutang)
                                 <div class="text-xs text-red-500 mt-1">Minimal 1x transaksi lunas untuk bisa hutang</div>
-                            @elseif($melebihiLimit)
+                        @elseif($melebihiLimit)
                                 <div class="text-xs text-red-500 mt-1">Total hutang akan melebihi limit</div>
-                            @endif
+                        @endif
                         </div>
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                         </svg>
                     </label>
-                    
-                    @if($bolehHutang && !$melebihiLimit)
+                        
+                        @if($bolehHutang && !$melebihiLimit)
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
                             <div class="font-medium mb-2">Info Hutang:</div>
                             <div class="grid grid-cols-3 gap-2 text-xs">
@@ -345,8 +345,8 @@
                                 <div>Limit hutang: <span class="font-semibold">Rp {{ number_format($limitHutang, 0, ',', '.') }}</span></div>
                                 <div>Sisa limit: <span class="font-semibold text-green-600">Rp {{ number_format($limitHutang - $totalHutangAktif, 0, ',', '.') }}</span></div>
                             </div>
-                        </div>
-                    @endif
+                            </div>
+                        @endif
                 </div>
 
                 <!-- DIV KETERANGAN -->

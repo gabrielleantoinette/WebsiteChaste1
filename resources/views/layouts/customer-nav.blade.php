@@ -76,6 +76,110 @@
 </header>
 
 <script>
+// Global functions untuk notification
+window.markAsRead = function(notificationId, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    console.log('=== MARK AS READ CLICKED ===');
+    console.log('Notification ID:', notificationId);
+    console.log('Event target:', event.target);
+    
+    // Disable tombol agar tidak bisa diklik lagi
+    const button = event.target;
+    button.disabled = true;
+    button.textContent = 'Memproses...';
+    button.classList.add('opacity-50');
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    console.log('CSRF Token:', csrfToken);
+    
+    const url = `/notifications/${notificationId}/mark-read`;
+    console.log('Calling URL:', url);
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            console.log('Mark as read successful');
+            // Update the notification item
+            const item = event.target.closest('[data-id]');
+            if (item) {
+                item.classList.remove('bg-teal-50');
+                item.classList.add('opacity-75');
+                // Hapus tombol "Tandai Dibaca" dengan benar
+                const button = item.querySelector('button');
+                if (button) {
+                    button.remove();
+                }
+            }
+            
+            // Update badge count dari server
+            console.log('Updating badge count...');
+            updateCustomerNotificationBadge();
+        } else {
+            console.error('Mark as read failed:', data);
+            // Re-enable tombol jika error
+            button.disabled = false;
+            button.textContent = 'Tandai Dibaca';
+            button.classList.remove('opacity-50');
+        }
+    })
+    .catch(error => {
+        console.error('Error marking notification as read:', error);
+        // Re-enable tombol jika error
+        button.disabled = false;
+        button.textContent = 'Tandai Dibaca';
+        button.classList.remove('opacity-50');
+    });
+};
+
+window.updateCustomerNotificationBadge = function() {
+    console.log('=== UPDATING BADGE COUNT ===');
+    fetch('/notifications/unread-count')
+        .then(response => {
+            console.log('Badge response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Badge response data:', data);
+            const badge = document.getElementById('customerNotificationBadge');
+            if (badge) {
+                const countSpan = badge.querySelector('.count');
+                console.log('Current badge count:', countSpan.textContent);
+                console.log('New badge count:', data.count);
+                if (data.count > 0) {
+                    countSpan.textContent = data.count;
+                    badge.style.display = 'flex';
+                    // Tambahkan animasi pulse jika ada notifikasi baru
+                    badge.classList.add('animate-pulse');
+                } else {
+                    countSpan.textContent = '0';
+                    badge.style.display = 'none';
+                    badge.classList.remove('animate-pulse');
+                }
+                console.log('Badge updated to:', countSpan.textContent);
+            } else {
+                console.error('Badge element not found');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating customer notification badge:', error);
+        });
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     // Update notification badge on page load
     updateCustomerNotificationBadge();
@@ -118,7 +222,9 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault();
         event.stopPropagation();
         
-        console.log('Mark as read clicked for notification:', notificationId); // Debug
+        console.log('=== MARK AS READ CLICKED ===');
+        console.log('Notification ID:', notificationId);
+        console.log('Event target:', event.target);
         
         // Disable tombol agar tidak bisa diklik lagi
         const button = event.target;
@@ -127,22 +233,28 @@ document.addEventListener('DOMContentLoaded', function() {
         button.classList.add('opacity-50');
         
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        console.log('CSRF Token:', csrfToken); // Debug
+        console.log('CSRF Token:', csrfToken);
         
-        fetch(`/notifications/${notificationId}/mark-read`, {
+        const url = `/notifications/${notificationId}/mark-read`;
+        console.log('Calling URL:', url);
+        
+        fetch(url, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
             }
         })
         .then(response => {
-            console.log('Response status:', response.status); // Debug
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
             return response.json();
         })
         .then(data => {
-            console.log('Response data:', data); // Debug
+            console.log('Response data:', data);
             if (data.success) {
+                console.log('Mark as read successful');
                 // Update the notification item
                 const item = event.target.closest('[data-id]');
                 if (item) {
@@ -156,9 +268,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Update badge count dari server
+                console.log('Updating badge count...');
                 updateCustomerNotificationBadge();
             } else {
-                console.error('Mark as read failed:', data); // Debug
+                console.error('Mark as read failed:', data);
                 // Re-enable tombol jika error
                 button.disabled = false;
                 button.textContent = 'Tandai Dibaca';
@@ -178,7 +291,6 @@ document.addEventListener('DOMContentLoaded', function() {
         bell.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Bell clicked!'); // Debug
             if (popoverOpen) {
                 popover.classList.add('hidden');
                 popoverOpen = false;
@@ -187,7 +299,6 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch('/notifications/latest')
                 .then(res => res.json())
                 .then(data => {
-                    console.log('Notifications data:', data); // Debug
                     renderNotifList(data.notifications, data.unread_count);
                     popover.classList.remove('hidden');
                     popoverOpen = true;
@@ -263,29 +374,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
-function updateCustomerNotificationBadge() {
-    fetch('/notifications/unread-count')
-        .then(response => response.json())
-        .then(data => {
-            const badge = document.getElementById('customerNotificationBadge');
-            if (badge) {
-                const countSpan = badge.querySelector('.count');
-                console.log('Updating badge count to:', data.count); // Debug
-                if (data.count > 0) {
-                    countSpan.textContent = data.count;
-                    badge.style.display = 'flex';
-                    // Tambahkan animasi pulse jika ada notifikasi baru
-                    badge.classList.add('animate-pulse');
-                } else {
-                    countSpan.textContent = '0';
-                    badge.style.display = 'none';
-                    badge.classList.remove('animate-pulse');
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error updating customer notification badge:', error);
-        });
-}
 </script>
