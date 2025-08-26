@@ -392,20 +392,37 @@ class WorkOrderController extends Controller
     {
         DB::beginTransaction();
         try {
+            \Log::info('Updating stock for work order: ' . $workOrder->id);
+            
             foreach ($workOrder->items as $item) {
                 if ($item->status === 'completed' && $item->completed_quantity > 0) {
+                    \Log::info('Processing item: ' . $item->id . ' with completed_quantity: ' . $item->completed_quantity);
+                    
+                    // Ambil data bahan baku dari raw_material_id
+                    $rawMaterial = \App\Models\RawMaterial::find($item->raw_material_id);
+                    if (!$rawMaterial) {
+                        \Log::error('Raw material not found for item: ' . $item->id);
+                        continue;
+                    }
+                    
                     // Hitung kebutuhan bahan baku (dalam meter persegi)
                     $kebutuhanBahanBaku = $item->completed_quantity * $this->calculateMaterialNeeded($item->size_material);
+                    \Log::info('Kebutuhan bahan baku: ' . $kebutuhanBahanBaku . ' m²');
                     
                     // Update stok bahan baku (kurangi)
-                    $this->updateRawMaterialStock($item->size_material, $kebutuhanBahanBaku, 'decrease');
+                    $oldStock = $rawMaterial->stock;
+                    $rawMaterial->stock = max(0, $rawMaterial->stock - $kebutuhanBahanBaku);
+                    $rawMaterial->save();
                     
-                    // Update stok produk (tambah)
+                    \Log::info('Raw material stock updated: ' . $rawMaterial->name . ' from ' . $oldStock . ' to ' . $rawMaterial->stock);
+                    
+                    // Update stok produk (tambah) - jika ada produk yang sesuai
                     $this->updateProductStock($item->size_material, $item->color, $item->completed_quantity, 'increase');
                 }
             }
             
             DB::commit();
+            \Log::info('Stock update completed successfully');
         } catch (\Exception $e) {
             DB::rollback();
             \Log::error('Error updating stock on work order complete: ' . $e->getMessage());
@@ -417,30 +434,19 @@ class WorkOrderController extends Controller
      */
     private function calculateMaterialNeeded($sizeMaterial)
     {
-        // Parse ukuran (misal: "3x4" = 12 meter persegi)
+        // Parse ukuran dari format "Terpal A8 2x3" atau "2x3"
         if (preg_match('/(\d+)x(\d+)/', $sizeMaterial, $matches)) {
             $panjang = (int)$matches[1];
             $lebar = (int)$matches[2];
-            return $panjang * $lebar;
+            $luas = $panjang * $lebar;
+            \Log::info('Calculated material needed: ' . $panjang . 'x' . $lebar . ' = ' . $luas . ' m²');
+            return $luas;
         }
+        \Log::warning('Could not parse size from: ' . $sizeMaterial);
         return 0;
     }
 
-    /**
-     * Update stok bahan baku
-     */
-    private function updateRawMaterialStock($materialName, $quantity, $action)
-    {
-        $material = \App\Models\RawMaterial::where('name', 'LIKE', "%{$materialName}%")->first();
-        if ($material) {
-            if ($action === 'decrease') {
-                $material->stock = max(0, $material->stock - $quantity);
-            } else {
-                $material->stock += $quantity;
-            }
-            $material->save();
-        }
-    }
+
 
     /**
      * Update stok produk
