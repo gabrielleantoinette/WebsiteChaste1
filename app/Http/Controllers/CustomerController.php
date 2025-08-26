@@ -96,6 +96,15 @@ class CustomerController extends Controller
     {
         $products = Product::where('live', true);
 
+        // Search berdasarkan nama atau deskripsi produk
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $products->where(function($query) use ($search) {
+                $query->where('name', 'LIKE', "%{$search}%")
+                      ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+        }
+
         // Filter kategori berdasarkan ID
         if ($request->has('kategori')) {
             $kategoriMap = ['plastik' => 1, 'kain' => 2, 'karet' => 3];
@@ -117,9 +126,42 @@ class CustomerController extends Controller
             $products->where('price', '<=', $request->harga_max);
         }
 
-        // Warna: bisa ditambahkan jika kamu sudah punya kolom `color` atau relasi warna
+        // Filter warna berdasarkan product variants
+        if ($request->has('warna')) {
+            $products->whereHas('variants', function($query) use ($request) {
+                $query->whereIn('color', $request->warna);
+            });
+        }
 
-        $products = $products->paginate(9);
+        // Sorting
+        $sortBy = $request->get('sort', 'name');
+        $sortOrder = $request->get('order', 'asc');
+        
+        // Handle sorting options
+        if ($request->has('sort')) {
+            switch ($sortBy) {
+                case 'price':
+                    if ($request->get('order') == 'desc') {
+                        $products->orderBy('price', 'desc');
+                    } else {
+                        $products->orderBy('price', 'asc');
+                    }
+                    break;
+                case 'name':
+                default:
+                    if ($request->get('order') == 'desc') {
+                        $products->orderBy('name', 'desc');
+                    } else {
+                        $products->orderBy('name', 'asc');
+                    }
+                    break;
+            }
+        } else {
+            // Default sorting
+            $products->orderBy('name', 'asc');
+        }
+
+        $products = $products->paginate(9)->withQueryString();
 
         return view('produk', compact('products'));
     }
