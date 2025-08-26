@@ -559,43 +559,68 @@ class InvoiceController extends Controller
                 
                 // Buat data dinvoice jika belum ada
                 $existingDInvoice = DB::table('dinvoice')->where('hinvoice_id', $invoice->id)->first();
-                if (!$existingDInvoice && session()->has('cart_ids_to_delete')) {
-                    $cartIds = session('cart_ids_to_delete');
-                    $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+                if (!$existingDInvoice) {
+                    // Coba ambil dari session cart_ids_to_delete terlebih dahulu
+                    $cartIds = session('cart_ids_to_delete', []);
+                    $carts = collect();
                     
-                    foreach ($carts as $cart) {
-                        if ($cart->variant_id) {
-                            // Produk biasa
-                            $product = DB::table('product_variants')
-                                ->join('products', 'product_variants.product_id', '=', 'products.id')
-                                ->where('product_variants.id', $cart->variant_id)
-                                ->select('products.id as product_id', 'products.price')
-                                ->first();
-                            
-                            if ($product) {
+                    if (!empty($cartIds)) {
+                        $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+                    }
+                    
+                    // Jika tidak ada data dari session, coba ambil dari cart user yang masih ada
+                    if ($carts->isEmpty()) {
+                        $carts = DB::table('cart')->where('user_id', $invoice->customer_id)->get();
+                    }
+                    
+                    // Jika masih kosong, buat data dummy berdasarkan grand_total invoice
+                    if ($carts->isEmpty()) {
+                        \Log::warning("No cart data found for invoice {$invoice->id}. Creating dummy dinvoice data.");
+                        DB::table('dinvoice')->insert([
+                            'hinvoice_id' => $invoice->id,
+                            'product_id' => 1,
+                            'variant_id' => 1,
+                            'price' => $invoice->grand_total,
+                            'quantity' => 1,
+                            'subtotal' => $invoice->grand_total,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    } else {
+                        foreach ($carts as $cart) {
+                            if ($cart->variant_id) {
+                                // Produk biasa
+                                $product = DB::table('product_variants')
+                                    ->join('products', 'product_variants.product_id', '=', 'products.id')
+                                    ->where('product_variants.id', $cart->variant_id)
+                                    ->select('products.id as product_id', 'products.price')
+                                    ->first();
+                                
+                                if ($product) {
+                                    DB::table('dinvoice')->insert([
+                                        'hinvoice_id' => $invoice->id,
+                                        'product_id' => $product->product_id,
+                                        'variant_id' => $cart->variant_id,
+                                        'price' => $product->price,
+                                        'quantity' => $cart->quantity,
+                                        'subtotal' => $product->price * $cart->quantity,
+                                        'created_at' => now(),
+                                        'updated_at' => now(),
+                                    ]);
+                                }
+                            } elseif ($cart->kebutuhan_custom) {
+                                // Produk custom
                                 DB::table('dinvoice')->insert([
                                     'hinvoice_id' => $invoice->id,
-                                    'product_id' => $product->product_id,
-                                    'variant_id' => $cart->variant_id,
-                                    'price' => $product->price,
+                                    'product_id' => 0,
+                                    'variant_id' => null,
+                                    'price' => $cart->harga_custom,
                                     'quantity' => $cart->quantity,
-                                    'subtotal' => $product->price * $cart->quantity,
+                                    'subtotal' => $cart->harga_custom * $cart->quantity,
                                     'created_at' => now(),
                                     'updated_at' => now(),
                                 ]);
                             }
-                        } elseif ($cart->kebutuhan_custom) {
-                            // Produk custom
-                            DB::table('dinvoice')->insert([
-                                'hinvoice_id' => $invoice->id,
-                                'product_id' => 0,
-                                'variant_id' => null,
-                                'price' => $cart->harga_custom,
-                                'quantity' => $cart->quantity,
-                                'subtotal' => $cart->harga_custom * $cart->quantity,
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]);
                         }
                     }
                 }
@@ -613,18 +638,36 @@ class InvoiceController extends Controller
             abort(404, 'Invoice tidak ditemukan.');
         }
 
-        // JOIN cart ke product_variants dan products untuk ambil nama produk
-        $cartItems = DB::table('cart')
-            ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+        // Ambil data dari dinvoice yang sudah dibuat saat pembayaran
+        $cartItems = DB::table('dinvoice')
+            ->leftJoin('product_variants', 'dinvoice.variant_id', '=', 'product_variants.id')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
             ->select(
-                'cart.*',
+                'dinvoice.*',
                 'products.name as product_name',
-                'products.price as product_price',  // INI PENTING!
-                'product_variants.color as variant_color'
+                'products.price as product_price',
+                'product_variants.color as variant_color',
+                'dinvoice.price as harga_custom',
+                'dinvoice.quantity',
+                'dinvoice.subtotal'
             )
-            ->where('cart.user_id', $invoice->customer_id)
+            ->where('dinvoice.hinvoice_id', $invoice->id)
             ->get();
+
+        // Jika tidak ada data di dinvoice, coba ambil dari cart (untuk transaksi lama)
+        if ($cartItems->isEmpty()) {
+            $cartItems = DB::table('cart')
+                ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+                ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
+                ->select(
+                    'cart.*',
+                    'products.name as product_name',
+                    'products.price as product_price',
+                    'product_variants.color as variant_color'
+                )
+                ->where('cart.user_id', $invoice->customer_id)
+                ->get();
+        }
 
         $pdf = Pdf::loadView('exports.invoiceCust_pdf', compact('invoice', 'cartItems'));
 
@@ -639,17 +682,36 @@ class InvoiceController extends Controller
             abort(404, 'Invoice tidak ditemukan.');
         }
 
-        $cartItems = DB::table('cart')
-            ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+        // Ambil data dari dinvoice yang sudah dibuat saat pembayaran
+        $cartItems = DB::table('dinvoice')
+            ->leftJoin('product_variants', 'dinvoice.variant_id', '=', 'product_variants.id')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
             ->select(
-                'cart.*',
+                'dinvoice.*',
                 'products.name as product_name',
-                'products.price as product_price',  // INI PENTING!
-                'product_variants.color as variant_color'
+                'products.price as product_price',
+                'product_variants.color as variant_color',
+                'dinvoice.price as harga_custom',
+                'dinvoice.quantity',
+                'dinvoice.subtotal'
             )
-            ->where('cart.user_id', $invoice->customer_id)
+            ->where('dinvoice.hinvoice_id', $invoice->id)
             ->get();
+
+        // Jika tidak ada data di dinvoice, coba ambil dari cart (untuk transaksi lama)
+        if ($cartItems->isEmpty()) {
+            $cartItems = DB::table('cart')
+                ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+                ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
+                ->select(
+                    'cart.*',
+                    'products.name as product_name',
+                    'products.price as product_price',
+                    'product_variants.color as variant_color'
+                )
+                ->where('cart.user_id', $invoice->customer_id)
+                ->get();
+        }
 
         $pdf = Pdf::loadView('exports.invoiceCust_pdf', compact('invoice', 'cartItems'));
 

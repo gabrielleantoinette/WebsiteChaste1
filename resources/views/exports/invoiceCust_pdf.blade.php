@@ -95,7 +95,7 @@
             <div style="line-height: 1.4;">
                 <h2 style="margin: 0; color: #008080; font-size: 20px;">PT. Chaste Gemilang Mandiri</h2>
                 <p style="margin: 0; font-size: 13px; color: #333;">
-                    031-5990710 | compagreterpal@gmail.com
+                    031-5990710 | chastegemilangmandiri@gmail.com
                 </p>
             </div>
         </div>
@@ -116,6 +116,7 @@
     
         <!-- Detail Pesanan -->
         <h3 style="color:#008080;">Detail Pesanan</h3>
+        
         <table>
             <thead>
             <tr>
@@ -130,7 +131,7 @@
             @foreach($cartItems as $item)
                 <tr>
                     <td>
-                        @if($item->kebutuhan_custom)
+                        @if(isset($item->kebutuhan_custom) && $item->kebutuhan_custom)
                             Produk Custom ({{ $item->kebutuhan_custom }})
                         @else
                             {{ $item->product_name ?? 'Produk Biasa' }}
@@ -139,10 +140,10 @@
                     <td>{{ $item->warna_custom ?? $item->variant_color ?? '-' }}</td>
                     <td>{{ $item->quantity }}</td>
                     <td>
-                        Rp {{ number_format($item->kebutuhan_custom ? ($item->harga_custom ?? 0) : ($item->product_price ?? 0), 0, ',', '.') }}
+                        Rp {{ number_format(isset($item->kebutuhan_custom) && $item->kebutuhan_custom ? ($item->harga_custom ?? 0) : ($item->price ?? 0), 0, ',', '.') }}
                     </td>
                     <td>
-                        Rp {{ number_format(($item->kebutuhan_custom ? ($item->harga_custom ?? 0) : ($item->product_price ?? 0)) * $item->quantity, 0, ',', '.') }}
+                        Rp {{ number_format((isset($item->kebutuhan_custom) && $item->kebutuhan_custom ? ($item->harga_custom ?? 0) : ($item->price ?? 0)) * $item->quantity, 0, ',', '.') }}
                     </td>
                 </tr>
             @endforeach
@@ -169,9 +170,9 @@
         </div>
     
         <div class="footer">
-            {{ $invoice->company_name ?? 'PT. Chaste Gemilang Mandiri' }} |
-            {{ $invoice->company_phone ?? '123-456-7890' }} |
-            {{ $invoice->company_email ?? 'hello@example.com' }}
+            PT. Chaste Gemilang Mandiri |
+            031-5990710 |
+            chastegemilangmandiri@gmail.com
         </div>
     </div>    
 
