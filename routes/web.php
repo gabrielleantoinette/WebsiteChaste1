@@ -46,7 +46,7 @@ Route::middleware([LoggedIn::class])->group(function () {
 
 
     Route::get('/keranjang', [CartController::class, 'view'])->name('keranjang');
-    Route::post('/keranjang/add', [CartController::class, 'addItem'])->name('keranjang.add');
+    Route::post('/keranjang/add', [CartController::class, 'addItemFromCart'])->name('keranjang.add');
     Route::get('/keranjang/delete/{id}', [CartController::class, 'deleteItem'])->name('keranjang.delete');
     Route::post('/keranjang/custom/add', [CartController::class, 'addCustomItem'])->name('keranjang.custom.add');
     Route::get('/custom-terpal', [CustomMaterialController::class, 'showCustomPage'])->name('custom.terpal');

@@ -47,11 +47,10 @@
                 <p class="text-gray-600">{{ $product->description }}</p>
 
                 <!-- Variant & Quantity -->
-                <form action="{{ route('keranjang.add') }}" method="POST" class="space-y-4">
-                    @csrf
+                <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Warna</label>
-                        <select name="variant_id"
+                        <select id="variantSelect"
                             class="w-full border border-gray-300 rounded-lg p-2 focus:ring-teal-400">
                             @foreach ($variants as $variant)
                                 <option value="{{ $variant->id }}">{{ ucfirst($variant->color) }}</option>
@@ -64,7 +63,7 @@
                         <div class="inline-flex items-center border border-gray-300 rounded-lg overflow-hidden">
                             <button type="button" onclick="changeQty(-1)"
                                 class="px-3 py-2 text-lg hover:bg-gray-100">-</button>
-                            <input type="number" id="qtyInput" name="quantity" value="1" min="1"
+                            <input type="number" id="qtyInput" value="1" min="1"
                                 class="w-16 text-center border-l border-r border-gray-300 focus:outline-none" />
                             <button type="button" onclick="changeQty(1)"
                                 class="px-3 py-2 text-lg hover:bg-gray-100">+</button>
@@ -73,30 +72,43 @@
 
                     <!-- Buttons -->
                     <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-3 sm:space-y-0">
-                        <button type="submit"
-                            class="flex-1 bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition">
-                            Tambah ke Keranjang
-                        </button>
+                        <!-- Form Tambah ke Keranjang -->
+                        <form action="{{ route('produk.add', $product->id) }}" method="POST" class="flex-1">
+                            @csrf
+                            <input type="hidden" name="variant_id" id="cartVariantId" value="{{ $variants->first()->id ?? '' }}">
+                            <input type="hidden" name="quantity" id="cartQuantity" value="1">
+                            <button type="submit"
+                                class="w-full bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition">
+                                Tambah ke Keranjang
+                            </button>
+                        </form>
                         
+                        <!-- Form Tawar Harga -->
                         @if($product->min_buying_stock && $product->min_buying_stock > 1)
                             <div class="flex-1 text-center">
-                                <a href="{{ route('produk.negosiasi', $product) }}" 
-                                   id="tawarButton"
-                                   class="block bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition">
-                                    Tawar Harga
-                                </a>
+                                <form action="{{ route('produk.negosiasi', $product) }}" method="GET" class="inline">
+                                    <input type="hidden" name="quantity" id="negosiasiQuantity" value="1">
+                                    <button type="submit"
+                                            id="tawarButton"
+                                            class="w-full bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition">
+                                        Tawar Harga
+                                    </button>
+                                </form>
                                 <p class="text-xs text-gray-500 mt-1" id="tawarInfo">
                                     Minimal {{ $product->min_buying_stock }} pcs untuk tawar menawar
                                 </p>
                             </div>
                         @else
-                            <a href="{{ route('produk.negosiasi', $product) }}"
-                                class="flex-1 text-center bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition">
-                                Tawar Harga
-                            </a>
+                            <form action="{{ route('produk.negosiasi', $product) }}" method="GET" class="flex-1">
+                                <input type="hidden" name="quantity" id="negosiasiQuantity2" value="1">
+                                <button type="submit"
+                                        class="w-full bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition">
+                                    Tawar Harga
+                                </button>
+                            </form>
                         @endif
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </section>
@@ -116,12 +128,26 @@
         
         function checkTawarButton() {
             const qtyInput = document.getElementById('qtyInput');
+            const variantSelect = document.getElementById('variantSelect');
             const tawarButton = document.getElementById('tawarButton');
             const tawarInfo = document.getElementById('tawarInfo');
-            
-            if (!tawarButton || !tawarInfo) return;
+            const negosiasiQuantity = document.getElementById('negosiasiQuantity');
+            const negosiasiQuantity2 = document.getElementById('negosiasiQuantity2');
+            const cartQuantity = document.getElementById('cartQuantity');
+            const cartVariantId = document.getElementById('cartVariantId');
             
             const currentQty = parseInt(qtyInput.value) || 1;
+            const currentVariant = variantSelect ? variantSelect.value : '';
+            
+            // Update quantity di form cart
+            if (cartQuantity) cartQuantity.value = currentQty;
+            if (cartVariantId) cartVariantId.value = currentVariant;
+            
+            // Update quantity di form negosiasi
+            if (negosiasiQuantity) negosiasiQuantity.value = currentQty;
+            if (negosiasiQuantity2) negosiasiQuantity2.value = currentQty;
+            
+            if (!tawarButton || !tawarInfo) return;
             
             if (currentQty >= minBuyingStock) {
                 // Quantity cukup, enable tombol
@@ -150,6 +176,12 @@
             const qtyInput = document.getElementById('qtyInput');
             if (qtyInput) {
                 qtyInput.addEventListener('input', checkTawarButton);
+            }
+            
+            // Check saat variant berubah
+            const variantSelect = document.getElementById('variantSelect');
+            if (variantSelect) {
+                variantSelect.addEventListener('change', checkTawarButton);
             }
         });
     </script>

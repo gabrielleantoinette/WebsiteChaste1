@@ -119,7 +119,8 @@ class NegotiationController extends Controller
 
         return redirect()
         ->route('produk.negosiasi', $product)
-        ->with('success', "Tawaran #{$no} diproses");
+        ->with('success', "Tawaran #{$no} diproses")
+        ->with('quantity', $request->quantity);
 
     }
 

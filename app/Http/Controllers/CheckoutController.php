@@ -43,23 +43,26 @@ class CheckoutController extends Controller
             return redirect()->route('keranjang')->with('error', 'Pilih minimal satu barang untuk checkout.');
         }
 
-        // Ambil barang produk biasa
+        // Ambil barang produk biasa (termasuk yang hasil negosiasi)
         $produkItems = DB::table('cart')
             ->join('product_variants', 'cart.variant_id', '=', 'product_variants.id')
             ->join('products', 'product_variants.product_id', '=', 'products.id')
             ->select(
                 'cart.id',
                 'cart.quantity',
+                'cart.harga_custom',
+                'cart.kebutuhan_custom',
                 'products.name as product_name',
                 'products.price as product_price',
+                'products.size as product_size',
                 'product_variants.color as variant_color'
             )
             ->where('cart.user_id', $customerId)
-            ->whereNull('cart.kebutuhan_custom')
-            ->whereIn('cart.id', $selectedItems) // <<< Tambahkan filter ini
+            ->whereNotNull('cart.variant_id') // Ada variant = produk normal
+            ->whereIn('cart.id', $selectedItems)
             ->get();
 
-        // Ambil barang custom
+        // Ambil barang custom terpal (yang tidak punya variant)
         $customItems = DB::table('cart')
             ->select(
                 'id',
@@ -73,8 +76,8 @@ class CheckoutController extends Controller
                 'harga_custom'
             )
             ->where('user_id', $customerId)
-            ->whereNotNull('kebutuhan_custom')
-            ->whereIn('id', $selectedItems) // <<< Tambahkan filter ini
+            ->whereNull('cart.variant_id') // Tidak ada variant = custom terpal
+            ->whereIn('id', $selectedItems)
             ->get();
 
         $cartIds = [];
@@ -83,7 +86,9 @@ class CheckoutController extends Controller
         $subtotalProduk = 0;
 
         foreach ($produkItems as $item) {
-            $subtotalProduk += $item->product_price * $item->quantity;
+            // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga produk normal
+            $price = $item->harga_custom ?? $item->product_price;
+            $subtotalProduk += $price * $item->quantity;
             $cartIds[] = $item->id;
         }
 

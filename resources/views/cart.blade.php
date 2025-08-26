@@ -38,12 +38,21 @@
                     <div class="flex items-center gap-4 border-b pb-6">
                         <input type="checkbox" class="item-checkbox" name="selected_items[]"
                             value="{{ $item->id }}">
-                        <img src="{{ asset('images/terpal-ayam.png') }}" alt="Gambar Produk"
-                            class="w-20 h-20 object-cover rounded-md">
+                        
+                        <!-- Gambar Produk -->
+                        @if ($item->variant && $item->variant->product)
+                            <img src="{{ $item->variant->product->image ? asset('storage/' . $item->variant->product->image) : asset('images/logo-perusahaan.png') }}" 
+                                 alt="{{ $item->variant->product->name ?? 'Produk' }}"
+                                 class="w-20 h-20 object-cover rounded-md">
+                        @else
+                            <img src="{{ asset('images/logo-perusahaan.png') }}" 
+                                 alt="Produk"
+                                 class="w-20 h-20 object-cover rounded-md">
+                        @endif
 
                         <div class="flex-1">
                             <p class="font-semibold">
-                                @if ($item->variant)
+                                @if ($item->variant && $item->variant->product)
                                     {{ $item->variant->product->name ?? 'Nama Produk' }}
                                 @else
                                     Custom Terpal
@@ -72,19 +81,30 @@
                                     @endif
                                 </div>
                             @else
-                                <p class="text-sm text-gray-500">Variasi: {{ $item->variant->color ?? '-' }}</p>
+                                <p class="text-sm text-gray-500">
+                                    Variasi: {{ $item->variant->color ?? '-' }}
+                                    @if ($item->variant->product->size)
+                                        <br>Ukuran: {{ $item->variant->product->size }}
+                                    @endif
+                                </p>
                             @endif
                         </div>
 
                         <div class="text-right">
                             <p class="font-semibold text-gray-700">
-                                @if ($item->variant)
-                                    Rp
-                                    {{ number_format($item->variant->product->price * $item->quantity, 0, ',', '.') }}
+                                @if ($item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi'))
+                                    <!-- Harga hasil negosiasi -->
+                                    <span class="text-teal-600">Rp {{ number_format($item->harga_custom * $item->quantity, 0, ',', '.') }}</span>
+                                    <div class="text-xs text-gray-500">(Hasil Negosiasi - Rp {{ number_format($item->harga_custom, 0, ',', '.') }} × {{ $item->quantity }})</div>
+                                @elseif ($item->variant)
+                                    <!-- Harga normal produk -->
+                                    Rp {{ number_format($item->variant->product->price * $item->quantity, 0, ',', '.') }}
                                 @else
+                                    <!-- Harga custom terpal -->
                                     Rp {{ number_format($item->harga_custom ?? 0, 0, ',', '.') }}
                                 @endif
                             </p>
+                            <p class="text-sm text-gray-500">Qty: {{ $item->quantity }}</p>
 
                             <a href="{{ route('keranjang.delete', $item->id) }}"
                                 class="text-red-500 text-xs mt-2 hover:underline">Hapus
@@ -92,6 +112,21 @@
                         </div>
                     </div>
                 @endforeach
+
+                <!-- Total Harga -->
+                <div class="border-t pt-6 mt-6">
+                    <div class="flex justify-between items-center">
+                        <div class="text-lg font-semibold text-gray-800">
+                            Total Belanja:
+                        </div>
+                        <div class="text-xl font-bold text-teal-600" id="totalHarga">
+                            Rp 0
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-500 mt-2" id="totalDetail">
+                        Pilih item untuk melihat total
+                    </div>
+                </div>
 
                 <div class="flex justify-end mt-8">
                     <button type="submit"
@@ -105,11 +140,86 @@
 
     @include('layouts.footer')
 
-    {{-- JavaScript Checkbox All --}}
+    {{-- JavaScript Checkbox All & Total Calculation --}}
     <script>
+        // Data harga untuk setiap item
+        const itemPrices = {
+            @foreach ($cartItems as $item)
+                {{ $item->id }}: {
+                    price: @if ($item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi'))
+                        {{ $item->harga_custom }}
+                    @elseif ($item->variant)
+                        {{ $item->variant->product->price }}
+                    @else
+                        {{ $item->harga_custom ?? 0 }}
+                    @endif,
+                    quantity: {{ $item->quantity }},
+                    name: "{{ $item->variant && $item->variant->product ? $item->variant->product->name : 'Custom Terpal' }}",
+                    color: "{{ $item->variant ? $item->variant->color : ($item->warna_custom ?? '-') }}",
+                    size: "{{ $item->variant && $item->variant->product ? $item->variant->product->size : ($item->ukuran_custom ?? '-') }}",
+                    isNegotiated: {{ $item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi') ? 'true' : 'false' }}
+                },
+            @endforeach
+        };
+
+        function updateTotal() {
+            let total = 0;
+            let selectedItems = [];
+            let checkboxes = document.querySelectorAll('.item-checkbox:checked');
+            
+            checkboxes.forEach(checkbox => {
+                const itemId = parseInt(checkbox.value);
+                const item = itemPrices[itemId];
+                if (item) {
+                    const itemTotal = item.price * item.quantity;
+                    total += itemTotal;
+                    
+                    // Tambahkan detail item
+                    const priceText = item.isNegotiated ? 
+                        `Rp ${item.price.toLocaleString('id-ID')} (Hasil Negosiasi)` : 
+                        `Rp ${item.price.toLocaleString('id-ID')}`;
+                    
+                    selectedItems.push({
+                        name: item.name,
+                        color: item.color,
+                        size: item.size,
+                        quantity: item.quantity,
+                        price: priceText,
+                        total: itemTotal
+                    });
+                }
+            });
+
+            // Update total harga
+            document.getElementById('totalHarga').textContent = `Rp ${total.toLocaleString('id-ID')}`;
+            
+            // Update detail
+            const totalDetail = document.getElementById('totalDetail');
+            if (selectedItems.length === 0) {
+                totalDetail.textContent = 'Pilih item untuk melihat total';
+            } else {
+                let detailText = selectedItems.map(item => 
+                    `${item.name} (${item.color}, ${item.size}) - ${item.quantity} pcs × ${item.price} = Rp ${item.total.toLocaleString('id-ID')}`
+                ).join('\n');
+                totalDetail.innerHTML = detailText.replace(/\n/g, '<br>');
+            }
+        }
+
+        // Event listener untuk select all
         document.getElementById('selectAll').addEventListener('change', function() {
             let checkboxes = document.querySelectorAll('.item-checkbox');
             checkboxes.forEach(cb => cb.checked = this.checked);
+            updateTotal();
+        });
+
+        // Event listener untuk setiap checkbox item
+        document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateTotal);
+        });
+
+        // Update total saat halaman load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTotal();
         });
     </script>
 

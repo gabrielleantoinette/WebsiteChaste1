@@ -23,7 +23,7 @@
       
       <!-- Gambar Produk -->
       <div class="relative w-full md:w-[300px]">
-        <img src="{{ asset('images/terpal-ayam.png') }}" 
+        <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/logo-perusahaan.png') }}" 
              alt="{{ $product->name }}" 
              class="rounded-lg border shadow-md w-full h-auto">
         <button class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-1 rounded-full shadow">
@@ -39,37 +39,54 @@
         <h2 class="text-2xl font-bold text-gray-900">{{ $product->name }} - {{ $product->size }}</h2>
         <p class="text-gray-600">Rp {{ number_format($product->price,0,',','.') }} <span class="text-sm">(Harga Normal)</span></p>
         
-        @if($product->min_buying_stock && $product->min_buying_stock > 1)
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <p class="text-sm text-blue-800">
-                    💡 <strong>Info:</strong> Tawar menawar tersedia untuk pembelian minimal {{ $product->min_buying_stock }} pcs
-                </p>
-            </div>
-        @endif
-        
-        <p class="text-sm text-gray-600">
-            💡 <strong>Tips Negosiasi:</strong> Tawar 10-30% dari harga normal untuk hasil terbaik
-        </p>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p class="text-sm text-blue-800">
+                💡 <strong>Tips Negosiasi:</strong> Tawar 60-80% dari harga normal untuk hasil terbaik
+            </p>
+        </div>
 
         <!-- Form Tawar -->
-        <form action="{{ route('produk.negosiasi.tawar', $product) }}" method="POST" class="mt-4 space-y-2">
+        <form action="{{ route('produk.negosiasi.tawar', $product) }}" method="POST" class="mt-4 space-y-4">
           @csrf
-          <label for="harga" class="text-sm text-gray-600">Penawaran Anda</label>
-          <div class="flex items-center gap-2">
-            <input 
-              type="number" 
-              id="harga" 
-              name="harga" 
-              min="1" 
-              required
-              placeholder="Contoh: Rp {{ number_format($product->price * 0.8, 0, ',', '.') }}"
-              class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-              value="{{ old('harga') }}"
-            />
-            <button type="submit"
-                    class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
-              Tawar
-            </button>
+          
+          <!-- Quantity Input -->
+          <div>
+            <label for="quantity" class="text-sm text-gray-600">Jumlah yang akan dibeli</label>
+            <div class="flex items-center gap-2 mt-1">
+              <button type="button" onclick="changeQty(-1)" class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300">-</button>
+              <input type="number" 
+                     id="quantity" 
+                     name="quantity" 
+                     value="{{ session('quantity', request('quantity', old('quantity', 1))) }}" 
+                     min="1" 
+                     required
+                     class="w-20 text-center border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <button type="button" onclick="changeQty(1)" class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300">+</button>
+            </div>
+            @if($product->min_buying_stock && $product->min_buying_stock > 1)
+              <p class="text-xs text-gray-500 mt-1">Minimal {{ $product->min_buying_stock }} pcs untuk tawar menawar</p>
+            @endif
+          </div>
+          
+          <!-- Harga Input -->
+          <div>
+            <label for="harga" class="text-sm text-gray-600">Penawaran Anda</label>
+            <div class="flex items-center gap-2">
+              <input 
+                type="number" 
+                id="harga" 
+                name="harga" 
+                min="1" 
+                required
+                placeholder="Contoh: Rp {{ number_format($product->price * 0.8, 0, ',', '.') }}"
+                class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                value="{{ old('harga') }}"
+              />
+              <button type="submit"
+                      class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
+                Tawar
+              </button>
+            </div>
           </div>
         </form>
 
@@ -113,21 +130,38 @@
 
         <!-- Tombol Actions -->
         <div class="mt-6 flex items-center gap-4">
-          <!-- Deal (disabled kecuali final) -->
-          <button type="button"
-                  class="px-5 py-2 rounded-lg font-semibold transition
-                         {{ $neg->status==='final'
-                            ? 'bg-teal-100 text-teal-800 hover:bg-teal-200'
-                            : 'bg-gray-200 text-gray-500 cursor-not-allowed' }}"
-                  {{ $neg->status!=='final' ? 'disabled' : '' }}>
-            Deal @if($neg->status==='final') - Rp {{ number_format($neg->final_price,0,',','.') }} @endif
-          </button>
+          <!-- Deal (bisa diklik jika ada tawaran) -->
+          @php
+            $hasAnyOffer = collect([$neg->cust_nego_1, $neg->cust_nego_2, $neg->cust_nego_3])->filter()->isNotEmpty();
+            $finalPrice = $neg->status === 'final' ? $neg->final_price : $neg->seller_nego_3 ?? $neg->seller_nego_2 ?? $neg->seller_nego_1;
+          @endphp
+          
+          @if($hasAnyOffer)
+            <form action="{{ route('produk.add', $product) }}" method="POST" class="inline">
+              @csrf
+              <input type="hidden" name="quantity" id="dealQuantity" value="1">
+              <input type="hidden" name="negotiated_price" value="{{ $finalPrice }}">
+              <button type="submit"
+                      class="px-5 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition">
+                Deal - Rp {{ number_format($finalPrice,0,',','.') }}
+              </button>
+            </form>
+          @else
+            <button type="button"
+                    class="px-5 py-2 bg-gray-200 text-gray-500 rounded-lg font-semibold cursor-not-allowed">
+              Deal
+            </button>
+          @endif
 
-          <!-- Tambah ke Keranjang -->
-          <a href="{{ route('produk.add', $product) }}"
-             class="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition text-gray-700">
-            Tambah ke Keranjang
-          </a>
+          <!-- Tambah ke Keranjang (harga normal) -->
+          <form action="{{ route('produk.add', $product) }}" method="POST" class="inline">
+            @csrf
+            <input type="hidden" name="quantity" id="normalQuantity" value="1">
+            <button type="submit"
+                    class="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition text-gray-700">
+              Tambah ke Keranjang (Harga Normal)
+            </button>
+          </form>
 
           <!-- Reset Negosiasi -->
           <form action="{{ route('produk.negosiasi.reset', $product) }}" method="POST" class="inline">
@@ -144,6 +178,88 @@
   </section>
 
   @include('layouts.footer')
+
+  <script>
+    const minBuyingStock = {{ $product->min_buying_stock ?? 1 }};
+    
+    function changeQty(amount) {
+      const input = document.getElementById('quantity');
+      let val = parseInt(input.value) || 1;
+      val = Math.max(val + amount, 1);
+      input.value = val;
+      
+      // Update quantity di tombol Deal dan Normal
+      updateButtonQuantities(val);
+      
+      // Check dan disable/enable aktivitas tawar
+      checkNegotiationActivity(val);
+    }
+    
+    function updateButtonQuantities(qty) {
+      const dealQuantity = document.getElementById('dealQuantity');
+      const normalQuantity = document.getElementById('normalQuantity');
+      
+      if (dealQuantity) dealQuantity.value = qty;
+      if (normalQuantity) normalQuantity.value = qty;
+    }
+    
+    function checkNegotiationActivity(qty) {
+      const hargaInput = document.getElementById('harga');
+      const tawarButton = document.querySelector('button[type="submit"]');
+      const dealButton = document.querySelector('button[type="submit"][class*="bg-teal-600"]');
+      
+      if (qty < minBuyingStock) {
+        // Disable aktivitas tawar
+        if (hargaInput) {
+          hargaInput.disabled = true;
+          hargaInput.placeholder = `Minimal ${minBuyingStock} pcs untuk tawar menawar`;
+        }
+        if (tawarButton) {
+          tawarButton.disabled = true;
+          tawarButton.classList.add('bg-gray-300', 'cursor-not-allowed');
+          tawarButton.classList.remove('bg-teal-600', 'hover:bg-teal-700');
+        }
+        if (dealButton) {
+          dealButton.disabled = true;
+          dealButton.classList.add('bg-gray-300', 'cursor-not-allowed');
+          dealButton.classList.remove('bg-teal-600', 'hover:bg-teal-700');
+        }
+      } else {
+        // Enable aktivitas tawar
+        if (hargaInput) {
+          hargaInput.disabled = false;
+          hargaInput.placeholder = `Contoh: Rp {{ number_format($product->price * 0.8, 0, ',', '.') }}`;
+        }
+        if (tawarButton) {
+          tawarButton.disabled = false;
+          tawarButton.classList.remove('bg-gray-300', 'cursor-not-allowed');
+          tawarButton.classList.add('bg-teal-600', 'hover:bg-teal-700');
+        }
+        if (dealButton) {
+          dealButton.disabled = false;
+          dealButton.classList.remove('bg-gray-300', 'cursor-not-allowed');
+          dealButton.classList.add('bg-teal-600', 'hover:bg-teal-700');
+        }
+      }
+    }
+    
+    // Update quantity saat halaman load
+    document.addEventListener('DOMContentLoaded', function() {
+      const quantityInput = document.getElementById('quantity');
+      if (quantityInput) {
+        const initialQty = parseInt(quantityInput.value) || 1;
+        updateButtonQuantities(initialQty);
+        checkNegotiationActivity(initialQty);
+        
+        // Update quantity saat input berubah
+        quantityInput.addEventListener('input', function() {
+          const qty = parseInt(this.value) || 1;
+          updateButtonQuantities(qty);
+          checkNegotiationActivity(qty);
+        });
+      }
+    });
+  </script>
 
 </body>
 </html>

@@ -6,62 +6,117 @@ use App\Models\Cart;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use App\Models\Product; // Added this import for Product model
+use App\Models\ProductVariant; // Added this import for ProductVariant model
 
 class CartController extends Controller
 {
     public function view()
     {
         $user = Session::get('user');
-        $cartItems = Cart::where('user_id', $user['id'])->get(); // <- pastikan ini
+        $cartItems = Cart::where('user_id', $user['id'])
+                        ->with(['variant.product']) // Load relationship
+                        ->get();
 
         return view('cart', compact('cartItems'));
     }
 
-    public function addItem(Request $request)
+    public function addItem(Request $request, $id)
     {
-        $variantId = $request->variant_id;
-        $quantity = $request->quantity;
-
         $user = Session::get('user');
+        $quantity = $request->quantity ?? 1;
+        $negotiatedPrice = $request->negotiated_price ?? null;
 
-        // Validasi stok sebelum menambahkan ke cart
-        $productVariant = DB::table('product_variants')
-            ->join('products', 'product_variants.product_id', '=', 'products.id')
-            ->where('product_variants.id', $variantId)
-            ->select('products.name', 'product_variants.color', 'product_variants.stock')
-            ->first();
-
-        if (!$productVariant) {
+        // Cari produk
+        $product = Product::find($id);
+        if (!$product) {
             return redirect()->back()->with('error', 'Produk tidak ditemukan.');
         }
 
-        // Cek apakah sudah ada di cart
-        $cartExist = Cart::where('user_id', $user['id'])->where('variant_id', $variantId)->first();
-        $totalQuantity = $quantity;
-        
-        if ($cartExist) {
-            $totalQuantity += $cartExist->quantity;
+        // Ambil variant pertama dari produk (atau buat default)
+        $variant = ProductVariant::where('product_id', $id)->first();
+        if (!$variant) {
+            // Jika tidak ada variant, buat default
+            $variant = new ProductVariant();
+            $variant->product_id = $id;
+            $variant->color = 'default';
+            $variant->stock = 999; // Default stock tinggi
+            $variant->save();
         }
 
-        // Validasi stok
-        if ($productVariant->stock < $totalQuantity) {
-            return redirect()->back()->with('error', "Stok tidak mencukupi. Stok tersedia: {$productVariant->stock}, Total yang diminta: {$totalQuantity}");
-        }
+        // Cek apakah sudah ada di cart dengan variant yang sama
+        $cartExist = Cart::where('user_id', $user['id'])
+                        ->where('variant_id', $variant->id)
+                        ->whereNull('kebutuhan_custom')
+                        ->first();
 
         if ($cartExist) {
+            // Update quantity jika sudah ada
             $cartExist->quantity += $quantity;
-
-            if ($cartExist->quantity <= 0) {
-                $cartExist->delete();
-            } else {
-                $cartExist->save();
-            }
+            $cartExist->save();
         } else {
-            Cart::create([
-                'user_id' => $user['id'],
-                'variant_id' => $variantId,
-                'quantity' => $quantity,
-            ]);
+            // Buat cart item baru
+            $cart = new Cart();
+            $cart->user_id = $user['id'];
+            $cart->variant_id = $variant->id;
+            $cart->quantity = $quantity;
+            
+            // Jika ada harga negosiasi, simpan sebagai harga custom
+            if ($negotiatedPrice) {
+                $cart->harga_custom = $negotiatedPrice;
+                $cart->kebutuhan_custom = "Hasil negosiasi - Harga final: Rp " . number_format($negotiatedPrice, 0, ',', '.');
+            }
+            
+            $cart->save();
+        }
+
+        $message = $negotiatedPrice 
+            ? "Produk hasil negosiasi berhasil ditambahkan ke keranjang dengan harga Rp " . number_format($negotiatedPrice, 0, ',', '.')
+            : "Produk berhasil ditambahkan ke keranjang.";
+
+        return redirect()->route('keranjang')->with('success', $message);
+    }
+
+    public function addItemFromCart(Request $request)
+    {
+        $user = Session::get('user');
+        $productId = $request->product_id;
+        $quantity = $request->quantity ?? 1;
+
+        // Cari produk
+        $product = Product::find($productId);
+        if (!$product) {
+            return redirect()->back()->with('error', 'Produk tidak ditemukan.');
+        }
+
+        // Ambil variant pertama dari produk (atau buat default)
+        $variant = ProductVariant::where('product_id', $productId)->first();
+        if (!$variant) {
+            // Jika tidak ada variant, buat default
+            $variant = new ProductVariant();
+            $variant->product_id = $productId;
+            $variant->color = 'default';
+            $variant->stock = 999; // Default stock tinggi
+            $variant->save();
+        }
+
+        // Cek apakah sudah ada di cart dengan variant yang sama
+        $cartExist = Cart::where('user_id', $user['id'])
+                        ->where('variant_id', $variant->id)
+                        ->whereNull('kebutuhan_custom')
+                        ->first();
+
+        if ($cartExist) {
+            // Update quantity jika sudah ada
+            $cartExist->quantity += $quantity;
+            $cartExist->save();
+        } else {
+            // Buat cart item baru
+            $cart = new Cart();
+            $cart->user_id = $user['id'];
+            $cart->variant_id = $variant->id;
+            $cart->quantity = $quantity;
+            $cart->save();
         }
 
         return redirect()->route('keranjang')->with('success', 'Produk berhasil ditambahkan ke keranjang.');
