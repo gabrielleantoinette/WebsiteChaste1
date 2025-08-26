@@ -36,10 +36,16 @@
                         {{ ucfirst($invoice->status) }}
                     </span>
                 </div>
+                @php
+                    $paymentMethod = $invoice->payments->first()->method ?? null;
+                    $isCOD = $paymentMethod === 'cod';
+                @endphp
+                @if($isCOD)
                 <div>
-                    <p class="text-sm text-gray-500">Total Pembayaran</p>
-                    <p class="font-semibold text-gray-800">Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</p>
+                    <p class="text-sm text-gray-500">Total yang Harus Ditagih (COD)</p>
+                    <p class="font-semibold text-red-800 text-lg">Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</p>
                 </div>
+                @endif
                 <div>
                     <p class="text-sm text-gray-500">Tanggal Jatuh Tempo</p>
                     <p class="font-semibold text-gray-800">{{ $invoice->due_date ?? '-' }}</p>
@@ -108,9 +114,13 @@
                             <th class="px-4 py-3 text-left font-semibold">No</th>
                             <th class="px-4 py-3 text-left font-semibold">Nama Produk</th>
                             <th class="px-4 py-3 text-left font-semibold">Warna</th>
+                            @if($isCOD)
                             <th class="px-4 py-3 text-left font-semibold">Harga</th>
+                            @endif
                             <th class="px-4 py-3 text-left font-semibold">Jumlah</th>
+                            @if($isCOD)
                             <th class="px-4 py-3 text-left font-semibold">Subtotal</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -119,17 +129,23 @@
                                 <td class="px-4 py-3">{{ $loop->iteration }}</td>
                                 <td class="px-4 py-3">{{ $detail->product->name ?? '-' }}</td>
                                 <td class="px-4 py-3">{{ $detail->variant->color ?? '-' }}</td>
+                                @if($isCOD)
                                 <td class="px-4 py-3">Rp {{ number_format($detail->price ?? 0, 0, ',', '.') }}</td>
+                                @endif
                                 <td class="px-4 py-3">{{ $detail->quantity ?? 0 }}</td>
+                                @if($isCOD)
                                 <td class="px-4 py-3">Rp {{ number_format($detail->subtotal ?? 0, 0, ',', '.') }}</td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
+            @if($isCOD)
             <div class="mt-4 text-right">
-                <p class="text-lg font-bold">Total: Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</p>
+                <p class="text-lg font-bold text-red-800">Total yang Harus Ditagih: Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</p>
             </div>
+            @endif
         </div>
         @endif
 

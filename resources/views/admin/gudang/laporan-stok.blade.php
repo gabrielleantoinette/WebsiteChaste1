@@ -78,19 +78,21 @@
         <h2 class="text-lg font-semibold text-gray-700 mb-4">Stok Saat Ini</h2>
         <div class="overflow-x-auto">
             <table class="min-w-full table-auto text-sm border border-gray-200">
-                <thead class="bg-gray-100 text-gray-700 sticky top-0 z-10">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Nama Produk/Material</th>
-                        <th class="px-4 py-3 text-left font-semibold">Kategori</th>
-                        <th class="px-4 py-3 text-left font-semibold">Tipe</th>
-                        <th class="px-4 py-3 text-left font-semibold">Total Stok</th>
-                        <th class="px-4 py-3 text-left font-semibold">Detail Variant</th>
-                    </tr>
-                </thead>
+                                    <thead class="bg-gray-100 text-gray-700 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold">Nama Produk/Material</th>
+                            <th class="px-4 py-3 text-left font-semibold">Ukuran</th>
+                            <th class="px-4 py-3 text-left font-semibold">Kategori</th>
+                            <th class="px-4 py-3 text-left font-semibold">Tipe</th>
+                            <th class="px-4 py-3 text-left font-semibold">Total Stok</th>
+                            <th class="px-4 py-3 text-left font-semibold">Detail Variant</th>
+                        </tr>
+                    </thead>
                 <tbody>
                     @forelse ($stokSaatIni as $item)
                         <tr class="border-b border-gray-100 @if($loop->odd) bg-gray-50 @endif hover:bg-blue-50 transition">
                             <td class="px-4 py-3 font-semibold">{{ $item['nama'] }}</td>
+                            <td class="px-4 py-3 font-medium">{{ $item['ukuran'] }}</td>
                             <td class="px-4 py-3">{{ $item['kategori'] }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold 
@@ -119,7 +121,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center text-gray-500 py-4">Tidak ada data stok.</td></tr>
+                        <tr><td colspan="6" class="text-center text-gray-500 py-4">Tidak ada data stok.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -138,6 +140,7 @@
                             <th class="px-4 py-3 text-left font-semibold">Tanggal</th>
                             <th class="px-4 py-3 text-left font-semibold">Tipe</th>
                             <th class="px-4 py-3 text-left font-semibold">Items</th>
+                            <th class="px-4 py-3 text-left font-semibold">Ukuran</th>
                             <th class="px-4 py-3 text-left font-semibold">Total Qty</th>
                         </tr>
                     </thead>
@@ -158,6 +161,13 @@
                                                 <div class="font-medium">{{ $item['nama'] }}</div>
                                                 <div class="text-gray-600">{{ $item['keterangan'] }}</div>
                                             </div>
+                                        @endforeach
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="space-y-1">
+                                        @foreach ($masuk['items'] as $item)
+                                            <div class="text-xs font-medium">{{ $item['ukuran'] ?? '-' }}</div>
                                         @endforeach
                                     </div>
                                 </td>
@@ -188,6 +198,7 @@
                             <th class="px-4 py-3 text-left font-semibold">Tanggal</th>
                             <th class="px-4 py-3 text-left font-semibold">Tipe</th>
                             <th class="px-4 py-3 text-left font-semibold">Items</th>
+                            <th class="px-4 py-3 text-left font-semibold">Ukuran</th>
                             <th class="px-4 py-3 text-left font-semibold">Total Qty</th>
                         </tr>
                     </thead>
@@ -208,6 +219,13 @@
                                                 <div class="font-medium">{{ $item['nama'] }}</div>
                                                 <div class="text-gray-600">{{ $item['keterangan'] }}</div>
                                             </div>
+                                        @endforeach
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="space-y-1">
+                                        @foreach ($keluar['items'] as $item)
+                                            <div class="text-xs font-medium">{{ $item['ukuran'] ?? '-' }}</div>
                                         @endforeach
                                     </div>
                                 </td>

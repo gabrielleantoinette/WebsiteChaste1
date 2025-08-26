@@ -64,7 +64,7 @@
                                 <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">{{ ucfirst($order->status) }}</span>
                             </td>
                             <td class="px-4 py-3">
-                                <a href="{{ url('/driver-transaksi/detail/' . $order->id) }}" class="text-blue-600 hover:text-blue-800 text-sm">Detail</a>
+                                <a href="{{ route('driver-transaksi.detail', $order->id) }}" class="text-blue-600 hover:text-blue-800 text-sm">Detail</a>
                             </td>
                         </tr>
                     @empty
@@ -108,8 +108,8 @@
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex gap-2">
-                                    <a href="{{ url('/admin/driver-retur/detail/' . $retur->id) }}" class="text-blue-600 hover:text-blue-800 text-sm">Detail</a>
-                                                                            <form method="POST" action="{{ url('/admin/driver-retur/pickup/' . $retur->id) }}" class="inline">
+                                    <a href="{{ route('driver-retur.detail', $retur->id) }}" class="text-blue-600 hover:text-blue-800 text-sm">Detail</a>
+                                    <form method="POST" action="{{ url('/admin/driver-retur/pickup/' . $retur->id) }}" class="inline">
                                         @csrf
                                         <button type="submit" class="text-green-600 hover:text-green-800 text-sm" onclick="return confirm('Konfirmasi pengambilan retur ini?')">
                                             Ambil Retur

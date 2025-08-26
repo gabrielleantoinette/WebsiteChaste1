@@ -212,7 +212,7 @@ class GudangController extends Controller
     public function laporanStokHarian(Request $request)
     {
         $periode = $request->get('periode', 'harian');
-        $tanggal = $request->get('tanggal', '2025-08-25');
+        $tanggal = $request->get('tanggal', now()->format('Y-m-d'));
         
         // Set tanggal berdasarkan periode
         switch ($periode) {
@@ -261,7 +261,7 @@ class GudangController extends Controller
     public function exportLaporanStokPDF(Request $request)
     {
         $periode = $request->get('periode', 'harian');
-        $tanggal = $request->get('tanggal', '2025-08-25');
+        $tanggal = $request->get('tanggal', now()->format('Y-m-d'));
         
         // Set tanggal berdasarkan periode
         switch ($periode) {
@@ -319,6 +319,7 @@ class GudangController extends Controller
                 return [
                     'id' => $product->id,
                     'nama' => $product->name,
+                    'ukuran' => $product->size ?? '-',
                     'kategori' => $product->category->name ?? 'Tanpa Kategori',
                     'tipe' => 'Produk Regular',
                     'stok' => $totalStock,
@@ -339,6 +340,7 @@ class GudangController extends Controller
                 return [
                     'id' => $material->id,
                     'nama' => $material->name,
+                    'ukuran' => '-',
                     'kategori' => 'Custom Material',
                     'tipe' => 'Custom Material',
                     'stok' => $totalStock,
@@ -388,6 +390,7 @@ class GudangController extends Controller
                 
                 $stokMasuk[$key]['items'][] = [
                     'nama' => $namaLengkap,
+                    'ukuran' => $item->size_material ?? '-',
                     'qty' => $item->completed_quantity,
                     'keterangan' => $keterangan
                 ];
@@ -416,6 +419,7 @@ class GudangController extends Controller
                 'items' => [
                     [
                         'nama' => "Barang Retur dari {$customerName}",
+                        'ukuran' => '-',
                         'qty' => 1,
                         'keterangan' => $keterangan
                     ]
@@ -437,12 +441,13 @@ class GudangController extends Controller
             ->leftJoin('product_variants', 'dinvoice.variant_id', '=', 'product_variants.id')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
             ->whereBetween('hinvoice.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-            ->whereIn('hinvoice.status', ['dibayar', 'dikemas', 'dikirim', 'selesai', 'sampai'])
+            ->whereIn('hinvoice.status', ['dibayar', 'dikemas', 'Dikemas', 'dikirim', 'selesai', 'sampai'])
             ->select(
                 'hinvoice.code as invoice_code',
                 'hinvoice.created_at',
                 'dinvoice.quantity',
                 'products.name as product_name',
+                'products.size as product_size',
                 'product_variants.color as product_color',
                 'dinvoice.price as harga_custom'
             )
@@ -470,6 +475,7 @@ class GudangController extends Controller
 
             $stokKeluar[$key]['items'][] = [
                 'nama' => $namaLengkap,
+                'ukuran' => $item->product_size ?? '-',
                 'qty' => $item->quantity,
                 'keterangan' => 'Penjualan'
             ];
@@ -503,6 +509,7 @@ class GudangController extends Controller
                 
                 $stokKeluar[$key]['items'][] = [
                     'nama' => $namaLengkap,
+                    'ukuran' => $item->size_material ?? '-',
                     'qty' => $item->quantity,
                     'keterangan' => $keterangan
                 ];
@@ -533,6 +540,7 @@ class GudangController extends Controller
                 'items' => [
                     [
                         'nama' => $namaLengkap,
+                        'ukuran' => $rusak->product->size ?? '-',
                         'qty' => $rusak->quantity,
                         'keterangan' => $keterangan
                     ]

@@ -27,10 +27,16 @@
                     <p class="text-sm text-gray-500">Tanggal Invoice</p>
                     <p class="font-semibold text-gray-800">{{ $invoice->created_at ? $invoice->created_at->format('d M Y H:i') : '-' }}</p>
                 </div>
+                @php
+                    $paymentMethod = $invoice->payments->first()->method ?? null;
+                    $isCOD = $paymentMethod === 'cod';
+                @endphp
+                @if($isCOD)
                 <div>
-                    <p class="text-sm text-gray-500">Total Pembayaran</p>
-                    <p class="font-semibold text-gray-800">Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</p>
+                    <p class="text-sm text-gray-500">Total Pembayaran (COD)</p>
+                    <p class="font-semibold text-red-800">Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</p>
                 </div>
+                @endif
             </div>
         </div>
 
