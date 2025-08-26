@@ -79,36 +79,82 @@
 
         {{-- Daftar Produk --}}
         <div class="mb-6">
-            <h2 class="text-lg font-semibold text-teal-700 mb-4">Daftar Produk</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-gray-700 border border-gray-300 rounded-md">
-                    <thead class="bg-[#D9F2F2] text-gray-800 font-medium">
-                        <tr>
-                            <th class="px-4 py-2 text-left">No</th>
-                            <th class="px-4 py-2 text-left">Nama</th>
-                            <th class="px-4 py-2 text-left">Harga</th>
-                            <th class="px-4 py-2 text-left">Warna</th>
-                            <th class="px-4 py-2 text-left">Jumlah</th>
-                            <th class="px-4 py-2 text-left">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($cartItems as $item)
-                        <tr class="border-t border-gray-200 hover:bg-gray-50">
-                            <td class="px-4 py-2">{{ $loop->iteration }}</td>
-                            <td class="px-4 py-2">{{ $item->product_name ?? 'Custom Terpal' }}</td>
-                            <td class="px-4 py-2">Rp {{ number_format($item->product_price ?? $item->harga_custom, 0, ',', '.') }}</td>
-                            <td class="px-4 py-2">{{ $item->variant_color ?? $item->warna_custom ?? '-' }}</td>
-                            <td class="px-4 py-2">{{ $item->quantity }}</td>
-                            <td class="px-4 py-2">Rp {{ number_format(($item->product_price ?? $item->harga_custom) * $item->quantity, 0, ',', '.') }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            <div class="text-right mt-4 text-base font-semibold text-gray-800">
-                Total: Rp {{ number_format($total, 0, ',', '.') }}
-            </div>            
+            <h2 class="text-lg font-semibold text-teal-700 mb-4">Daftar Produk yang Harus Disiapkan</h2>
+            @if($cartItems->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-gray-700 border border-gray-300 rounded-md">
+                        <thead class="bg-[#D9F2F2] text-gray-800 font-medium">
+                            <tr>
+                                <th class="px-4 py-2 text-left">No</th>
+                                <th class="px-4 py-2 text-left">Nama Produk</th>
+                                <th class="px-4 py-2 text-left">Ukuran</th>
+                                <th class="px-4 py-2 text-left">Warna</th>
+                                <th class="px-4 py-2 text-left">Jumlah</th>
+                                <th class="px-4 py-2 text-left">Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($cartItems as $item)
+                            <tr class="border-t border-gray-200 hover:bg-gray-50">
+                                <td class="px-4 py-2">{{ $loop->iteration }}</td>
+                                <td class="px-4 py-2 font-medium">
+                                    @if($item->product_name)
+                                        {{ $item->product_name }}
+                                    @else
+                                        <span class="text-blue-600">Custom Terpal</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2">
+                                    @if(isset($item->product_size) && $item->product_size)
+                                        {{ $item->product_size }}
+                                    @elseif(isset($item->kebutuhan_custom) && $item->kebutuhan_custom)
+                                        <span class="text-gray-600">Custom</span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2">
+                                    @if(isset($item->variant_color) && $item->variant_color)
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            {{ $item->variant_color }}
+                                        </span>
+                                    @elseif(isset($item->warna_custom) && $item->warna_custom)
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {{ $item->warna_custom }}
+                                        </span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2">
+                                    <span class="font-semibold text-teal-600">{{ $item->quantity }} pcs</span>
+                                </td>
+                                <td class="px-4 py-2">
+                                    @if(isset($item->kebutuhan_custom) && $item->kebutuhan_custom)
+                                        <span class="text-sm text-gray-600">{{ $item->kebutuhan_custom }}</span>
+                                    @else
+                                        <span class="text-sm text-gray-500">Produk standar</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                        <span class="text-sm text-blue-800">
+                            Total <strong>{{ $cartItems->sum('quantity') }} pcs</strong> produk yang perlu disiapkan
+                        </span>
+                    </div>
+                </div>
+            @else
+                <div class="text-center py-8">
+                    <i class="fas fa-box-open text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-500">Belum ada detail produk yang tersedia</p>
+                </div>
+            @endif
         </div>
     </div>
 </div>

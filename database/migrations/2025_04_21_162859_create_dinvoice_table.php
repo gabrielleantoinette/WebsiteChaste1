@@ -14,11 +14,13 @@ return new class extends Migration
         Schema::create('dinvoice', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('hinvoice_id');
-            $table->unsignedBigInteger('product_id');
-            $table->unsignedBigInteger('variant_id');
+            $table->unsignedBigInteger('product_id')->nullable();
+            $table->unsignedBigInteger('variant_id')->nullable();
             $table->bigInteger('price');
             $table->bigInteger('quantity');
             $table->bigInteger('subtotal');
+            $table->text('kebutuhan_custom')->nullable();
+            $table->string('warna_custom')->nullable();
             $table->timestamps();
         });
     }

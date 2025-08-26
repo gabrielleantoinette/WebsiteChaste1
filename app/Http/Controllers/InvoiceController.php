@@ -316,6 +316,52 @@ class InvoiceController extends Controller
             $newPayment->snap_token = $snapToken;
             $newPayment->save();
 
+            // Simpan detail produk ke dinvoice langsung saat checkout Midtrans
+            if (!empty($cartIds)) {
+                // Hapus dinvoice records yang sudah ada untuk invoice ini (jika ada)
+                DB::table('dinvoice')->where('hinvoice_id', $newInvoiceId)->delete();
+                
+                $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+                
+                foreach ($carts as $cart) {
+                    if ($cart->variant_id) {
+                        // Produk biasa
+                        $product = DB::table('product_variants')
+                            ->join('products', 'product_variants.product_id', '=', 'products.id')
+                            ->where('product_variants.id', $cart->variant_id)
+                            ->select('products.id as product_id', 'products.price')
+                            ->first();
+                        
+                        if ($product) {
+                            DB::table('dinvoice')->insert([
+                                'hinvoice_id' => $newInvoiceId,
+                                'product_id' => $product->product_id,
+                                'variant_id' => $cart->variant_id,
+                                'price' => $product->price,
+                                'quantity' => $cart->quantity,
+                                'subtotal' => $product->price * $cart->quantity,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        }
+                    } elseif ($cart->kebutuhan_custom) {
+                        // Produk custom
+                        DB::table('dinvoice')->insert([
+                            'hinvoice_id' => $newInvoiceId,
+                            'product_id' => null,
+                            'variant_id' => null,
+                            'price' => $cart->harga_custom,
+                            'quantity' => $cart->quantity,
+                            'subtotal' => $cart->harga_custom * $cart->quantity,
+                            'kebutuhan_custom' => $cart->kebutuhan_custom,
+                            'warna_custom' => $cart->warna_custom,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            }
+            
             // Simpan cartIds ke session untuk dihapus setelah payment sukses
             session()->put('cart_ids_to_delete', $cartIds);
             return redirect()->route('checkout.midtrans.payment', ['snapToken' => $snapToken, 'paymentId' => $newPayment->id]);
@@ -323,6 +369,9 @@ class InvoiceController extends Controller
 
         // Simpan detail produk ke tabel dinvoice
         if (!empty($cartIds)) {
+            // Hapus dinvoice records yang sudah ada untuk invoice ini (jika ada)
+            DB::table('dinvoice')->where('hinvoice_id', $newInvoiceId)->delete();
+            
             $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
             
             foreach ($carts as $cart) {
@@ -350,11 +399,13 @@ class InvoiceController extends Controller
                     // Produk custom - simpan dengan product_id = 0 atau null
                     DB::table('dinvoice')->insert([
                         'hinvoice_id' => $newInvoiceId,
-                        'product_id' => 0, // atau null untuk custom
+                        'product_id' => null,
                         'variant_id' => null,
                         'price' => $cart->harga_custom,
                         'quantity' => $cart->quantity,
                         'subtotal' => $cart->harga_custom * $cart->quantity,
+                        'kebutuhan_custom' => $cart->kebutuhan_custom,
+                        'warna_custom' => $cart->warna_custom,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -557,72 +608,10 @@ class InvoiceController extends Controller
                     ]
                 );
                 
-                // Buat data dinvoice jika belum ada
+                // Cek apakah dinvoice sudah ada (seharusnya sudah dibuat saat checkout)
                 $existingDInvoice = DB::table('dinvoice')->where('hinvoice_id', $invoice->id)->first();
                 if (!$existingDInvoice) {
-                    // Coba ambil dari session cart_ids_to_delete terlebih dahulu
-                    $cartIds = session('cart_ids_to_delete', []);
-                    $carts = collect();
-                    
-                    if (!empty($cartIds)) {
-                        $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
-                    }
-                    
-                    // Jika tidak ada data dari session, coba ambil dari cart user yang masih ada
-                    if ($carts->isEmpty()) {
-                        $carts = DB::table('cart')->where('user_id', $invoice->customer_id)->get();
-                    }
-                    
-                    // Jika masih kosong, buat data dummy berdasarkan grand_total invoice
-                    if ($carts->isEmpty()) {
-                        \Log::warning("No cart data found for invoice {$invoice->id}. Creating dummy dinvoice data.");
-                        DB::table('dinvoice')->insert([
-                            'hinvoice_id' => $invoice->id,
-                            'product_id' => 1,
-                            'variant_id' => 1,
-                            'price' => $invoice->grand_total,
-                            'quantity' => 1,
-                            'subtotal' => $invoice->grand_total,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    } else {
-                        foreach ($carts as $cart) {
-                            if ($cart->variant_id) {
-                                // Produk biasa
-                                $product = DB::table('product_variants')
-                                    ->join('products', 'product_variants.product_id', '=', 'products.id')
-                                    ->where('product_variants.id', $cart->variant_id)
-                                    ->select('products.id as product_id', 'products.price')
-                                    ->first();
-                                
-                                if ($product) {
-                                    DB::table('dinvoice')->insert([
-                                        'hinvoice_id' => $invoice->id,
-                                        'product_id' => $product->product_id,
-                                        'variant_id' => $cart->variant_id,
-                                        'price' => $product->price,
-                                        'quantity' => $cart->quantity,
-                                        'subtotal' => $product->price * $cart->quantity,
-                                        'created_at' => now(),
-                                        'updated_at' => now(),
-                                    ]);
-                                }
-                            } elseif ($cart->kebutuhan_custom) {
-                                // Produk custom
-                                DB::table('dinvoice')->insert([
-                                    'hinvoice_id' => $invoice->id,
-                                    'product_id' => 0,
-                                    'variant_id' => null,
-                                    'price' => $cart->harga_custom,
-                                    'quantity' => $cart->quantity,
-                                    'subtotal' => $cart->harga_custom * $cart->quantity,
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ]);
-                            }
-                        }
-                    }
+                    \Log::warning("No dinvoice data found for invoice {$invoice->id}. This should not happen.");
                 }
             }
         }

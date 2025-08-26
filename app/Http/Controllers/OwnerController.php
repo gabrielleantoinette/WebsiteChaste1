@@ -19,8 +19,15 @@ class OwnerController extends Controller
     public function viewAssignDriver()
     {
         $drivers = Employee::where('role', 'driver')->get();
-        $pengirimanNormal = HInvoice::whereNotIn('status', ['retur_diajukan', 'retur_diambil'])->get();
+        
+        // Hanya tampilkan transaksi yang sudah disiapkan gudang (status 'dikemas' dan sudah ada gudang_id)
+        $pengirimanNormal = HInvoice::where('status', 'dikemas')
+            ->whereNotNull('gudang_id')
+            ->whereNotIn('status', ['retur_diajukan', 'retur_diambil'])
+            ->get();
+            
         $pengambilanRetur = HInvoice::whereIn('status', ['retur_diajukan', 'retur_diambil'])->get();
+        
         return view('admin.assign-driver.view', compact('pengirimanNormal', 'pengambilanRetur', 'drivers'));
     }
 

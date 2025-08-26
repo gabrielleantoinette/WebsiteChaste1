@@ -27,25 +27,40 @@ class GudangController extends Controller
     {
         $invoice = HInvoice::with('customer', 'gudang')->findOrFail($id);
     
-        $cartItems = DB::table('cart')
-            ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+        // Query dinvoice untuk detail produk yang harus disiapkan
+        $cartItems = DB::table('dinvoice')
+            ->leftJoin('product_variants', 'dinvoice.variant_id', '=', 'product_variants.id')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
             ->select(
-                'cart.*',
+                'dinvoice.*',
                 'products.name as product_name',
-                'products.price as product_price',
-                'product_variants.color as variant_color'
+                'products.size as product_size',
+                'product_variants.color as variant_color',
+                'dinvoice.price as harga_custom',
+                'dinvoice.quantity',
+                'dinvoice.subtotal',
+                'dinvoice.kebutuhan_custom',
+                'dinvoice.warna_custom'
             )
-            ->where('cart.user_id', $invoice->customer_id)
+            ->where('dinvoice.hinvoice_id', $invoice->id)
             ->get();
     
-        // Hitung total manual
-        $total = $cartItems->reduce(function ($carry, $item) {
-            $price = $item->product_price ?? $item->harga_custom ?? 0;
-            return $carry + ($price * $item->quantity);
-        }, 0);
+        // Jika dinvoice kosong, coba ambil dari cart sebagai fallback
+        if ($cartItems->isEmpty()) {
+            $cartItems = DB::table('cart')
+                ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
+                ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
+                ->select(
+                    'cart.*',
+                    'products.name as product_name',
+                    'products.size as product_size',
+                    'product_variants.color as variant_color'
+                )
+                ->where('cart.user_id', $invoice->customer_id)
+                ->get();
+        }
     
-        return view('admin.gudang-transaksi.detail', compact('invoice', 'cartItems', 'total'));
+        return view('admin.gudang-transaksi.detail', compact('invoice', 'cartItems'));
     }
 
     public function assignGudang(Request $request, $id)

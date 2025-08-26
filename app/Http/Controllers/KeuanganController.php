@@ -80,6 +80,8 @@ class KeuanganController extends Controller
                 ]
             );
 
+
+            
             // Kirim notifikasi ke owner tentang action keuangan
             $notificationService->notifyFinanceAction([
                 'message' => "Keuangan telah mengkonfirmasi pembayaran untuk pesanan {$invoice->code} sebesar Rp " . number_format($invoice->grand_total),
