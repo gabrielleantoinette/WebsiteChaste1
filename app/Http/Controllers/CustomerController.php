@@ -179,7 +179,7 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $statusMap = [
             'menunggukonfirmasi' => 'Menunggu Konfirmasi Pembayaran',
-            'dikemas' => 'Dikemas',
+            'dikemas' => ['dibayar', 'Dikemas', 'dikemas'], // Tambahkan semua variasi status dikemas
             'dikirim' => ['dikirim', 'sampai'],
             'diterima' => 'diterima',
             'pengembalian' => 'retur_diajukan', // Ubah dari 'pengembalian' ke 'retur_diajukan'
@@ -213,7 +213,7 @@ class CustomerController extends Controller
         $customer = Customer::find($user['id']);
 
         $menungguPembayaranCount = HInvoice::where('customer_id', $user['id'])->where('status', 'Menunggu Konfirmasi Pembayaran')->count();
-        $dikemasCount = HInvoice::where('customer_id', $user['id'])->where('status', 'Dikemas')->count();
+        $dikemasCount = HInvoice::where('customer_id', $user['id'])->whereIn('status', ['dibayar', 'Dikemas', 'dikemas'])->count();
         $dikirimCount = HInvoice::where('customer_id', $user['id'])->whereIn('status', ['dikirim', 'sampai'])->count();
         $reviewCount = HInvoice::where('customer_id', $user['id'])->where('status', 'diterima')->count();
 
@@ -269,7 +269,7 @@ class CustomerController extends Controller
     {
         $user = Session::get('user');
         $customer = Customer::find($user['id']);
-        $orders = HInvoice::where('status', 'dikemas')
+        $orders = HInvoice::whereIn('status', ['dibayar', 'Dikemas', 'dikemas'])
             ->where('customer_id', $user['id'])
             ->latest()->get();
         return view('barangdikemas', compact('orders'));

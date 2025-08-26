@@ -506,10 +506,56 @@ class InvoiceController extends Controller
         if ($paymentStatus == 'success') {
             $invoice = HInvoice::find($payment->invoice_id);
             if ($invoice) {
-                $invoice->status = 'dibayar';
+                $invoice->status = 'Dikemas'; // Langsung ubah ke status Dikemas agar masuk ke gudang
                 $invoice->is_paid = 1;
                 $invoice->paid_amount = $payment->amount;
                 $invoice->save();
+                
+                // Kirim notifikasi ke owner tentang pesanan baru
+                $notificationService = app(NotificationService::class);
+                $notificationService->notifyOrderCreated($invoice->id, $customer->id, [
+                    'total_amount' => $payment->amount,
+                    'invoice_code' => $invoice->code,
+                    'customer_name' => $customer->name
+                ]);
+                
+                // Kirim notifikasi ke gudang tentang pesanan baru yang perlu diproses
+                $notificationService->sendToRole(
+                    'order_created',
+                    'Pesanan Baru Siap Diproses',
+                    "Pesanan baru {$invoice->code} dari {$customer->name} sebesar Rp " . number_format($payment->amount) . " siap untuk diproses",
+                    'gudang',
+                    [
+                        'data_type' => 'order',
+                        'data_id' => $invoice->id,
+                        'action_url' => "/admin/gudang-transaksi/detail/{$invoice->id}",
+                        'priority' => 'high',
+                        'icon' => 'fas fa-box'
+                    ]
+                );
+                
+                // Kirim notifikasi ke owner tentang pesanan baru
+                $notificationService->notifyWarehouseAction([
+                    'message' => "Pesanan baru {$invoice->code} dari {$customer->name} sebesar Rp " . number_format($payment->amount) . " siap untuk diproses",
+                    'action_id' => $invoice->id,
+                    'action_url' => "/admin/gudang-transaksi/detail/{$invoice->id}",
+                    'priority' => 'high'
+                ]);
+                
+                // Kirim notifikasi ke admin tentang pesanan baru
+                $notificationService->sendToRole(
+                    'order_created',
+                    'Pesanan Baru',
+                    "Pesanan baru {$invoice->code} dari {$customer->name} sebesar Rp " . number_format($payment->amount) . " telah dibuat",
+                    'admin',
+                    [
+                        'data_type' => 'order',
+                        'data_id' => $invoice->id,
+                        'action_url' => "/admin/invoices/{$invoice->id}",
+                        'priority' => 'high',
+                        'icon' => 'fas fa-shopping-cart'
+                    ]
+                );
                 
                 // Buat data dinvoice jika belum ada
                 $existingDInvoice = DB::table('dinvoice')->where('hinvoice_id', $invoice->id)->first();

@@ -4,8 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>List Transaksi | CHASTE</title>
     @vite('resources/css/app.css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body class="bg-white font-sans text-gray-800">
@@ -48,6 +50,8 @@
                                     $q->whereIn('status', ['dikirim', 'sampai']);
                                 } else if ($key === 'menunggukonfirmasi') {
                                     $q->where('status', 'Menunggu Konfirmasi Pembayaran');
+                                } else if ($key === 'dikemas') {
+                                    $q->whereIn('status', ['dibayar', 'Dikemas', 'dikemas']); // Tambahkan semua variasi status dikemas
                                 } else if ($key === 'beripenilaian') {
                                     $q->where('status', 'diterima');
                                 } else if ($key === 'pengembalian') {
@@ -87,11 +91,15 @@
                             <td class="px-4 py-3 font-semibold">Rp {{ number_format($transaction->grand_total) }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold
-                                    @if(strtolower($transaction->status) == 'dikemas') bg-teal-100 text-teal-700
+                                    @if(strtolower($transaction->status) == 'dikemas' || strtolower($transaction->status) == 'dibayar') bg-teal-100 text-teal-700
                                     @elseif(strtolower($transaction->status) == 'menunggu konfirmasi pembayaran') bg-yellow-100 text-yellow-700
                                     @elseif(strtolower($transaction->status) == 'selesai' || strtolower($transaction->status) == 'diterima') bg-green-100 text-green-700
                                     @else bg-gray-200 text-gray-700 @endif">
-                                    {{ ucwords(str_replace('_', ' ', $transaction->status)) }}
+                                    @if(strtolower($transaction->status) == 'dibayar')
+                                        Dikemas
+                                    @else
+                                        {{ ucwords(str_replace('_', ' ', $transaction->status)) }}
+                                    @endif
                                 </span>
                             </td>
                             <td class="px-4 py-3">
