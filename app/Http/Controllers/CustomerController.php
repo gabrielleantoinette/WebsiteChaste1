@@ -171,7 +171,18 @@ class CustomerController extends Controller
     {
         $product = Product::find($id);
         $variants = ProductVariant::where('product_id', $id)->get();
-        return view('produk-detail', compact('product', 'variants'));
+        
+        // Ambil review untuk produk ini
+        $reviews = \App\Models\ProductReview::with(['user', 'order'])
+                                           ->where('product_id', $id)
+                                           ->approved()
+                                           ->orderBy('created_at', 'desc')
+                                           ->get();
+        
+        $averageRating = $reviews->avg('rating');
+        $totalReviews = $reviews->count();
+        
+        return view('produk-detail', compact('product', 'variants', 'reviews', 'averageRating', 'totalReviews'));
     }
 
     public function viewTransaction(Request $request)
@@ -204,7 +215,12 @@ class CustomerController extends Controller
     public function detailTransaction($id)
     {
         $transaction = HInvoice::find($id);
-        return view('transaction-detail', compact('transaction'));
+        
+        // Ambil product_id dari dinvoice
+        $dinvoice = \App\Models\DInvoice::where('hinvoice_id', $id)->first();
+        $productId = $dinvoice ? $dinvoice->product_id : null;
+        
+        return view('transaction-detail', compact('transaction', 'productId'));
     }
 
     public function viewProfile()

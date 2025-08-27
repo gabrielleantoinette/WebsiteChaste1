@@ -19,6 +19,7 @@ use App\Http\Controllers\NegotiationController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\WorkOrderController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Middleware\LoggedIn;
 use App\Http\Middleware\GudangRole;
 use Illuminate\Http\Request;
@@ -62,6 +63,10 @@ Route::middleware([LoggedIn::class])->group(function () {
     Route::get('/transaksi/dikemas', [CustomerController::class, 'showDikemas'])->name('transaksi.dikemas');
     Route::get('/transaksi/dikirim', [CustomerController::class, 'showDikirim'])->name('transaksi.dikirim');
     Route::get('/transaksi/beri-penilaian', [CustomerController::class, 'showBeriPenilaian'])->name('transaksi.beripenilaian');
+
+    Route::post('/review/submit', [ReviewController::class, 'submitReview'])->name('review.submit');
+    Route::get('/review/product/{productId}', [ReviewController::class, 'getProductReviews'])->name('review.product');
+    Route::get('/review/check/{orderId}/{productId}', [ReviewController::class, 'checkUserReview'])->name('review.check');
 
     Route::get('/retur/{id}', [CustomerController::class, 'showReturForm'])->name('retur.create');
     Route::post('/retur/{id}', [CustomerController::class, 'submitRetur'])->name('retur.store');

@@ -46,22 +46,23 @@
 
         @if ($transaction->status == 'diterima')
             <div class="mt-5 space-y-2 text-sm bg-white p-4 rounded-lg shadow">
-                <div>Beri review untuk pesanan kamu yuk</div>
-                <form method="POST" action="{{ route('transaksi.diterima', $transaction->id) }}" class="space-y-2">
-                    @csrf
-                    <div class="flex items-center gap-2">
-                        <span>Rating</span>
+                <div class="font-medium text-gray-800 mb-3">Beri review untuk pesanan kamu yuk</div>
+                
+                <!-- Review Form -->
+                <div id="reviewForm" class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <span class="font-medium">Rating:</span>
                         <div class="flex items-center gap-1">
                             <input type="hidden" name="rating" id="rating" value="0">
                             <div class="flex gap-1" id="starRating">
                                 @for ($i = 1; $i <= 5; $i++)
-                                    <svg class="w-6 h-6 text-gray-300 cursor-pointer star"
+                                    <svg class="w-7 h-7 text-gray-300 cursor-pointer star hover:text-yellow-400 transition-colors"
                                         data-value="{{ $i }}" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                                            d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285-5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.563.563 0 0 1 .321-.988l5.518-.442c.563.563 0 0 0 .475-.345L11.48 3.5Z" />
                                     </svg>
-                                    <svg class="w-6 h-6 text-yellow-400 cursor-pointer star-filled hidden"
+                                    <svg class="w-7 h-7 text-yellow-400 cursor-pointer star-filled hidden"
                                         data-value="{{ $i }}" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 24 24" fill="currentColor">
                                         <path fill-rule="evenodd"
@@ -72,11 +73,32 @@
                             </div>
                         </div>
                     </div>
-                    <textarea name="review" id="review" class="w-full border bg-white border-gray-300 rounded-md p-2"></textarea>
-                    <button class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-6 rounded">
-                        Beri Review
+                    
+                    <div>
+                        <label for="review" class="block font-medium text-gray-700 mb-2">Komentar (opsional):</label>
+                        <textarea name="review" id="review" placeholder="Bagaimana pengalaman kamu dengan produk ini?" 
+                                  class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none" 
+                                  rows="4"></textarea>
+                    </div>
+                    
+                    <button type="button" id="submitReviewBtn" 
+                            class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Kirim Review
                     </button>
-                </form>
+                </div>
+
+                <!-- Review Success Message -->
+                <div id="reviewSuccess" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Review berhasil dikirim! Terima kasih atas feedback kamu.
+                </div>
+
+                <!-- Review Error Message -->
+                <div id="reviewError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span id="errorMessage"></span>
+                </div>
             </div>
         @endif
 
@@ -100,6 +122,11 @@
             const stars = document.querySelectorAll('.star');
             const starsFilled = document.querySelectorAll('.star-filled');
             const ratingInput = document.getElementById('rating');
+            const submitReviewBtn = document.getElementById('submitReviewBtn');
+            const reviewForm = document.getElementById('reviewForm');
+            const reviewSuccess = document.getElementById('reviewSuccess');
+            const reviewError = document.getElementById('reviewError');
+            const errorMessage = document.getElementById('errorMessage');
 
             function updateStars(value) {
                 stars.forEach((star, index) => {
@@ -149,6 +176,64 @@
                     const currentValue = ratingInput.value;
                     updateStars(currentValue);
                 });
+            });
+
+            submitReviewBtn.addEventListener('click', function() {
+                const rating = ratingInput.value;
+                const review = document.getElementById('review').value;
+
+                if (rating === '0') {
+                    errorMessage.textContent = 'Silakan beri rating terlebih dahulu.';
+                    reviewError.classList.remove('hidden');
+                    reviewSuccess.classList.add('hidden');
+                    return;
+                }
+
+                                 submitReviewBtn.disabled = true;
+                 submitReviewBtn.textContent = 'Mengirim...';
+                 
+                 console.log('Sending review data:', {
+                     order_id: {{ $transaction->id }},
+                     product_id: {{ $productId ?? 1 }},
+                     rating: rating,
+                     comment: review
+                 });
+
+                                 fetch(`{{ route('review.submit') }}`, {
+                     method: 'POST',
+                     headers: {
+                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                         'Content-Type': 'application/json',
+                     },
+                     body: JSON.stringify({
+                         order_id: {{ $transaction->id }},
+                         product_id: {{ $productId ?? 1 }}, // Product ID dari dinvoice
+                         rating: parseInt(rating),
+                         comment: review,
+                     }),
+                 })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        reviewForm.classList.add('hidden');
+                        reviewSuccess.classList.remove('hidden');
+                        errorMessage.textContent = '';
+                    } else {
+                        errorMessage.textContent = data.message || 'Gagal mengirim review.';
+                        reviewError.classList.remove('hidden');
+                        reviewSuccess.classList.add('hidden');
+                    }
+                                         submitReviewBtn.disabled = false;
+                     submitReviewBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Kirim Review';
+                })
+                                 .catch(error => {
+                     console.error('Error:', error);
+                     errorMessage.textContent = 'Terjadi kesalahan saat mengirim review. Silakan coba lagi.';
+                     reviewError.classList.remove('hidden');
+                     reviewSuccess.classList.add('hidden');
+                     submitReviewBtn.disabled = false;
+                     submitReviewBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Kirim Review';
+                 });
             });
         });
     </script>

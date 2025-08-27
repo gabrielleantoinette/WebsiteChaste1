@@ -115,6 +115,80 @@
         </div>
     </section>
 
+    <!-- Review Section -->
+    <section class="container mx-auto px-6 py-12">
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">Review & Rating</h2>
+                <div class="flex items-center gap-4">
+                    @if($totalReviews > 0)
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-yellow-500">{{ number_format($averageRating, 1) }}</div>
+                            <div class="text-sm text-gray-600">{{ $totalReviews }} review</div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            @for ($i = 1; $i <= 5; $i++)
+                                @if ($i <= $averageRating)
+                                    <i class="fas fa-star text-yellow-400 text-xl"></i>
+                                @else
+                                    <i class="far fa-star text-gray-300 text-xl"></i>
+                                @endif
+                            @endfor
+                        </div>
+                    @else
+                        <div class="text-gray-500">Belum ada review</div>
+                    @endif
+                </div>
+            </div>
+
+            @if($totalReviews > 0)
+                <div class="space-y-6">
+                    @foreach($reviews as $review)
+                        <div class="border-b border-gray-200 pb-6 last:border-b-0">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-teal-600"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-800">
+                                            {{ $review->user->name ?? 'Customer' }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ \Carbon\Carbon::parse($review->created_at)->diffForHumans() }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        @if ($i <= $review->rating)
+                                            <i class="fas fa-star text-yellow-400"></i>
+                                        @else
+                                            <i class="far fa-star text-gray-300"></i>
+                                        @endif
+                                    @endfor
+                                </div>
+                            </div>
+                            @if($review->comment)
+                                <div class="text-gray-700 ml-13">
+                                    "{{ $review->comment }}"
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="text-center py-12">
+                    <div class="text-gray-400 text-6xl mb-4">
+                        <i class="far fa-comment-dots"></i>
+                    </div>
+                    <h3 class="text-xl font-medium text-gray-600 mb-2">Belum ada review</h3>
+                    <p class="text-gray-500">Jadilah yang pertama memberikan review untuk produk ini!</p>
+                </div>
+            @endif
+        </div>
+    </section>
+
     @include('layouts.footer')
 
     <script>
