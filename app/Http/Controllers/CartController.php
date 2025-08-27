@@ -25,6 +25,7 @@ class CartController extends Controller
     {
         $user = Session::get('user');
         $quantity = $request->quantity ?? 1;
+        $variantId = $request->variant_id; // Ambil variant_id dari form
         $negotiatedPrice = $request->negotiated_price ?? null;
 
         // Cari produk
@@ -33,15 +34,25 @@ class CartController extends Controller
             return redirect()->back()->with('error', 'Produk tidak ditemukan.');
         }
 
-        // Ambil variant pertama dari produk (atau buat default)
-        $variant = ProductVariant::where('product_id', $id)->first();
+        // Cari variant berdasarkan variant_id yang dikirim
+        $variant = null;
+        if ($variantId) {
+            $variant = ProductVariant::where('id', $variantId)
+                                   ->where('product_id', $id)
+                                   ->first();
+        }
+        
+        // Jika variant tidak ditemukan, ambil variant pertama sebagai fallback
         if (!$variant) {
-            // Jika tidak ada variant, buat default
-            $variant = new ProductVariant();
-            $variant->product_id = $id;
-            $variant->color = 'default';
-            $variant->stock = 999; // Default stock tinggi
-            $variant->save();
+            $variant = ProductVariant::where('product_id', $id)->first();
+            if (!$variant) {
+                // Jika tidak ada variant sama sekali, buat default
+                $variant = new ProductVariant();
+                $variant->product_id = $id;
+                $variant->color = 'default';
+                $variant->stock = 999; // Default stock tinggi
+                $variant->save();
+            }
         }
 
         // Cek apakah sudah ada di cart dengan variant yang sama

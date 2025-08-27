@@ -83,7 +83,7 @@
                         <!-- Form Tambah ke Keranjang -->
                         <form action="{{ route('produk.add', $product->id) }}" method="POST" class="flex-1">
                             @csrf
-                            <input type="hidden" name="variant_id" id="cartVariantId" value="{{ $variants->first()->id ?? '' }}">
+                            <input type="hidden" name="variant_id" id="cartVariantId" value="">
                             <input type="hidden" name="quantity" id="cartQuantity" value="1">
                             <button type="submit"
                                 class="w-full bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition">
@@ -252,6 +252,16 @@
         
         // Check saat halaman load
         document.addEventListener('DOMContentLoaded', function() {
+            // Inisialisasi variant yang dipilih saat pertama kali load
+            const variantSelect = document.getElementById('variantSelect');
+            const cartVariantId = document.getElementById('cartVariantId');
+            
+            // Pastikan cartVariantId diisi dengan variant yang dipilih
+            if (variantSelect && cartVariantId) {
+                cartVariantId.value = variantSelect.value;
+                console.log('Variant initialized:', variantSelect.value); // Debug
+            }
+            
             checkTawarButton();
             
             // Check saat input berubah
@@ -261,9 +271,15 @@
             }
             
             // Check saat variant berubah
-            const variantSelect = document.getElementById('variantSelect');
             if (variantSelect) {
-                variantSelect.addEventListener('change', checkTawarButton);
+                variantSelect.addEventListener('change', function() {
+                    // Update cartVariantId saat variant berubah
+                    if (cartVariantId) {
+                        cartVariantId.value = this.value;
+                        console.log('Variant changed to:', this.value); // Debug
+                    }
+                    checkTawarButton();
+                });
             }
         });
     </script>
