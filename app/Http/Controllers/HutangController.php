@@ -31,7 +31,7 @@ class HutangController extends Controller
             });
         }
 
-        $hutang = $query->orderBy('created_at', 'desc')->paginate(10); // tampilkan 10 per halaman, urutkan dari yang terbaru
+        $hutang = $query->orderBy('created_at', 'desc')->paginate(5); // tampilkan 5 per halaman, urutkan dari yang terbaru
 
         return view('admin.keuangan.hutangsupplier', compact('hutang'));
     }

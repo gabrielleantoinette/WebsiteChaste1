@@ -98,7 +98,6 @@
         </div>
 
         {{-- Pagination --}}
-        @if ($hutang->hasPages())
         <div class="px-6 py-4 border-t bg-gray-50">
             <div class="flex items-center justify-between">
                 <div class="text-sm text-gray-700">
@@ -109,7 +108,6 @@
                 </div>
             </div>
         </div>
-        @endif
     </div>
 </div>
 @endsection
