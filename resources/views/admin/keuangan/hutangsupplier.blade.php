@@ -11,18 +11,26 @@
         <form method="GET" action="{{ route('keuangan.hutang.index') }}"
               class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
-            {{-- KIRI: Search + Tombol Cari --}}
-            <div class="flex items-center">
+            {{-- KIRI: Search + Filter Status + Tombol Cari --}}
+            <div class="flex items-center gap-2">
                 <input type="text" name="search"
                        placeholder="Cari kode PO atau nama supplier"
                        value="{{ request('search') }}"
                        class="w-[180px] md:w-[250px] px-4 py-2 rounded-l-md border border-gray-300 focus:ring-teal-500 focus:border-teal-500 text-sm" />
+                
+                <select name="status" class="px-3 py-2 border border-gray-300 focus:ring-teal-500 focus:border-teal-500 text-sm">
+                    <option value="">Semua Status</option>
+                    <option value="belum_dibayar" {{ request('status') == 'belum_dibayar' ? 'selected' : '' }}>Belum Dibayar</option>
+                    <option value="sebagian_dibayar" {{ request('status') == 'sebagian_dibayar' ? 'selected' : '' }}>Sebagian Dibayar</option>
+                    <option value="lunas" {{ request('status') == 'lunas' ? 'selected' : '' }}>Lunas</option>
+                </select>
+                
                 <button type="submit"
                         class="px-4 py-2 bg-teal-600 text-white text-sm rounded-r-md hover:bg-teal-700 transition shrink-0">
                     Cari
                 </button>
 
-                @if(request('search'))
+                @if(request('search') || request('status'))
                     <a href="{{ route('keuangan.hutang.index') }}"
                        class="ml-2 px-3 py-2 bg-gray-200 text-sm rounded-md hover:bg-gray-300 transition text-gray-700">
                         ✕
@@ -91,8 +99,15 @@
 
         {{-- Pagination --}}
         @if ($hutang->hasPages())
-        <div class="p-4">
-            {{ $hutang->withQueryString()->links() }}
+        <div class="px-6 py-4 border-t bg-gray-50">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Menampilkan {{ $hutang->firstItem() ?? 0 }} - {{ $hutang->lastItem() ?? 0 }} dari {{ $hutang->total() }} data
+                </div>
+                <div class="flex items-center space-x-2">
+                    {{ $hutang->withQueryString()->links() }}
+                </div>
+            </div>
         </div>
         @endif
     </div>

@@ -13,9 +13,15 @@ class HutangController extends Controller
 {
     public function index(Request $request)
     {
-            $query = PurchaseOrder::with('supplier')
-            ->whereIn('status', ['belum_dibayar', 'sebagian_dibayar']);
+            $query = PurchaseOrder::with('supplier');
+            // Tampilkan semua status hutang (termasuk yang sudah lunas)
 
+        // Filter berdasarkan status
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter berdasarkan search
         if ($request->has('search') && $request->search != '') {
             $query->where(function ($q) use ($request) {
                 $q->where('code', 'like', '%' . $request->search . '%')
@@ -25,7 +31,7 @@ class HutangController extends Controller
             });
         }
 
-        $hutang = $query->orderBy('due_date', 'asc')->paginate(5); // tampilkan 5 per halaman
+        $hutang = $query->orderBy('created_at', 'desc')->paginate(10); // tampilkan 10 per halaman, urutkan dari yang terbaru
 
         return view('admin.keuangan.hutangsupplier', compact('hutang'));
     }
@@ -50,20 +56,36 @@ class HutangController extends Controller
             'order_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:order_date',
             'total' => 'required|numeric|min:1',
+            'items' => 'required|array|min:1',
+            'items.*.material_name' => 'required|string|max:255',
+            'items.*.quantity' => 'required|numeric|min:1',
+            'items.*.unit_price' => 'required|numeric|min:1',
+            'items.*.subtotal' => 'required|numeric|min:1',
         ]);
         
         // Cek jika supplier sudah ada
         $supplier = Supplier::firstOrCreate(['name' => $request->supplier_name]);
         
         // Simpan PO
-        PurchaseOrder::create([
+        $po = PurchaseOrder::create([
             'supplier_id' => $supplier->id,
             'code' => $request->po_code,
             'order_date' => $request->order_date,
             'due_date' => $request->due_date,
             'total' => $request->total,
             'status' => 'belum_dibayar',
-        ]);        
+        ]);
+
+        // Simpan item-item
+        foreach ($request->items as $item) {
+            \App\Models\PurchaseOrderItem::create([
+                'purchase_order_id' => $po->id,
+                'material_name' => $item['material_name'],
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
+                'subtotal' => $item['subtotal'],
+            ]);
+        }
 
         return redirect()->route('keuangan.hutang.index')->with('success', 'PO berhasil ditambahkan.');
     }
@@ -71,8 +93,7 @@ class HutangController extends Controller
     public function exportPDF()
     {
         $hutang = PurchaseOrder::with('supplier')
-        ->whereIn('status', ['belum_dibayar', 'sebagian_dibayar'])
-        ->orderBy('due_date', 'asc')
+        ->orderBy('created_at', 'desc')
         ->get();
 
         $total = $hutang->sum('total');
@@ -84,6 +105,50 @@ class HutangController extends Controller
         ]);
 
         return $pdf->download('laporan_piutang_supplier_'.now()->format('Ymd').'.pdf');
+    }
+
+    public function storePayment(Request $request, $id)
+    {
+        $request->validate([
+            'amount_paid' => 'required|numeric|min:1',
+            'payment_date' => 'required|date',
+            'payment_proof' => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $po = PurchaseOrder::findOrFail($id);
+        
+        // Cek apakah pembayaran tidak melebihi total hutang
+        $totalPaid = $po->payments->sum('amount_paid');
+        $remainingDebt = $po->total - $totalPaid;
+        
+        if ($request->amount_paid > $remainingDebt) {
+            return back()->withErrors(['amount_paid' => 'Jumlah pembayaran tidak boleh melebihi sisa hutang']);
+        }
+
+        // Upload bukti pembayaran
+        $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+
+        // Simpan pembayaran
+        $payment = \App\Models\DebtPayment::create([
+            'purchase_order_id' => $po->id,
+            'payment_date' => $request->payment_date,
+            'amount_paid' => $request->amount_paid,
+            'payment_proof' => $proofPath,
+            'notes' => $request->notes,
+        ]);
+
+        // Update status PO
+        $newTotalPaid = $totalPaid + $request->amount_paid;
+        if ($newTotalPaid >= $po->total) {
+            $po->status = 'lunas';
+        } else {
+            $po->status = 'sebagian_dibayar';
+        }
+        $po->save();
+
+        return redirect()->route('keuangan.hutang.show', $po->id)
+            ->with('success', 'Pembayaran berhasil disimpan!');
     }
 
 }
