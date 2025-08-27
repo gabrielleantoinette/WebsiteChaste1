@@ -12,7 +12,13 @@
     @include('layouts.customer-nav')
 
     <div class="max-w-3xl mx-auto py-10 px-6">
-        <h1 class="text-2xl font-bold text-center mb-6">Form Retur Barang</h1>
+        <div class="mb-6">
+            <x-breadcrumb :items="[
+                ['label' => 'Transaksi', 'url' => route('transaksi')],
+                ['label' => 'Retur']
+            ]" />
+            <h1 class="text-2xl font-bold text-gray-800">Form Retur Barang</h1>
+        </div>
 
         <div class="bg-white rounded-lg shadow p-6 space-y-4">
             <p><strong>Kode Invoice:</strong> {{ $transaction->code }}</p>

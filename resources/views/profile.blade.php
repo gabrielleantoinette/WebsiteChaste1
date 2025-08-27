@@ -14,20 +14,15 @@
     {{-- Header --}}
     @include('layouts.customer-nav')
     <div class="px-[100px] py-12 space-y-10 max-w-5xl mx-auto">
-        <a href="{{ url()->previous() }}" 
-            class="inline-flex items-center gap-2 bg-teal-100 hover:bg-teal-200 text-teal-700 font-medium py-2 px-4 rounded-md text-sm transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            Kembali
-        </a>
-        {{-- Heading --}}
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold">Selamat datang, {{ $customer->name }}</h1>
-            <a href="{{ route('logout') }}"
-                class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-md transition">
-                Keluar
-            </a>
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <x-breadcrumb :items="[['label' => 'Profil']]" />
+                <a href="{{ route('logout') }}" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-md transition">
+                    Keluar
+                </a>
+            </div>
+            
+            <h1 class="text-2xl font-bold text-gray-800">Selamat datang, {{ $customer->name }}</h1>
         </div>
 
         {{-- Form Edit Profil --}}

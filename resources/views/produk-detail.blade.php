@@ -15,6 +15,12 @@
     @include('layouts.customer-nav')
 
     <section class="container mx-auto px-6 py-12">
+        <div class="mb-6">
+            <x-breadcrumb :items="[
+                ['label' => 'Produk', 'url' => route('produk')],
+                ['label' => $product->name]
+            ]" />
+        </div>
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden md:flex">
             <!-- Gambar Produk (Kotak Persegi) -->
             <div class="md:w-1/2">

@@ -11,10 +11,13 @@
 <body class="bg-gray-100 min-h-screen py-10">
     @include('layouts.customer-nav')
     <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md">
-        <a href="{{ route('profile') }}" class="inline-flex items-center gap-2 bg-teal-100 hover:bg-teal-200 text-teal-700 font-medium py-2 px-4 rounded-md text-sm transition mb-4">
-            &larr; Kembali ke Profil
-        </a>
-        <h1 class="text-2xl font-bold mb-6 text-center">Detail Hutang & Pelunasan</h1>
+        <div class="mb-6">
+            <x-breadcrumb :items="[
+                ['label' => 'Profil', 'url' => route('profile')],
+                ['label' => 'Hutang']
+            ]" />
+            <h1 class="text-2xl font-bold text-gray-800">Detail Hutang & Pelunasan</h1>
+        </div>
 
         <div class="mb-8">
             <h2 class="text-lg font-semibold mb-2">Daftar Tagihan Belum Lunas</h2>
