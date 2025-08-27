@@ -109,15 +109,7 @@
                                             </div>
                                         @endif
                                     </td>
-                                    <td class="border border-gray-300 px-4 py-2">
-                                        @if($workOrder->assigned_to == session('user')->id)
-                                            <button type="button" 
-                                                    onclick="openUpdateModal({{ $item->id }}, '{{ $item->status }}', {{ $item->completed_quantity }}, {{ $item->quantity }})"
-                                                    class="text-blue-600 hover:text-blue-800 text-sm">
-                                                Update
-                                            </button>
-                                        @endif
-                                    </td>
+
                                 @endif
                             </tr>
                         @empty
@@ -211,6 +203,32 @@
                             <textarea name="notes" id="notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Catatan update status...">{{ $workOrder->notes }}</textarea>
                         </div>
                     </div>
+                    
+                    <!-- Input Jumlah Selesai untuk setiap item -->
+                    <div class="mb-4">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">Jumlah Selesai per Item:</h4>
+                        <div class="space-y-3">
+                            @foreach($workOrder->items as $item)
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium">{{ $item->size_material }} - {{ $item->color }}</p>
+                                        <p class="text-xs text-gray-600">Target: {{ $item->quantity }} item</p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <label class="text-sm text-gray-700">Selesai:</label>
+                                        <input type="number" 
+                                               name="completed_quantities[{{ $item->id }}]" 
+                                               value="{{ $item->completed_quantity }}" 
+                                               min="0" 
+                                               max="{{ $item->quantity }}"
+                                               class="w-20 px-2 py-1 border border-gray-300 rounded text-sm">
+                                        <span class="text-xs text-gray-500">/ {{ $item->quantity }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    
                     <div class="flex justify-end">
                         <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700">
                             Update Status
@@ -222,76 +240,8 @@
     @endif
 </div>
 
-<!-- Modal Update Item Status -->
-@if(session('user')->role === 'gudang')
-<div id="updateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div class="p-6">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4">Update Status Item</h3>
-                <form id="updateItemForm" method="POST">
-                    @csrf
-                    <div class="space-y-4">
-                        <div>
-                            <label for="modal_status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                            <select name="status" id="modal_status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-                                <option value="pending">Menunggu</option>
-                                <option value="in_progress">Sedang Dikerjakan</option>
-                                <option value="completed">Selesai</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="modal_completed_quantity" class="block text-sm font-medium text-gray-700 mb-2">Jumlah Selesai</label>
-                            <input type="number" name="completed_quantity" id="modal_completed_quantity" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
-                            <p class="text-xs text-gray-500 mt-1">Dari total: <span id="modal_total_quantity">0</span></p>
-                        </div>
-                        <div>
-                            <label for="modal_notes" class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
-                            <textarea name="notes" id="modal_notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Catatan untuk item ini..."></textarea>
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-6">
-                        <button type="button" onclick="closeUpdateModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
-                            Batal
-                        </button>
-                        <button type="submit" class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700">
-                            Update
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
+
 
 @endsection
 
-@push('scripts')
-@if(session('user')->role === 'gudang')
-<script>
-function openUpdateModal(itemId, currentStatus, completedQty, totalQty) {
-    document.getElementById('modal_status').value = currentStatus;
-    document.getElementById('modal_completed_quantity').value = completedQty;
-    document.getElementById('modal_total_quantity').textContent = totalQty;
-    document.getElementById('modal_completed_quantity').max = totalQty;
-    
-    const form = document.getElementById('updateItemForm');
-    form.action = `/admin/work-orders/{{ $workOrder->id }}/items/${itemId}/status`;
-    
-    document.getElementById('updateModal').classList.remove('hidden');
-}
 
-function closeUpdateModal() {
-    document.getElementById('updateModal').classList.add('hidden');
-}
-
-// Close modal when clicking outside
-document.getElementById('updateModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeUpdateModal();
-    }
-});
-</script>
-@endif
-@endpush

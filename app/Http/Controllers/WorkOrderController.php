@@ -299,50 +299,7 @@ class WorkOrderController extends Controller
 
     // ==================== GUDANG FUNCTIONS ====================
 
-    /**
-     * Update status item work order
-     */
-    public function updateItemStatus(Request $request, $workOrderId, $itemId)
-    {
-        $user = Session::get('user');
-        if (!$user || $user->role !== 'gudang') {
-            return redirect('/admin')->with('error', 'Akses ditolak.');
-        }
 
-        $workOrder = WorkOrder::where('assigned_to', $user->id)->findOrFail($workOrderId);
-        $item = WorkOrderItem::where('work_order_id', $workOrderId)->findOrFail($itemId);
-
-        $request->validate([
-            'status' => 'required|in:pending,in_progress,completed',
-            'completed_quantity' => 'required|integer|min:0|max:' . $item->quantity,
-            'notes' => 'nullable|string'
-        ]);
-
-        $item->update([
-            'status' => $request->status,
-            'completed_quantity' => $request->completed_quantity,
-            'notes' => $request->notes
-        ]);
-
-        // Update status work order jika semua item selesai
-        $allCompleted = $workOrder->items()->where('status', '!=', 'completed')->count() == 0;
-        if ($allCompleted && $workOrder->status !== 'selesai') {
-            $workOrder->update([
-                'status' => 'selesai',
-                'completed_at' => now()
-            ]);
-            
-            // Update stok bahan baku dan produk ketika work order selesai
-            $this->updateStockOnWorkOrderComplete($workOrder);
-        } elseif ($request->status === 'in_progress' && $workOrder->status === 'dibuat') {
-            $workOrder->update([
-                'status' => 'dikerjakan',
-                'started_at' => now()
-            ]);
-        }
-
-        return back()->with('success', 'Status item berhasil diupdate.');
-    }
 
     /**
      * Update status work order
@@ -358,8 +315,20 @@ class WorkOrderController extends Controller
 
         $request->validate([
             'status' => 'required|in:dibuat,dikerjakan,selesai,dibatalkan',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
+            'completed_quantities' => 'nullable|array',
+            'completed_quantities.*' => 'integer|min:0'
         ]);
+
+        // Update completed_quantity untuk setiap item jika ada
+        if ($request->has('completed_quantities')) {
+            foreach ($request->completed_quantities as $itemId => $completedQty) {
+                $item = WorkOrderItem::where('work_order_id', $id)->where('id', $itemId)->first();
+                if ($item && $completedQty <= $item->quantity) {
+                    $item->update(['completed_quantity' => $completedQty]);
+                }
+            }
+        }
 
         $workOrder->update([
             'status' => $request->status,
@@ -395,7 +364,7 @@ class WorkOrderController extends Controller
             \Log::info('Updating stock for work order: ' . $workOrder->id);
             
             foreach ($workOrder->items as $item) {
-                if ($item->status === 'completed' && $item->completed_quantity > 0) {
+                if ($item->completed_quantity > 0) {
                     \Log::info('Processing item: ' . $item->id . ' with completed_quantity: ' . $item->completed_quantity);
                     
                     // Ambil data bahan baku dari raw_material_id

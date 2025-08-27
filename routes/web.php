@@ -207,7 +207,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::put('/{id}', [WorkOrderController::class, 'update'])->name('admin.work-orders.update');
         
         // Gudang routes
-        Route::post('/{workOrderId}/items/{itemId}/status', [WorkOrderController::class, 'updateItemStatus'])->name('gudang.work-orders.update-item-status');
+        
         Route::post('/{id}/status', [WorkOrderController::class, 'updateWorkOrderStatus'])->name('gudang.work-orders.update-status');
     });
     
