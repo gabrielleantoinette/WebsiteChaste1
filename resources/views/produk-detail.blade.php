@@ -43,8 +43,8 @@
                     Rp {{ number_format($product->price, 0, ',', '.') }}
                     <span class="text-sm text-gray-500">/ unit</span>
                 </p>
-                <p class="text-sm text-gray-600">
-                    💡 <strong>Tips:</strong> Anda bisa tawar 10-30% dari harga normal
+                <p class="text-sm text-yellow-600 bg-yellow-50 px-3 py-2 rounded-lg border border-pink-200">
+                     <strong>Ambil banyak untuk harga lebih murah!</strong>
                 </p>
                 <p class="text-gray-600">{{ $product->description }}</p>
 
