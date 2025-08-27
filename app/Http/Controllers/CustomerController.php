@@ -215,12 +215,28 @@ class CustomerController extends Controller
     public function detailTransaction($id)
     {
         $transaction = HInvoice::find($id);
+        $user = Session::get('user');
         
-        // Ambil product_id dari dinvoice
+        // Ambil detail produk dari dinvoice
         $dinvoice = \App\Models\DInvoice::where('hinvoice_id', $id)->first();
-        $productId = $dinvoice ? $dinvoice->product_id : null;
+        $product = null;
+        $productId = null;
         
-        return view('transaction-detail', compact('transaction', 'productId'));
+        if ($dinvoice) {
+            $productId = $dinvoice->product_id;
+            $product = \App\Models\Product::find($productId);
+        }
+        
+        // Cek apakah user sudah review untuk order ini
+        $hasReviewed = false;
+        if ($productId && $user) {
+            $hasReviewed = \App\Models\ProductReview::where('user_id', $user['id'])
+                ->where('order_id', $id)
+                ->where('product_id', $productId)
+                ->exists();
+        }
+        
+        return view('transaction-detail', compact('transaction', 'product', 'productId', 'hasReviewed', 'dinvoice'));
     }
 
     public function viewProfile()
