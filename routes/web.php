@@ -105,7 +105,7 @@ Route::middleware([LoggedIn::class])->group(function () {
 
 // Prefix Admin untuk Management
 Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
-    Route::get('/', [DashboardController::class, 'index']);
+    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
     
     // Dashboard Gudang
     Route::get('/dashboard-gudang', [GudangController::class, 'dashboardGudang'])->name('gudang.dashboard');
@@ -125,6 +125,11 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::post('/detail/{id}', [ProductController::class, 'updateProductAction']);
         Route::get('/detail/{id}/variants/create', [ProductController::class, 'createVariant']);
         Route::post('/detail/{id}/variants/create', [ProductController::class, 'createVariantAction']);
+        Route::match(['post', 'put'], '/detail/{productId}/variants/{variantId}/update', [ProductController::class, 'updateVariantAction']);
+        Route::get('/test-variant/{productId}/{variantId}', function($productId, $variantId) {
+            return response()->json(['success' => true, 'message' => 'Test route working', 'productId' => $productId, 'variantId' => $variantId]);
+        });
+        Route::match(['post', 'delete'], '/detail/{productId}/variants/{variantId}/delete', [ProductController::class, 'deleteVariantAction']);
 
         Route::post('/detail/{id}/min-price', [ProductController::class, 'updateMinPriceAction']);
         Route::post('/detail/{id}/min-buying-stock', [ProductController::class, 'updateMinBuyingStockAction']);

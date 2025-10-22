@@ -61,9 +61,20 @@
                         <select id="variantSelect"
                             class="w-full border border-gray-300 rounded-lg p-2 focus:ring-teal-400">
                             @foreach ($variants as $variant)
-                                <option value="{{ $variant->id }}">{{ ucfirst($variant->color) }}</option>
+                                <option value="{{ $variant->id }}" data-stock="{{ $variant->stock }}">
+                                    {{ ucfirst($variant->color) }} 
+                                    {{-- @if($variant->stock > 0)
+                                        - Stok: {{ $variant->stock }}
+                                    @else
+                                        - Stok Habis
+                                    @endif --}}
+                                </option>
                             @endforeach
                         </select>
+                        <!-- Stock Info Display -->
+                        <div id="stockInfo" class="mt-2 text-sm">
+                            <span id="stockText" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+                        </div>
                     </div>
 
                     <div>
@@ -200,6 +211,38 @@
     <script>
         const minBuyingStock = {{ $product->min_buying_stock ?? 1 }};
         
+        // Initialize stock display on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStockDisplay();
+            
+            // Add event listener for variant selection change
+            const variantSelect = document.getElementById('variantSelect');
+            if (variantSelect) {
+                variantSelect.addEventListener('change', function() {
+                    updateStockDisplay();
+                    checkTawarButton();
+                });
+            }
+        });
+        
+        function updateStockDisplay() {
+            const variantSelect = document.getElementById('variantSelect');
+            const stockText = document.getElementById('stockText');
+            
+            if (!variantSelect || !stockText) return;
+            
+            const selectedOption = variantSelect.options[variantSelect.selectedIndex];
+            const stock = selectedOption ? parseInt(selectedOption.dataset.stock) : 0;
+            
+            if (stock > 0) {
+                stockText.textContent = `Stok tersedia: ${stock} unit`;
+                stockText.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800';
+            } else {
+                stockText.textContent = 'Stok habis';
+                stockText.className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800';
+            }
+        }
+        
         function changeQty(amount) {
             const input = document.getElementById('qtyInput');
             let val = parseInt(input.value) || 1;
@@ -221,6 +264,10 @@
             const currentQty = parseInt(qtyInput.value) || 1;
             const currentVariant = variantSelect ? variantSelect.value : '';
             
+            // Get current stock for selected variant
+            const selectedOption = variantSelect ? variantSelect.options[variantSelect.selectedIndex] : null;
+            const currentStock = selectedOption ? parseInt(selectedOption.dataset.stock) : 0;
+            
             // Update quantity di form cart
             if (cartQuantity) cartQuantity.value = currentQty;
             if (cartVariantId) cartVariantId.value = currentVariant;
@@ -231,8 +278,9 @@
             
             if (!tawarButton || !tawarInfo) return;
             
-            if (currentQty >= minBuyingStock) {
-                // Quantity cukup, enable tombol
+            // Check if quantity meets minimum requirement and stock is available
+            if (currentQty >= minBuyingStock && currentStock >= currentQty) {
+                // Quantity dan stok cukup, enable tombol
                 tawarButton.classList.remove('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
                 tawarButton.classList.add('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
                 tawarButton.style.pointerEvents = 'auto';
@@ -240,13 +288,18 @@
                 tawarInfo.classList.add('text-gray-500');
                 tawarInfo.textContent = `Minimal ${minBuyingStock} pcs untuk tawar menawar`;
             } else {
-                // Quantity tidak cukup, disable tombol
+                // Quantity atau stok tidak cukup, disable tombol
                 tawarButton.classList.remove('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
                 tawarButton.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
                 tawarButton.style.pointerEvents = 'none';
                 tawarInfo.classList.remove('text-gray-500');
                 tawarInfo.classList.add('text-red-500');
-                tawarInfo.textContent = `Minimal ${minBuyingStock} pcs untuk tawar menawar (quantity tidak cukup)`;
+                
+                if (currentQty < minBuyingStock) {
+                    tawarInfo.textContent = `Minimal ${minBuyingStock} pcs untuk tawar menawar (quantity tidak cukup)`;
+                } else if (currentStock < currentQty) {
+                    tawarInfo.textContent = `Stok tidak mencukupi untuk quantity ${currentQty} (tersedia: ${currentStock})`;
+                }
             }
         }
         

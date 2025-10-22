@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -169,15 +170,121 @@ class ProductController extends Controller
 
     public function createVariantAction(Request $request, $id)
     {
-        $request->validate([
-            'color' => 'required|string|max:100',
-            'stock' => 'required|integer|min:0',
-        ]);
+        try {
+            $request->validate([
+                'color' => 'required|string|max:100',
+                'stock' => 'required|integer|min:0',
+            ]);
 
-        $product = Product::findOrFail($id);
-        $product->variants()->create($request->only('color', 'stock'));
+            $product = Product::findOrFail($id);
+            $variant = $product->variants()->create($request->only('color', 'stock'));
 
-        return redirect()->to('/admin/products/detail/' . $id)
-            ->with('success', 'Variant berhasil ditambahkan.');
+            // Always return JSON for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Variant berhasil ditambahkan.',
+                    'variant' => $variant
+                ]);
+            }
+
+            return redirect()->to('/admin/products/detail/' . $id)
+                ->with('success', 'Variant berhasil ditambahkan.');
+                
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Gagal menambahkan variant: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Gagal menambahkan variant: ' . $e->getMessage());
+        }
+    }
+
+    public function updateVariantAction(Request $request, $productId, $variantId)
+    {
+        try {
+            // Debug: Log request data
+            \Log::info('UpdateVariant Request Data:', [
+                'productId' => $productId,
+                'variantId' => $variantId,
+                'all' => $request->all(),
+                'color' => $request->input('color'),
+                'stock' => $request->input('stock'),
+                'method' => $request->method(),
+                'content_type' => $request->header('Content-Type'),
+                'is_ajax' => $request->ajax(),
+                'wants_json' => $request->wantsJson()
+            ]);
+            
+            $request->validate([
+                'color' => 'required|string|max:100',
+                'stock' => 'required|integer|min:0',
+            ]);
+
+            $variant = ProductVariant::where('id', $variantId)
+                ->where('product_id', $productId)
+                ->firstOrFail();
+
+            $variant->update($request->only('color', 'stock'));
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Variant berhasil diupdate.']);
+            }
+
+            return redirect()->to('/admin/products/detail/' . $productId)
+                ->with('success', 'Variant berhasil diupdate.');
+                
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Gagal mengupdate variant: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Gagal mengupdate variant: ' . $e->getMessage());
+        }
+    }
+
+    public function deleteVariantAction(Request $request, $productId, $variantId)
+    {
+        try {
+            // Debug: Log delete request data
+            \Log::info('DeleteVariant Request Data:', [
+                'productId' => $productId,
+                'variantId' => $variantId,
+                'all' => $request->all(),
+                'method' => $request->method(),
+                'content_type' => $request->header('Content-Type'),
+                'is_ajax' => $request->ajax(),
+                'wants_json' => $request->wantsJson()
+            ]);
+            
+            $variant = ProductVariant::where('id', $variantId)
+                ->where('product_id', $productId)
+                ->firstOrFail();
+
+            $variant->delete();
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Variant berhasil dihapus.']);
+            }
+
+            return redirect()->to('/admin/products/detail/' . $productId)
+                ->with('success', 'Variant berhasil dihapus.');
+                
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Gagal menghapus variant: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Gagal menghapus variant: ' . $e->getMessage());
+        }
     }
 }

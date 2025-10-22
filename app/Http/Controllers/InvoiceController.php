@@ -246,7 +246,9 @@ class InvoiceController extends Controller
                         ->where('product_variants.id', $cart->variant_id)
                         ->select('products.price')
                         ->first();
-                    $subtotalProduk += ($product->price ?? 0) * $cart->quantity;
+                    // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga produk normal
+                    $price = $cart->harga_custom ?? $product->price;
+                    $subtotalProduk += ($price ?? 0) * $cart->quantity;
                 } elseif ($cart->kebutuhan_custom) {
                     $subtotalProduk += ($cart->harga_custom ?? 0) * $cart->quantity;
                 }
@@ -333,13 +335,15 @@ class InvoiceController extends Controller
                             ->first();
                         
                         if ($product) {
+                            // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga produk normal
+                            $price = $cart->harga_custom ?? $product->price;
                             DB::table('dinvoice')->insert([
                                 'hinvoice_id' => $newInvoiceId,
                                 'product_id' => $product->product_id,
                                 'variant_id' => $cart->variant_id,
-                                'price' => $product->price,
+                                'price' => $price,
                                 'quantity' => $cart->quantity,
-                                'subtotal' => $product->price * $cart->quantity,
+                                'subtotal' => $price * $cart->quantity,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
@@ -384,13 +388,15 @@ class InvoiceController extends Controller
                         ->first();
                     
                     if ($product) {
+                        // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga produk normal
+                        $price = $cart->harga_custom ?? $product->price;
                         DB::table('dinvoice')->insert([
                             'hinvoice_id' => $newInvoiceId,
                             'product_id' => $product->product_id,
                             'variant_id' => $cart->variant_id,
-                            'price' => $product->price,
+                            'price' => $price,
                             'quantity' => $cart->quantity,
-                            'subtotal' => $product->price * $cart->quantity,
+                            'subtotal' => $price * $cart->quantity,
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
