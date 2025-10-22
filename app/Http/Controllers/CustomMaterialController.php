@@ -208,54 +208,58 @@ class CustomMaterialController extends Controller
             'garam'      => 'Kebutuhan melindungi garam',
         ];
     
+        // Get materials from database for recommendations
+        $materials = CustomMaterial::with('variants')->get();
+        
+        // Create recommendation map based on actual materials in database
         $rekomendasiMap = [
             'tambak' => [
-                'bahan' => 'A7, A8',
+                'bahan' => 'Terpal Plastik A7 KOR, Terpal Plastik A8 LKL',
                 'deskripsi' => [
-                    'A7 lebih ekonomis untuk tambak kecil - Rp 7.000',
-                    'A8 lebih tebal dan tahan lama untuk tambak besar - Rp 8.500'
+                    'Terpal Plastik A7 KOR - Ekonomis untuk tambak kecil - Rp ' . number_format($materials->where('name', 'Terpal Plastik A7 KOR')->first()->price ?? 0, 0, ',', '.'),
+                    'Terpal Plastik A8 LKL - Lebih tebal dan tahan lama untuk tambak besar - Rp ' . number_format($materials->where('name', 'Terpal Plastik A8 LKL')->first()->price ?? 0, 0, ',', '.')
                 ]
             ],
             'bertani' => [
-                'bahan' => 'A3, A4',
+                'bahan' => 'Terpal Plastik A3 CN, Terpal Plastik A5 CN',
                 'deskripsi' => [
-                    'A3 cocok untuk penutup lahan ringan - Rp 4.500',
-                    'A4 sedikit lebih kuat dan tahan air - Rp 5.000'
+                    'Terpal Plastik A3 CN - Cocok untuk penutup lahan ringan - Rp ' . number_format($materials->where('name', 'Terpal Plastik A3 CN')->first()->price ?? 0, 0, ',', '.'),
+                    'Terpal Plastik A5 CN - Lebih kuat dan tahan air untuk pertanian - Rp ' . number_format($materials->where('name', 'Terpal Plastik A5 CN')->first()->price ?? 0, 0, ',', '.')
                 ]
             ],
             'angkutan' => [
-                'bahan' => 'Keep Jep, Ulin Orchid',
+                'bahan' => 'Terpal Kain JP, Terpal Karet Ulin DD/SP/KOS',
                 'deskripsi' => [
-                    'Keep Jep lebih kuat untuk beban berat dan tahan hujan - Rp 70.000',
-                    'Ulin Orchid cocok untuk barang kering sementara - Rp 27.000'
+                    'Terpal Kain JP - Kuat untuk beban berat dan tahan hujan - Rp ' . number_format($materials->where('name', 'Terpal Kain JP')->first()->price ?? 0, 0, ',', '.'),
+                    'Terpal Karet Ulin DD/SP/KOS - Tahan air laut dan cuaca ekstrem - Rp ' . number_format($materials->where('name', 'Terpal Karet Ulin DD/SP/KOS')->first()->price ?? 0, 0, ',', '.')
                 ]
             ],
             'tenda' => [
-                'bahan' => 'A4, A5',
+                'bahan' => 'Terpal Plastik A4 LKL, Terpal Plastik A5 CN',
                 'deskripsi' => [
-                    'A4 untuk tenda indoor atau sementara',
-                    'A5 lebih kuat untuk outdoor dan cuaca ekstrem'
+                    'Terpal Plastik A4 LKL - Untuk tenda indoor atau sementara - Rp ' . number_format($materials->where('name', 'Terpal Plastik A4 LKL')->first()->price ?? 0, 0, ',', '.'),
+                    'Terpal Plastik A5 CN - Lebih kuat untuk outdoor dan cuaca ekstrem - Rp ' . number_format($materials->where('name', 'Terpal Plastik A5 CN')->first()->price ?? 0, 0, ',', '.')
                 ]
             ],
             'kebocoran' => [
-                'bahan' => 'A4, A5',
+                'bahan' => 'Terpal Plastik A5 CN, Terpal Plastik A8 LKL',
                 'deskripsi' => [
-                    'A4 cukup untuk tutup bocoran ringan - Rp 5.000',
-                    'A5 lebih tahan terhadap tekanan dan tahan sobek - Rp 5.800'
+                    'Terpal Plastik A5 CN - Cukup untuk tutup bocoran ringan - Rp ' . number_format($materials->where('name', 'Terpal Plastik A5 CN')->first()->price ?? 0, 0, ',', '.'),
+                    'Terpal Plastik A8 LKL - Lebih tahan terhadap tekanan dan tahan sobek - Rp ' . number_format($materials->where('name', 'Terpal Plastik A8 LKL')->first()->price ?? 0, 0, ',', '.')
                 ]
             ],
             'bangunan' => [
-                'bahan' => 'A8, A10',
+                'bahan' => 'Terpal Plastik A10 SKR, Terpal Plastik A12 SKR',
                 'deskripsi' => [
-                    'A8 digunakan untuk pelindung proyek ringan - Rp 8.500',
-                    'A10 lebih tebal untuk proyek konstruksi berat - Rp 12.000'
+                    'Terpal Plastik A10 SKR - Untuk pelindung proyek ringan - Rp ' . number_format($materials->where('name', 'Terpal Plastik A10 SKR')->first()->price ?? 0, 0, ',', '.'),
+                    'Terpal Plastik A12 SKR - Lebih tebal untuk proyek konstruksi berat - Rp ' . number_format($materials->where('name', 'Terpal Plastik A12 SKR')->first()->price ?? 0, 0, ',', '.')
                 ]
             ],
             'garam' => [
-                'bahan' => 'A12, A15',
+                'bahan' => 'Terpal Plastik A20 UV/KOR SPR ORC, Terpal Karet Orchid',
                 'deskripsi' => [
-                    'A12 cukup untuk tempat penyimpanan sementara - Rp 10.500',
-                    'A15 tahan garam dan sinar UV - Rp 12.000'
+                    'Terpal Plastik A20 UV/KOR SPR ORC - Tahan sinar UV dan cuaca ekstrem - Rp ' . number_format($materials->where('name', 'Terpal Plastik A20 UV/KOR SPR ORC')->first()->price ?? 0, 0, ',', '.'),
+                    'Terpal Karet Orchid - Tahan panas dan tahan lama - Rp ' . number_format($materials->where('name', 'Terpal Karet Orchid')->first()->price ?? 0, 0, ',', '.')
                 ]
             ]
         ];

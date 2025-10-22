@@ -12,10 +12,6 @@
 
 <section class="px-6 md:px-20 py-8">
   <div class="mb-6">
-      <x-breadcrumb :items="[
-          ['label' => 'Produk', 'url' => route('produk')],
-          ['label' => 'Custom Terpal']
-      ]" />
       <h1 class="text-2xl font-bold text-gray-800">Custom Terpal</h1>
   </div>
   <div class="max-w-5xl mx-auto border rounded-xl p-8 bg-white">

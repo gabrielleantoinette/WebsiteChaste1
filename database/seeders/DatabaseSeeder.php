@@ -26,6 +26,9 @@ class DatabaseSeeder extends Seeder
 
         $this->createProduct();
         $this->createUser();
+        
+        // Seed custom materials
+        $this->call(CustomMaterialSeeder::class);
     }
 
     function createProduct()

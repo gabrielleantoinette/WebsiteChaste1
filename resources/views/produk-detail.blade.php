@@ -83,7 +83,8 @@
                             <button type="button" onclick="changeQty(-1)"
                                 class="px-3 py-2 text-lg hover:bg-gray-100">-</button>
                             <input type="number" id="qtyInput" value="1" min="1"
-                                class="w-16 text-center border-l border-r border-gray-300 focus:outline-none" />
+                                class="w-16 text-center border-l border-r border-gray-300 focus:outline-none" 
+                                onchange="validateQuantity()" oninput="validateQuantity()" />
                             <button type="button" onclick="changeQty(1)"
                                 class="px-3 py-2 text-lg hover:bg-gray-100">+</button>
                         </div>
@@ -92,11 +93,11 @@
                     <!-- Buttons -->
                     <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-3 sm:space-y-0">
                         <!-- Form Tambah ke Keranjang -->
-                        <form action="{{ route('produk.add', $product->id) }}" method="POST" class="flex-1">
+                        <form action="{{ route('produk.add', $product->id) }}" method="POST" class="flex-1" id="addToCartForm">
                             @csrf
                             <input type="hidden" name="variant_id" id="cartVariantId" value="">
                             <input type="hidden" name="quantity" id="cartQuantity" value="1">
-                            <button type="submit"
+                            <button type="submit" id="addToCartButton"
                                 class="w-full bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition">
                                 Tambah ke Keranjang
                             </button>
@@ -223,6 +224,33 @@
                     checkTawarButton();
                 });
             }
+            
+            // Add event listener for form submission validation
+            const addToCartForm = document.getElementById('addToCartForm');
+            if (addToCartForm) {
+                addToCartForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const qtyInput = document.getElementById('qtyInput');
+                    const variantSelect = document.getElementById('variantSelect');
+                    const selectedOption = variantSelect ? variantSelect.options[variantSelect.selectedIndex] : null;
+                    const currentStock = selectedOption ? parseInt(selectedOption.dataset.stock) : 0;
+                    const requestedQty = parseInt(qtyInput.value) || 1;
+                    
+                    if (currentStock === 0) {
+                        alert('Stok habis untuk warna yang dipilih!');
+                        return;
+                    }
+                    
+                    if (requestedQty > currentStock) {
+                        alert(`Stok tidak mencukupi! Tersedia: ${currentStock} unit, diminta: ${requestedQty} unit`);
+                        return;
+                    }
+                    
+                    // If validation passes, submit the form
+                    this.submit();
+                });
+            }
         });
         
         function updateStockDisplay() {
@@ -243,10 +271,43 @@
             }
         }
         
+        function validateQuantity() {
+            const input = document.getElementById('qtyInput');
+            const variantSelect = document.getElementById('variantSelect');
+            
+            let val = parseInt(input.value) || 1;
+            val = Math.max(val, 1);
+            
+            // Get current stock for selected variant
+            const selectedOption = variantSelect ? variantSelect.options[variantSelect.selectedIndex] : null;
+            const currentStock = selectedOption ? parseInt(selectedOption.dataset.stock) : 0;
+            
+            // Limit quantity to available stock
+            if (currentStock > 0 && val > currentStock) {
+                val = currentStock;
+                input.value = val;
+                alert(`Maksimal quantity: ${currentStock} unit (sesuai stok tersedia)`);
+            }
+            
+            checkTawarButton();
+        }
+        
         function changeQty(amount) {
             const input = document.getElementById('qtyInput');
+            const variantSelect = document.getElementById('variantSelect');
+            
             let val = parseInt(input.value) || 1;
             val = Math.max(val + amount, 1);
+            
+            // Get current stock for selected variant
+            const selectedOption = variantSelect ? variantSelect.options[variantSelect.selectedIndex] : null;
+            const currentStock = selectedOption ? parseInt(selectedOption.dataset.stock) : 0;
+            
+            // Limit quantity to available stock
+            if (currentStock > 0) {
+                val = Math.min(val, currentStock);
+            }
+            
             input.value = val;
             checkTawarButton();
         }
