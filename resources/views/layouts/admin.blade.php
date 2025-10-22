@@ -39,8 +39,8 @@
             @elseif ($role == 'gudang')
                 <a href="{{ route('gudang.dashboard') }}" class="{{ request()->routeIs('gudang.dashboard') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Dashboard Gudang</a>
                 <a href="{{ url('/admin/gudang-transaksi') }}" class="{{ request()->is('admin/gudang-transaksi') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Transaksi Gudang</a>
-                <a href="{{ route('gudang.stok-barang') }}" class="{{ request()->routeIs('gudang.stok-barang') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">📦 Stok Barang</a>
-                <a href="{{ route('gudang.laporan-stok') }}" class="{{ request()->routeIs('gudang.laporan-stok') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">📊 Laporan Stok</a>
+                <a href="{{ route('gudang.stok-barang') }}" class="{{ request()->routeIs('gudang.stok-barang') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Stok Barang</a>
+                <a href="{{ route('gudang.laporan-stok') }}" class="{{ request()->routeIs('gudang.laporan-stok') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Laporan Stok</a>
                 <a href="{{ route('gudang.barang-rusak') }}" class="{{ request()->routeIs('gudang.barang-rusak') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Barang Rusak</a>
                 <a href="{{ route('gudang.work-orders.index') }}" class="{{ request()->routeIs('gudang.work-orders*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Surat Perintah Kerja</a>
             @else
