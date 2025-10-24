@@ -73,7 +73,11 @@
                 @csrf
                 <div>
                     <label for="amount_paid" class="block text-sm font-medium mb-1">Nominal Pembayaran</label>
-                    <input type="number" name="amount_paid" id="amount_paid" class="w-full border rounded px-3 py-2" min="1000" required>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">Rp</span>
+                        <input type="text" name="amount_paid" id="amount_paid" class="w-full border rounded px-10 py-2" placeholder="0" required>
+                        <input type="hidden" name="amount_paid_raw" id="amount_paid_raw">
+                    </div>
                 </div>
                 <div>
                     <label for="payment_date" class="block text-sm font-medium mb-1">Tanggal Pembayaran</label>
@@ -92,5 +96,52 @@
         </div>
     </div>
     @include('layouts.footer')
+
+    <script>
+        // Format rupiah untuk input nominal pembayaran
+        function formatRupiah(angka) {
+            // Hapus semua karakter non-digit
+            let number_string = angka.replace(/[^,\d]/g, '').toString();
+            let split = number_string.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah == '' ? '' : rupiah;
+        }
+
+        // Event listener untuk format input
+        document.getElementById('amount_paid').addEventListener('input', function(e) {
+            let value = e.target.value;
+            let formattedValue = formatRupiah(value);
+            e.target.value = formattedValue;
+            
+            // Simpan nilai asli (tanpa format) ke hidden input
+            let rawValue = value.replace(/[^,\d]/g, '').replace(',', '.');
+            document.getElementById('amount_paid_raw').value = rawValue;
+        });
+
+        // Validasi form sebelum submit
+        document.querySelector('form').addEventListener('submit', function(e) {
+            let amountInput = document.getElementById('amount_paid');
+            let rawAmount = document.getElementById('amount_paid_raw').value;
+            
+            // Set nilai asli ke input amount_paid untuk dikirim ke server
+            amountInput.value = rawAmount;
+            
+            // Validasi minimum amount
+            if (parseFloat(rawAmount) < 1000) {
+                e.preventDefault();
+                alert('Nominal pembayaran minimum Rp 1.000');
+                return false;
+            }
+        });
+    </script>
 </body>
 </html> 

@@ -27,17 +27,27 @@ class CheckoutController extends Controller
 
     public function index(Request $request)
     {
-        if (!session()->has('isLoggedIn')) {
+        $user = Session::get('user');
+        
+        if (!$user) {
             return redirect()->route('login')->with('error', 'Silakan login dahulu.');
         }
 
-        $customerId = session()->get('customer_id');
-
-        if (!$customerId) {
-            return redirect()->route('login')->with('error', 'Session habis, silakan login ulang.');
+        // Pastikan user adalah customer
+        if (!is_array($user) || ($user['role'] ?? '') !== 'customer') {
+            return redirect()->route('login')->with('error', 'Akses ditolak.');
         }
 
+        $customerId = $user['id'];
+
         $selectedItems = $request->input('selected_items'); // Ambil dari form
+        
+        // Debug logging
+        \Log::info('Checkout Debug:', [
+            'selected_items' => $selectedItems,
+            'customer_id' => $customerId,
+            'all_request' => $request->all()
+        ]);
 
         if (!$selectedItems) {
             return redirect()->route('keranjang')->with('error', 'Pilih minimal satu barang untuk checkout.');
@@ -76,9 +86,19 @@ class CheckoutController extends Controller
                 'harga_custom'
             )
             ->where('user_id', $customerId)
-            ->whereNull('cart.variant_id') // Tidak ada variant = custom terpal
+            ->where(function($query) {
+                $query->whereNull('variant_id')
+                      ->orWhere('variant_id', 0);
+            }) // Tidak ada variant = custom terpal (NULL atau 0)
             ->whereIn('id', $selectedItems)
             ->get();
+
+        // Debug logging untuk custom items
+        \Log::info('Custom Items Query Result:', [
+            'custom_items_count' => $customItems->count(),
+            'custom_items' => $customItems->toArray(),
+            'selected_items' => $selectedItems
+        ]);
 
         $cartIds = [];
 
@@ -100,6 +120,7 @@ class CheckoutController extends Controller
         $subtotalPengiriman = 0; // default 0, berubah saat user pilih ekspedisi
         $alamat_default_user = '';
         $customer = Customer::find($customerId);
+        $isFromSurabaya = false;
         if ($customer) {
             $alamat_default_user = trim(
                 ($customer->address ? $customer->address : '') .
@@ -107,6 +128,11 @@ class CheckoutController extends Controller
                 ($customer->province ? ', ' . $customer->province : '') .
                 ($customer->postal_code ? ' ' . $customer->postal_code : '')
             );
+            
+            // Cek apakah customer dari Surabaya untuk ongkir gratis
+            $isFromSurabaya = (strtolower($customer->city ?? '') === 'surabaya' || 
+                              strtolower($customer->province ?? '') === 'jawa timur' && 
+                              str_contains(strtolower($customer->city ?? ''), 'surabaya'));
         }
 
         // Cek apakah customer sudah pernah transaksi lunas/diterima
@@ -150,6 +176,7 @@ class CheckoutController extends Controller
             'totalHutangAktif' => $totalHutangAktif,
             'limitHutang' => $limitHutang,
             'melebihiLimit' => $melebihiLimit,
+            'isFromSurabaya' => $isFromSurabaya,
         ]);
     }
 }

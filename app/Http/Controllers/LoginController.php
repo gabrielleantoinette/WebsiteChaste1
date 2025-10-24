@@ -75,6 +75,7 @@ class LoginController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'password' => 'required|string|min:6',
+            'password_confirmation' => 'required|same:password',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'province' => 'nullable|string|max:100',

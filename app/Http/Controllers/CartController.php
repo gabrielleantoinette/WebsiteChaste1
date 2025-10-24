@@ -33,6 +33,11 @@ class CartController extends Controller
         if (!$product) {
             return redirect()->back()->with('error', 'Produk tidak ditemukan.');
         }
+        
+        // Validasi: jika ada harga tawar, pastikan quantity memenuhi syarat minimum
+        if ($negotiatedPrice && $product->min_buying_stock && $quantity < $product->min_buying_stock) {
+            return redirect()->back()->with('error', "Minimal {$product->min_buying_stock} pcs untuk menggunakan harga hasil tawar.");
+        }
 
         // Cari variant berdasarkan variant_id yang dikirim
         $variant = null;

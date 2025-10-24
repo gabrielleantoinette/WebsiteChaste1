@@ -53,6 +53,21 @@
                 <div class="space-y-4">
                     @php $no = 1; @endphp
 
+                    {{-- Debug: Tampilkan jumlah items --}}
+                    @if(count($produkItems) == 0 && count($customItems) == 0)
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex items-center text-red-600">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="font-semibold">Tidak ada item dalam keranjang</span>
+                            </div>
+                            <div class="text-sm text-red-600 mt-1">
+                                Produk Items: {{ count($produkItems) }}, Custom Items: {{ count($customItems) }}
+                            </div>
+                        </div>
+                    @endif
+
                     @foreach ($produkItems as $item)
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
                             <div class="flex justify-between items-start">
@@ -216,25 +231,49 @@
                 </h2>
 
                 <div class="space-y-3">
-                    <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
-                        <input type="radio" name="shipping_method" value="kurir" class="accent-teal-600 mr-3" checked
-                            onclick="updateShippingCost(0)">
-                        <div class="flex-1">
-                            <div class="font-semibold text-gray-800">Kurir Perusahaan</div>
-                            <div class="text-sm text-gray-600">Khusus Surabaya Gratis</div>
-                        </div>
-                        <div class="text-teal-600 font-semibold">Gratis</div>
-                    </label>
+                    @if($isFromSurabaya)
+                        <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
+                            <input type="radio" name="shipping_method" value="kurir" class="accent-teal-600 mr-3" checked
+                                onclick="updateShippingCost(0)">
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-800">Kurir Perusahaan</div>
+                                <div class="text-sm text-gray-600">Khusus Surabaya Gratis</div>
+                            </div>
+                            <div class="text-teal-600 font-semibold">Gratis</div>
+                        </label>
 
-                    <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
-                        <input type="radio" name="shipping_method" value="expedition" class="accent-teal-600 mr-3"
-                            onclick="updateShippingCost(19000)">
-                        <div class="flex-1">
-                            <div class="font-semibold text-gray-800">Ekspedisi</div>
-                            <div class="text-sm text-gray-600">Pengiriman ke seluruh Indonesia</div>
+                        <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
+                            <input type="radio" name="shipping_method" value="expedition" class="accent-teal-600 mr-3"
+                                onclick="updateShippingCost(19000)">
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-800">Ekspedisi</div>
+                                <div class="text-sm text-gray-600">Pengiriman ke seluruh Indonesia</div>
+                            </div>
+                            <div class="text-teal-600 font-semibold">Rp 19.000</div>
+                        </label>
+                    @else
+                        <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div class="flex items-center text-red-600">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="font-semibold">Kurir Perusahaan Tidak Tersedia</span>
+                            </div>
+                            <div class="text-sm text-red-600 mt-1">
+                                Kurir perusahaan hanya melayani pengiriman di Surabaya. Silakan pilih ekspedisi untuk pengiriman ke luar Surabaya.
+                            </div>
                         </div>
-                        <div class="text-teal-600 font-semibold">Rp 19.000</div>
-                    </label>
+
+                        <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
+                            <input type="radio" name="shipping_method" value="expedition" class="accent-teal-600 mr-3" checked
+                                onclick="updateShippingCost(19000)">
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-800">Ekspedisi</div>
+                                <div class="text-sm text-gray-600">Pengiriman ke seluruh Indonesia</div>
+                            </div>
+                            <div class="text-teal-600 font-semibold">Rp 19.000</div>
+                        </label>
+                    @endif
                 </div>
             </section>
 
@@ -304,18 +343,32 @@
                         </svg>
                     </label>
 
-                    <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
-                        <input type="radio" name="payment_method" value="cod" class="accent-teal-600 mr-3"
-                                onchange="showPaymentInfo()">
-                        <div class="flex-1">
-                            <div class="font-semibold text-gray-800">COD</div>
-                            <div class="text-sm text-gray-600">Bayar di Tempat</div>
-                    </div>
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        </label>
+                    @if($isFromSurabaya)
+                        <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
+                            <input type="radio" name="payment_method" value="cod" class="accent-teal-600 mr-3"
+                                    onchange="showPaymentInfo()">
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-800">COD</div>
+                                <div class="text-sm text-gray-600">Bayar di Tempat</div>
+                        </div>
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            </label>
+                    @else
+                        <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div class="flex items-center text-red-600">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="font-semibold">COD Tidak Tersedia</span>
+                            </div>
+                            <div class="text-sm text-red-600 mt-1">
+                                COD hanya tersedia untuk pengiriman di Surabaya. Silakan pilih metode pembayaran lain.
+                            </div>
+                        </div>
+                    @endif
 
                     <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer {{ !$bolehHutang || $melebihiLimit ? 'opacity-50 cursor-not-allowed' : '' }}">
                         <input type="radio" name="payment_method" value="hutang" class="accent-teal-600 mr-3"

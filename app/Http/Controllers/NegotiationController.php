@@ -32,7 +32,10 @@ class NegotiationController extends Controller
 
     public function tawar(Request $request, Product $product)
     {
-        $request->validate(['harga' => 'required|integer|min:1']);
+        $request->validate([
+            'harga' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:1'
+        ]);
 
         $user  = Session::get('user');
         $userId = is_array($user)
@@ -40,6 +43,16 @@ class NegotiationController extends Controller
         : $user->id;
 
         $offer = (int) $request->input('harga');
+        $quantity = (int) $request->input('quantity');
+        
+        // Validasi minimum quantity untuk tawar menawar
+        $minBuyingStock = $product->min_buying_stock ?? 1;
+        if ($quantity < $minBuyingStock) {
+            return back()->with('error', "Minimal {$minBuyingStock} pcs untuk tawar menawar.");
+        }
+        
+        // Simpan quantity ke session untuk konsistensi
+        session(['quantity' => $quantity]);
 
         $neg = NegotiationTable::firstOrCreate(
             ['user_id'    => $userId,          // ← pakai $user->id

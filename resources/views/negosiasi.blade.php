@@ -59,8 +59,8 @@
               <input type="number" 
                      id="quantity" 
                      name="quantity" 
-                     value="{{ session('quantity', request('quantity', old('quantity', 1))) }}" 
-                     min="1" 
+                     value="{{ session('quantity', request('quantity', old('quantity', $product->min_buying_stock ?? 1))) }}" 
+                     min="{{ $product->min_buying_stock ?? 1 }}" 
                      required
                      class="w-20 text-center border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400">
               <button type="button" onclick="changeQty(1)" class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300">+</button>
@@ -186,8 +186,8 @@
     
     function changeQty(amount) {
       const input = document.getElementById('quantity');
-      let val = parseInt(input.value) || 1;
-      val = Math.max(val + amount, 1);
+      let val = parseInt(input.value) || minBuyingStock;
+      val = Math.max(val + amount, minBuyingStock);
       input.value = val;
       
       // Update quantity di tombol Deal dan Normal

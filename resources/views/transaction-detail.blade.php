@@ -59,8 +59,16 @@
                         
                         <div>
                             <p class="text-lg font-bold text-teal-600">
-                                Rp {{ number_format($product->price, 0, ',', '.') }} / unit
+                                Rp {{ number_format($dinvoice->price ?? $product->price, 0, ',', '.') }} / unit
                             </p>
+                            @if($dinvoice && $dinvoice->price != $product->price)
+                                <p class="text-sm text-gray-500 line-through">
+                                    Harga normal: Rp {{ number_format($product->price, 0, ',', '.') }} / unit
+                                </p>
+                                <p class="text-sm text-green-600 font-medium">
+                                    ✓ Harga hasil tawar
+                                </p>
+                            @endif
                         </div>
                         
                         <div>
@@ -73,7 +81,7 @@
                                 <strong>Jumlah yang dibeli:</strong> {{ $dinvoice->quantity }} unit
                             </p>
                             <p class="text-sm text-gray-600">
-                                <strong>Subtotal:</strong> Rp {{ number_format($dinvoice->quantity * $product->price, 0, ',', '.') }}
+                                <strong>Subtotal:</strong> Rp {{ number_format($dinvoice->subtotal ?? ($dinvoice->quantity * ($dinvoice->price ?? $product->price)), 0, ',', '.') }}
                             </p>
                         </div>
                         @endif

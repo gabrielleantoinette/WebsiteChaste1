@@ -50,7 +50,7 @@
                     </h1>
                     <a href="{{ route('custom.terpal') }}"
                         class="inline-block bg-white text-gray-800 font-semibold px-6 py-3 rounded-md border border-gray-300 hover:bg-gray-100 transition">
-                        Custom Terpalmu Disini!
+                        Kustom Terpalmu Disini!
                     </a>
                 </div>
                 <div class="w-100 h-100 rounded-full overflow-hidden border-4 border-white shadow-md">
@@ -232,7 +232,7 @@
                             </button>
                             <a href="{{ route('produk') }}" 
                                class="block w-full text-center bg-gray-100 text-gray-700 font-semibold py-2 rounded hover:bg-gray-200 transition">
-                                Clear Filter
+                                Hapus Filter
                             </a>
                         </div>
                     </form>

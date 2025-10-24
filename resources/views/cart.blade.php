@@ -218,6 +218,30 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateTotal();
         });
+
+        // Handle form submission untuk memastikan checkbox terpilih dikirim
+        document.querySelector('form').addEventListener('submit', function(e) {
+            let checkedBoxes = document.querySelectorAll('.item-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert('Pilih minimal satu item untuk checkout.');
+                return false;
+            }
+            
+            // Pastikan form dikirim dengan method GET dan parameter selected_items
+            let form = this;
+            let selectedItems = Array.from(checkedBoxes).map(cb => cb.value);
+            
+            // Build URL dengan parameter selected_items
+            let url = new URL(form.action);
+            selectedItems.forEach(itemId => {
+                url.searchParams.append('selected_items[]', itemId);
+            });
+            
+            // Redirect ke URL yang sudah dibangun
+            window.location.href = url.toString();
+            e.preventDefault();
+        });
     </script>
 
 </body>

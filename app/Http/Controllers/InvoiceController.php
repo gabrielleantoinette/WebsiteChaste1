@@ -196,6 +196,22 @@ class InvoiceController extends Controller
         $alamat = $request->input('address');
         $invoiceCode = 'INV-' . date('Ymd') . '-' . Str::random(5);
         $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
+        
+        // Validasi COD hanya untuk Surabaya
+        if ($paymentMethod == 'cod') {
+            $customer = Customer::find($customerId);
+            $isFromSurabaya = false;
+            if ($customer) {
+                $isFromSurabaya = (strtolower($customer->city ?? '') === 'surabaya' || 
+                                  strtolower($customer->province ?? '') === 'jawa timur' && 
+                                  str_contains(strtolower($customer->city ?? ''), 'surabaya'));
+            }
+            
+            if (!$isFromSurabaya) {
+                return redirect()->back()->with('error', 'COD hanya tersedia untuk pengiriman di Surabaya. Silakan pilih metode pembayaran lain.');
+            }
+        }
+        
         // Validasi upload bukti transfer jika transfer bank
         if ($paymentMethod == 'transfer') {
             $request->validate([
