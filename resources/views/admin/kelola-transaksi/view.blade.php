@@ -1,187 +1,265 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-teal-600">Kelola Transaksi</h1>
-        
-        {{-- Tombol Download dengan Dropdown --}}
-        <div class="relative">
-            <button id="downloadBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2">
-                📄 Unduh Laporan
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </button>
-            
-            {{-- Dropdown Menu --}}
-            <div id="downloadDropdown" class="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50 hidden">
-                <div class="py-2">
-                    <a href="{{ url('/admin/laporan-transaksi/download?filter=' . request('filter', $filter)) }}" 
-                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        📊 Laporan Transaksi
-                    </a>
-                    <a href="{{ url('/admin/laporan-payment-gateway/download?filter=' . request('filter', $filter)) }}" 
-                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        💳 Laporan Payment Gateway
-                    </a>
-                    <a href="{{ url('/admin/laporan-negosiasi/download?filter=' . request('filter', $filter)) }}" 
-                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        🤝 Laporan Negosiasi Harga
-                    </a>
+    {{-- Header dengan Gradient Background --}}
+    <div class="relative overflow-hidden bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl mb-8">
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative px-8 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">💳 Kelola Transaksi</h1>
+                    <p class="text-teal-100">Kelola dan monitor semua transaksi</p>
+                </div>
+                <div class="flex gap-3">
+                    {{-- Tombol Download dengan Dropdown --}}
+                    <div class="relative">
+                        <button id="downloadBtn" class="inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-medium rounded-lg hover:bg-white/30 transition-all duration-300 shadow-lg border border-white/20">
+                            📄 Unduh Laporan
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        {{-- Dropdown Menu --}}
+                        <div id="downloadDropdown" class="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden">
+                            <div class="py-2">
+                                <a href="{{ url('/admin/laporan-transaksi/download?filter=' . request('filter', $filter)) }}" 
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    📊 Laporan Transaksi
+                                </a>
+                                <a href="{{ url('/admin/laporan-payment-gateway/download?filter=' . request('filter', $filter)) }}" 
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    💳 Laporan Payment Gateway
+                                </a>
+                                <a href="{{ url('/admin/laporan-negosiasi/download?filter=' . request('filter', $filter)) }}" 
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    🤝 Laporan Negosiasi Harga
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Filter Waktu & Search --}}
-    <div class="mb-6">
-        <form method="GET" action="" class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div class="flex items-center gap-2">
-                <label for="filter" class="text-sm font-medium text-gray-700">Filter Waktu:</label>
-                <select name="filter" id="filter" onchange="this.form.submit()" class="text-sm px-3 py-2 rounded-md border border-gray-300 focus:ring-teal-500 focus:border-teal-500 transition">
+    {{-- Stats Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Transaksi</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $payments->count() }}</p>
+                </div>
+                <div class="p-3 bg-teal-100 rounded-lg">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Transaksi Lunas</p>
+                    <p class="text-2xl font-bold text-emerald-600">{{ $payments->where('is_paid', true)->count() }}</p>
+                </div>
+                <div class="p-3 bg-emerald-100 rounded-lg">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Belum Lunas</p>
+                    <p class="text-2xl font-bold text-red-600">{{ $payments->where('is_paid', false)->count() }}</p>
+                </div>
+                <div class="p-3 bg-red-100 rounded-lg">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Pembayaran</p>
+                    <p class="text-2xl font-bold text-green-600">Rp {{ number_format($payments->sum('amount')) }}</p>
+                </div>
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Filter Waktu & Search dengan Card --}}
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
+        <form method="GET" action="" class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"/>
+                    </svg>
+                    <label for="filter" class="text-sm font-semibold text-gray-700">Filter Waktu:</label>
+                </div>
+                <select name="filter" id="filter" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white shadow-sm">
                     <option value="hari" {{ request('filter', $filter) == 'hari' ? 'selected' : '' }}>Hari Ini</option>
                     <option value="minggu" {{ request('filter', $filter) == 'minggu' ? 'selected' : '' }}>Minggu Ini</option>
                     <option value="bulan" {{ request('filter', $filter) == 'bulan' ? 'selected' : '' }}>Bulan Ini</option>
                     <option value="tahun" {{ request('filter', $filter) == 'tahun' ? 'selected' : '' }}>Tahun Ini</option>
                 </select>
             </div>
-            <div class="flex flex-wrap items-center gap-2 justify-end">
-                <input type="text" name="search" placeholder="Cari kode/nama/ket" value="{{ request('search', $search) }}" class="w-[180px] md:w-[250px] px-4 py-2 rounded-md border border-gray-300 focus:ring-teal-500 focus:border-teal-500 text-sm" />
-                <button type="submit" class="px-4 py-2 bg-teal-600 text-white text-sm rounded-md hover:bg-teal-700 transition shrink-0">Cari</button>
-                @if(request('search'))
-                    <a href="?filter={{ request('filter', $filter) }}" class="px-3 py-2 bg-gray-200 text-sm rounded-md hover:bg-gray-300 transition text-gray-700">×</a>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="relative">
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" name="search" placeholder="Cari kode/nama/ket" value="{{ request('search', $search) }}" class="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 shadow-sm" />
+                </div>
+                <button type="submit" class="px-6 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white font-medium rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl">Cari</button>
+                @if(request('search') || request('filter'))
+                    <a href="{{ url('/admin/kelola-transaksi') }}" class="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-200">Reset</a>
                 @endif
             </div>
         </form>
     </div>
 
-    {{-- Pendapatan --}}
-    <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
-        <h2 class="text-xl font-semibold px-6 py-4 bg-teal-50 text-teal-700 border-b">Pendapatan (Penjualan)</h2>
+    {{-- Tabel dengan Card Layout --}}
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                Data Transaksi
+            </h3>
+        </div>
+        
         <div class="overflow-x-auto">
-            <table class="min-w-full table-auto text-sm">
-                <thead class="bg-gray-100 text-gray-700">
+            <table class="w-full">
+                <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left">Tanggal</th>
-                        <th class="px-6 py-3 text-left">Kode</th>
-                        <th class="px-6 py-3 text-left">Customer</th>
-                        <th class="px-6 py-3 text-left">Total</th>
-                        <th class="px-6 py-3 text-left">Status</th>
-                        <th class="px-6 py-3 text-left">Metode Pembayaran</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Invoice</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Metode Pembayaran</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Jumlah</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @forelse ($pendapatan as $p)
-                        <tr>
-                            <td class="px-6 py-4">{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d M Y') : '-' }}</td>
-                            <td class="px-6 py-4">{{ $p->code }}</td>
-                            <td class="px-6 py-4">{{ $p->customer->name ?? '-' }}</td>
-                            <td class="px-6 py-4">Rp {{ number_format($p->grand_total, 0, ',', '.') }}</td>
-                            <td class="px-6 py-4">{{ ucfirst($p->status) }}</td>
-                            <td class="px-6 py-4">
-                                @if($p->payments && $p->payments->count())
-                                    {{ $p->payments->pluck('method')->unique()->implode(', ') }}
-                                @else
-                                    -
-                                @endif
+                <tbody class="divide-y divide-gray-200">
+                    @forelse ($payments as $p)
+                        <tr class="hover:bg-gray-50 transition-colors duration-200">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $p->id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-teal-600">{{ $p->hinvoice->code }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $p->hinvoice->customer->name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $p->hinvoice->receive_date ? \Carbon\Carbon::parse($p->hinvoice->receive_date)->format('d M Y') : ($p->hinvoice->created_at ? \Carbon\Carbon::parse($p->hinvoice->created_at)->format('d M Y') : '-') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                @switch($p->method)
+                                    @case('bank_transfer')
+                                        Transfer Bank
+                                        @break
+                                    @case('cash')
+                                        Tunai
+                                        @break
+                                    @case('credit_card')
+                                        Kartu Kredit
+                                        @break
+                                    @case('debit_card')
+                                        Kartu Debit
+                                        @break
+                                    @case('e_wallet')
+                                        E-Wallet
+                                        @break
+                                    @case('qris')
+                                        QRIS
+                                        @break
+                                    @case('gopay')
+                                        GoPay
+                                        @break
+                                    @case('shopeepay')
+                                        ShopeePay
+                                        @break
+                                    @case('dana')
+                                        DANA
+                                        @break
+                                    @case('ovo')
+                                        OVO
+                                        @break
+                                    @case('linkaja')
+                                        LinkAja
+                                        @break
+                                    @default
+                                        {{ ucfirst(str_replace('_', ' ', $p->method)) }}
+                                @endswitch
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-emerald-600">Rp {{ number_format($p->amount, 0, ',', '.') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                    {{ $p->is_paid ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800' }}">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $p->is_paid ? 'Lunas' : 'Belum Lunas' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{{ url('/admin/invoices/detail/' . $p->hinvoice->id) }}" 
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Detail
+                                </a>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center text-gray-500 py-4">Tidak ada data.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {{-- Pengeluaran --}}
-    <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
-        <h2 class="text-xl font-semibold px-6 py-4 bg-teal-50 text-teal-700 border-b">Pengeluaran (Pembayaran Hutang ke Supplier)</h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full table-auto text-sm">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="px-6 py-3 text-left">Tanggal Bayar</th>
-                        <th class="px-6 py-3 text-left">Supplier</th>
-                        <th class="px-6 py-3 text-left">Kode PO</th>
-                        <th class="px-6 py-3 text-left">Jumlah Bayar</th>
-                        <th class="px-6 py-3 text-left">Keterangan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($pengeluaran as $e)
                         <tr>
-                            <td class="px-6 py-4">{{ $e->payment_date ? \Carbon\Carbon::parse($e->payment_date)->format('d M Y') : '-' }}</td>
-                            <td class="px-6 py-4">{{ $e->purchaseOrder && $e->purchaseOrder->supplier ? $e->purchaseOrder->supplier->name : '-' }}</td>
-                            <td class="px-6 py-4">{{ $e->purchaseOrder ? $e->purchaseOrder->code : '-' }}</td>
-                            <td class="px-6 py-4">Rp {{ number_format($e->amount_paid, 0, ',', '.') }}</td>
-                            <td class="px-6 py-4">{{ $e->notes }}</td>
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Tidak ada data transaksi</h3>
+                                    <p class="text-gray-500">Transaksi akan muncul di sini setelah ada pembayaran</p>
+                                </div>
+                            </td>
                         </tr>
-                    @empty
-                        <tr><td colspan="5" class="text-center text-gray-500 py-4">Tidak ada data.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 
-    {{-- Hutang Piutang --}}
-    <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
-        <h2 class="text-xl font-semibold px-6 py-4 bg-teal-50 text-teal-700 border-b">Hutang Piutang</h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full table-auto text-sm">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="px-6 py-3 text-left">Tanggal Order</th>
-                        <th class="px-6 py-3 text-left">Supplier</th>
-                        <th class="px-6 py-3 text-left">Kode PO</th>
-                        <th class="px-6 py-3 text-left">Total Hutang</th>
-                        <th class="px-6 py-3 text-left">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($hutang as $h)
-                        <tr>
-                            <td class="px-6 py-4">{{ $h->order_date ? \Carbon\Carbon::parse($h->order_date)->format('d M Y') : '-' }}</td>
-                            <td class="px-6 py-4">{{ $h->supplier ? $h->supplier->name : '-' }}</td>
-                            <td class="px-6 py-4">{{ $h->code }}</td>
-                            <td class="px-6 py-4">Rp {{ number_format($h->total, 0, ',', '.') }}</td>
-                            <td class="px-6 py-4">{{ $h->getStatusLabelAttribute() }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="5" class="text-center text-gray-500 py-4">Tidak ada data.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+    <script>
+        // Download dropdown functionality
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const dropdown = document.getElementById('downloadDropdown');
+            dropdown.classList.toggle('hidden');
+        });
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const downloadBtn = document.getElementById('downloadBtn');
-    const downloadDropdown = document.getElementById('downloadDropdown');
-    
-    // Toggle dropdown saat tombol diklik
-    downloadBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        downloadDropdown.classList.toggle('hidden');
-    });
-    
-    // Tutup dropdown saat klik di luar
-    document.addEventListener('click', function(e) {
-        if (!downloadBtn.contains(e.target) && !downloadDropdown.contains(e.target)) {
-            downloadDropdown.classList.add('hidden');
-        }
-    });
-    
-    // Tutup dropdown saat item dipilih
-    downloadDropdown.addEventListener('click', function(e) {
-        if (e.target.tagName === 'A') {
-            downloadDropdown.classList.add('hidden');
-        }
-    });
-});
-</script>
-@endsection 
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('downloadDropdown');
+            const button = document.getElementById('downloadBtn');
+            
+            if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    </script>
+@endsection

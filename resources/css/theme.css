@@ -1,3 +1,26 @@
+/* === SIDEBAR WIDTH CONSISTENCY === */
+aside.w-64 {
+    width: 16rem !important;
+    min-width: 16rem !important;
+    max-width: 16rem !important;
+    flex-shrink: 0 !important;
+}
+
+/* Ensure sidebar doesn't shrink due to DataTables or other CSS */
+.flex.min-h-screen aside {
+    width: 16rem !important;
+    min-width: 16rem !important;
+    max-width: 16rem !important;
+    flex-shrink: 0 !important;
+}
+
+/* Ensure main content doesn't affect sidebar width */
+.flex.min-h-screen main {
+    flex: 1 !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+}
+
 /* === BODY === */
 body {
     background-color: #ffffff;

@@ -1,107 +1,137 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Atur Kurir</h1>
-        <p class="text-gray-600">Kelola pengiriman dan pengambilan barang retur</p>
+    {{-- Header dengan Gradient Background --}}
+    <div class="relative overflow-hidden bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl mb-8">
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative px-8 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">🚚 Atur Kurir</h1>
+                    <p class="text-teal-100">Kelola pengiriman dan pengambilan barang retur</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="text-right text-white">
+                        <p class="text-sm opacity-90">Total Pengiriman</p>
+                        <p class="text-lg font-semibold">{{ $pengirimanNormal->count() + $pengirimanRetur->count() }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-            <i class="fas fa-check-circle mr-2"></i>
-            {{ session('success') }}
+        <div class="bg-emerald-100 text-emerald-800 px-6 py-4 rounded-xl mb-6 border border-emerald-200">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                {{ session('success') }}
+            </div>
         </div>
     @endif
 
+    {{-- Stats Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Pengiriman Normal</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $pengirimanNormal->count() }}</p>
+                </div>
+                <div class="p-3 bg-teal-100 rounded-lg">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Pengiriman Retur</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $pengirimanRetur->count() }}</p>
+                </div>
+                <div class="p-3 bg-red-100 rounded-lg">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m5 3v6a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Driver Aktif</p>
+                    <p class="text-2xl font-bold text-emerald-600">{{ \App\Models\Employee::where('role', 'driver')->where('active', true)->count() }}</p>
+                </div>
+                <div class="p-3 bg-emerald-100 rounded-lg">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Pengiriman Normal Section -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                <i class="fas fa-truck mr-3 text-teal-600"></i>
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-8">
+        <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                </svg>
                 Daftar Pengiriman Normal
                 <span class="ml-2 bg-teal-100 text-teal-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
                     {{ $pengirimanNormal->count() }}
                 </span>
-            </h2>
+            </h3>
         </div>
         
         @if($pengirimanNormal->count() > 0)
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+                <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Invoice</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Alamat</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Driver</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="divide-y divide-gray-200">
                         @foreach ($pengirimanNormal as $invoice)
-                            <tr class="hover:bg-gray-50 transition-colors">
+                            <tr class="hover:bg-gray-50 transition-colors duration-200">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $invoice->code }}</div>
+                                    <div class="text-sm font-medium text-teal-600">{{ $invoice->code }}</div>
                                     <div class="text-sm text-gray-500">ID: {{ $invoice->id }}</div>
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $invoice->customer->name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ Str::limit($invoice->address, 30) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $invoice->receive_date ? \Carbon\Carbon::parse($invoice->receive_date)->format('d M Y') : '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $invoice->customer->name }}</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm text-gray-900 max-w-xs truncate">{{ $invoice->address }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $invoice->receive_date ? \Carbon\Carbon::parse($invoice->receive_date)->format('d/m/Y') : '-' }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <i class="fas fa-box mr-1"></i>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                        {{ $invoice->status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 
+                                           ($invoice->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800') }}">
                                         {{ ucfirst($invoice->status) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($invoice->driver)
-                                        <div class="flex items-center">
-                                            <div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center mr-3">
-                                                <i class="fas fa-user text-teal-600 text-sm"></i>
-                                            </div>
-                                            <div>
-                                                <div class="text-sm font-medium text-gray-900">{{ $invoice->driver->name }}</div>
-                                                <div class="text-xs text-gray-500">Assigned</div>
-                                            </div>
-                                        </div>
-                                    @else
-                                        <div class="flex items-center text-gray-500">
-                                            <i class="fas fa-user-slash mr-2"></i>
-                                            <span class="text-sm">Belum ada driver</span>
-                                        </div>
-                                    @endif
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {{ $invoice->driver ? $invoice->driver->name : 'Belum ditugaskan' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if(!$invoice->driver)
-                                        <form method="POST" action="{{ url('/admin/assign-driver/assign/' . $invoice->id) }}" class="flex gap-2">
-                                            @csrf
-                                            <select name="driver_id" class="text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                                                <option value="">Pilih Driver</option>
-                                                @foreach ($drivers as $driver)
-                                                    <option value="{{ $driver->id }}">{{ $driver->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors">
-                                                <i class="fas fa-paper-plane mr-1"></i>
-                                                Assign
-                                            </button>
-                                        </form>
-                                    @else
-                                        <span class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-gray-100 cursor-not-allowed">
-                                            <i class="fas fa-check mr-1"></i>
-                                            Sudah Diassign
-                                        </span>
-                                    @endif
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ url('/admin/assign-driver/create/' . $invoice->id) }}" 
+                                       class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15" />
+                                        </svg>
+                                        Assign Driver
+                                    </a>
                                 </td>
                             </tr>
                         @endforeach
@@ -110,107 +140,73 @@
             </div>
         @else
             <div class="px-6 py-12 text-center">
-                <i class="fas fa-truck text-4xl text-gray-300 mb-4"></i>
-                <h3 class="text-lg font-medium text-gray-900 mb-2">Tidak ada pengiriman</h3>
-                <p class="text-gray-500">Belum ada pesanan yang siap untuk dikirim</p>
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Tidak ada pengiriman normal</h3>
+                    <p class="text-gray-500">Pengiriman akan muncul di sini setelah ada transaksi</p>
+                </div>
             </div>
         @endif
     </div>
 
-    <!-- Pengambilan Retur Section -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-                <i class="fas fa-undo mr-3 text-orange-600"></i>
-                Daftar Pengambilan Barang Retur
-                <span class="ml-2 bg-orange-100 text-orange-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
-                    {{ $pengambilanRetur->count() }}
+    <!-- Pengiriman Retur Section -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m5 3v6a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h2"/>
+                </svg>
+                Daftar Pengiriman Retur
+                <span class="ml-2 bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                    {{ $pengirimanRetur->count() }}
                 </span>
-            </h2>
+            </h3>
         </div>
         
-        @if($pengambilanRetur->count() > 0)
+        @if($pengirimanRetur->count() > 0)
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+                <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Invoice</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Alamat</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Driver</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach ($pengambilanRetur as $invoice)
-                            <tr class="hover:bg-gray-50 transition-colors">
+                    <tbody class="divide-y divide-gray-200">
+                        @foreach ($pengirimanRetur as $invoice)
+                            <tr class="hover:bg-gray-50 transition-colors duration-200">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $invoice->code }}</div>
+                                    <div class="text-sm font-medium text-red-600">{{ $invoice->code }}</div>
                                     <div class="text-sm text-gray-500">ID: {{ $invoice->id }}</div>
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $invoice->customer->name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ Str::limit($invoice->address, 30) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $invoice->receive_date ? \Carbon\Carbon::parse($invoice->receive_date)->format('d M Y') : '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $invoice->customer->name }}</div>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                        Retur
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm text-gray-900 max-w-xs truncate">{{ $invoice->address }}</div>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {{ $invoice->driver ? $invoice->driver->name : 'Belum ditugaskan' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $invoice->receive_date ? \Carbon\Carbon::parse($invoice->receive_date)->format('d/m/Y') : '-' }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($invoice->status == 'retur_diajukan')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            <i class="fas fa-clock mr-1"></i>
-                                            Diajukan
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                            <i class="fas fa-truck mr-1"></i>
-                                            Diambil
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($invoice->driver)
-                                        <div class="flex items-center">
-                                            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                                                <i class="fas fa-user text-orange-600 text-sm"></i>
-                                            </div>
-                                            <div>
-                                                <div class="text-sm font-medium text-gray-900">{{ $invoice->driver->name }}</div>
-                                                <div class="text-xs text-gray-500">Assigned</div>
-                                            </div>
-                                        </div>
-                                    @else
-                                        <div class="flex items-center text-gray-500">
-                                            <i class="fas fa-user-slash mr-2"></i>
-                                            <span class="text-sm">Belum ada driver</span>
-                                        </div>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if(!$invoice->driver)
-                                        <form method="POST" action="{{ url('/admin/assign-driver/assign/' . $invoice->id) }}" class="flex gap-2">
-                                            @csrf
-                                            <select name="driver_id" class="text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                                                <option value="">Pilih Driver</option>
-                                                @foreach ($drivers as $driver)
-                                                    <option value="{{ $driver->id }}">{{ $driver->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
-                                                <i class="fas fa-paper-plane mr-1"></i>
-                                                Assign
-                                            </button>
-                                        </form>
-                                    @else
-                                        <span class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-gray-100 cursor-not-allowed">
-                                            <i class="fas fa-check mr-1"></i>
-                                            Sudah Diassign
-                                        </span>
-                                    @endif
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ url('/admin/assign-driver/create/' . $invoice->id) }}" 
+                                       class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-medium rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15" />
+                                        </svg>
+                                        Assign Driver
+                                    </a>
                                 </td>
                             </tr>
                         @endforeach
@@ -219,11 +215,16 @@
             </div>
         @else
             <div class="px-6 py-12 text-center">
-                <i class="fas fa-undo text-4xl text-gray-300 mb-4"></i>
-                <h3 class="text-lg font-medium text-gray-900 mb-2">Tidak ada retur</h3>
-                <p class="text-gray-500">Belum ada barang retur yang perlu diambil</p>
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m5 3v6a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h2"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Tidak ada pengiriman retur</h3>
+                    <p class="text-gray-500">Pengiriman retur akan muncul di sini setelah ada barang retur</p>
+                </div>
             </div>
         @endif
     </div>
-</div>
 @endsection

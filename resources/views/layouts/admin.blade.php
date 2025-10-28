@@ -17,12 +17,76 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
     <link rel="stylesheet" href="{{ asset('css/theme.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Force sidebar width consistency - Multiple approaches */
+        #admin-sidebar {
+            width: 16rem !important;
+            min-width: 16rem !important;
+            max-width: 16rem !important;
+            flex-shrink: 0 !important;
+        }
+        
+        aside.w-64 {
+            width: 16rem !important;
+            min-width: 16rem !important;
+            max-width: 16rem !important;
+            flex-shrink: 0 !important;
+        }
+        
+        .flex.min-h-screen aside {
+            width: 16rem !important;
+            min-width: 16rem !important;
+            max-width: 16rem !important;
+            flex-shrink: 0 !important;
+        }
+        
+        .flex.min-h-screen main {
+            flex: 1 !important;
+            min-width: 0 !important;
+            overflow-x: auto !important;
+        }
+        
+        /* Override any DataTables CSS that might affect layout */
+        .dataTables_wrapper {
+            width: 100% !important;
+        }
+        
+        .dataTables_scroll {
+            width: 100% !important;
+        }
+        
+        /* Additional fix for flexbox layout */
+        .flex.min-h-screen {
+            display: flex !important;
+        }
+        
+        .flex.min-h-screen > aside {
+            flex: 0 0 16rem !important;
+        }
+        
+        .flex.min-h-screen > main {
+            flex: 1 1 auto !important;
+        }
+        
+        /* Nuclear option - force everything */
+        * {
+            box-sizing: border-box !important;
+        }
+        
+        body .flex.min-h-screen aside {
+            width: 16rem !important;
+            min-width: 16rem !important;
+            max-width: 16rem !important;
+            flex-shrink: 0 !important;
+            flex-basis: 16rem !important;
+        }
+    </style>
 </head>
 
 <body class="{{ $theme }}">
 <div class="flex min-h-screen">
     <!-- Sidebar -->
-    <aside class="w-64 bg-[#D9F2F2] text-gray-800 p-6 space-y-4">
+    <aside id="admin-sidebar" class="w-64 bg-[#D9F2F2] text-gray-800 p-6 space-y-4">
         <h2 class="text-xl font-bold mb-6">CHASTE Master</h2>
 
         <nav class="flex flex-col gap-2 text-sm font-medium">
@@ -130,6 +194,17 @@
             $(this).val(formattedValue);
         });
         $('.data-table').DataTable({ order: [] });
+        
+        // Force sidebar width after DataTables initialization
+        setTimeout(function() {
+            const sidebar = document.getElementById('admin-sidebar');
+            if (sidebar) {
+                sidebar.style.width = '16rem';
+                sidebar.style.minWidth = '16rem';
+                sidebar.style.maxWidth = '16rem';
+                sidebar.style.flexShrink = '0';
+            }
+        }, 100);
         
         // Update notification badge on page load
         console.log('Document ready, updating notification badge...'); // Debug

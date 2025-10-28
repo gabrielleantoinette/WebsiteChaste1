@@ -69,7 +69,7 @@
                 <tbody>
                     @forelse ($transaksi as $trx)
                         <tr class="border-b border-gray-100 @if($loop->odd) bg-gray-50 @endif hover:bg-teal-50 transition">
-                            <td class="px-6 py-4">{{ $trx->created_at ? \Carbon\Carbon::parse($trx->created_at)->format('d M Y') : '-' }}</td>
+                            <td class="px-6 py-4">{{ $trx->receive_date ? \Carbon\Carbon::parse($trx->receive_date)->format('d M Y') : ($trx->created_at ? \Carbon\Carbon::parse($trx->created_at)->format('d M Y') : '-') }}</td>
                             <td class="px-6 py-4 font-mono text-teal-700 font-semibold">{{ $trx->code }}</td>
                             <td class="px-6 py-4 font-semibold">Rp {{ number_format($trx->grand_total, 0, ',', '.') }}</td>
                             <td class="px-6 py-4">

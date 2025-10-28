@@ -35,9 +35,28 @@ class InvoiceController extends Controller
         Config::$is3ds = true;
     }
 
-    public function view()
+    public function view(Request $request)
     {
-        $invoices = HInvoice::all();
+        $query = HInvoice::with(['customer', 'employee', 'driver', 'gudang', 'accountant']);
+        
+        // Filter berdasarkan status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Search berdasarkan kode invoice atau nama customer
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function($customerQuery) use ($search) {
+                      $customerQuery->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        $invoices = $query->orderBy('created_at', 'desc')->paginate(10);
+        
         return view('admin.invoices.view', compact('invoices'));
     }
 

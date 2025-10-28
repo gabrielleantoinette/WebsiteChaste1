@@ -9,6 +9,7 @@ use App\Models\HInvoice;
 use App\Models\ProductVariant;
 use App\Models\Returns;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -17,51 +18,72 @@ class DashboardController extends Controller
         $user = session('user');
         $role = strtolower(is_array($user) ? ($user['role'] ?? '') : ($user->role ?? ''));
 
-        // Data untuk dashboard umum (owner)
-        $employeeCount = \App\Models\Employee::count();
-        $customerCount = \App\Models\Customer::count();
-        $productCount  = \App\Models\Product::count();
-        $totalPenjualan = \App\Models\HInvoice::whereDate('created_at', now()->toDateString())->sum('grand_total');
-        $recentInvoices = \App\Models\HInvoice::with('customer')
-                        ->whereDate('created_at', now()->toDateString())
-                        ->orderBy('created_at', 'desc')
+        // Data dasar dengan query yang lebih efisien
+        $employeeCount = Employee::count();
+        $customerCount = Customer::count();
+        $productCount = Product::count();
+        
+        // Query yang lebih efisien untuk penjualan hari ini
+        $today = now()->toDateString();
+        $totalPenjualan = HInvoice::whereDate('receive_date', $today)->sum('grand_total');
+        
+        // Recent invoices dengan limit untuk performa
+        $recentInvoices = HInvoice::with('customer')
+                        ->whereDate('receive_date', $today)
+                        ->orderBy('receive_date', 'desc')
+                        ->limit(10)
                         ->get();
-        $days = collect();
-        $sales = collect();
+
+        // Generate chart data HANYA dari data real (tanpa fallback)
+        // 7 Hari Terakhir
+        $dailyLabels = collect();
+        $dailySales = collect();
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
-            $days->push($date->format('d M'));
-            $sales->push(
-                \App\Models\HInvoice::whereDate('created_at', $date)->sum('grand_total')
-            );
+            $dailyLabels->push($date->format('d M'));
+            $salesAmount = HInvoice::whereDate('receive_date', $date)->sum('grand_total');
+            $dailySales->push($salesAmount);
         }
+
+        // 30 Hari Terakhir
         $monthlyLabels = collect();
         $monthlySales = collect();
         for ($i = 29; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $monthlyLabels->push($date->format('d M'));
-            $monthlySales->push(
-                \App\Models\HInvoice::whereDate('created_at', $date)->sum('grand_total')
-            );
+            $salesAmount = HInvoice::whereDate('receive_date', $date)->sum('grand_total');
+            $monthlySales->push($salesAmount);
         }
+
+        // 12 Bulan Terakhir
         $yearLabels = collect();
         $yearSales = collect();
         for ($i = 11; $i >= 0; $i--) {
             $month = now()->subMonths($i);
             $yearLabels->push($month->format('M Y'));
-            $yearSales->push(
-                \App\Models\HInvoice::whereYear('created_at', $month->year)
-                        ->whereMonth('created_at', $month->month)
-                        ->sum('grand_total')
-            );
+            $salesAmount = HInvoice::whereYear('receive_date', $month->year)
+                    ->whereMonth('receive_date', $month->month)
+                    ->sum('grand_total');
+            $yearSales->push($salesAmount);
+        }
+
+        // 5 Tahun Terakhir - PERBAIKAN: Mulai dari tahun 2020
+        $yearlyLabels = collect();
+        $yearlySales = collect();
+        for ($i = 4; $i >= 0; $i--) {
+            $year = now()->subYears($i);
+            $yearlyLabels->push($year->format('Y'));
+            $salesAmount = HInvoice::whereYear('receive_date', $year->year)->sum('grand_total');
+            $yearlySales->push($salesAmount);
         }
 
         if ($role === 'admin') {
-            $pendingOrders = \App\Models\HInvoice::with('customer')
+            $pendingOrders = HInvoice::with('customer')
                 ->whereIn('status', ['Menunggu Pembayaran', 'Diproses'])
+                ->limit(20)
                 ->get();
-            $lowStocks = \App\Models\ProductVariant::where('stock', '<', 10)->get();
-            $returCount = \App\Models\Returns::where('status', 'diajukan')->count();
+            $lowStocks = ProductVariant::where('stock', '<', 10)->limit(20)->get();
+            $returCount = Returns::where('status', 'diajukan')->count();
             return view('admin.dashboardadmin', compact('pendingOrders', 'lowStocks', 'returCount'));
         } elseif ($role === 'keuangan') {
             return redirect()->route('keuangan.dashboard');
@@ -70,8 +92,9 @@ class DashboardController extends Controller
         } else { // owner atau role lain
             return view('admin.dashboard', compact(
                 'employeeCount', 'customerCount', 'productCount', 'totalPenjualan',
-                'recentInvoices', 'days', 'sales',
-                'monthlyLabels', 'monthlySales', 'yearLabels', 'yearSales'
+                'recentInvoices', 'dailyLabels', 'dailySales',
+                'monthlyLabels', 'monthlySales', 'yearLabels', 'yearSales',
+                'yearlyLabels', 'yearlySales'
             ));
         }
     }

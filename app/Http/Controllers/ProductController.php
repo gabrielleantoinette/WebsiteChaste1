@@ -13,7 +13,7 @@ class ProductController extends Controller
     public function view()
     {
         return view('admin.products.view', [
-            'products' => Product::all(),
+            'products' => Product::with('variants')->paginate(12),
         ]);
     }
 

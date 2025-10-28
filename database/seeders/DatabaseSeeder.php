@@ -27,11 +27,17 @@ class DatabaseSeeder extends Seeder
         $this->createProduct();
         $this->createUser();
         
+        // Seed customers
+        $this->call(CustomerSeeder::class);
+        
         // Seed custom materials
         $this->call(CustomMaterialSeeder::class);
         
         // Seed categories
         $this->call(CategorySeeder::class);
+        
+        // Seed sales data
+        $this->call(SalesDataSeeder::class);
     }
 
     function createProduct()
