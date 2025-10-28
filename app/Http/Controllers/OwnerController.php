@@ -26,9 +26,9 @@ class OwnerController extends Controller
             ->whereNotIn('status', ['retur_diajukan', 'retur_diambil'])
             ->get();
             
-        $pengambilanRetur = HInvoice::whereIn('status', ['retur_diajukan', 'retur_diambil'])->get();
+        $pengirimanRetur = HInvoice::whereIn('status', ['retur_diajukan', 'retur_diambil'])->get();
         
-        return view('admin.assign-driver.view', compact('pengirimanNormal', 'pengambilanRetur', 'drivers'));
+        return view('admin.assign-driver.view', compact('pengirimanNormal', 'pengirimanRetur', 'drivers'));
     }
 
     public function assignDriver($id, Request $request)

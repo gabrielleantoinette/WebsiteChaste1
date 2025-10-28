@@ -136,30 +136,58 @@
         </div>
     </div>
 
-    {{-- Charts Section - KEMBALI KE TAMPILAN AWAL YANG SEDERHANA --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {{-- Grafik Penjualan 7 Hari Terakhir --}}
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Penjualan 7 Hari Terakhir</h3>
-            <canvas id="dailySalesChart" width="400" height="200"></canvas>
+    {{-- Charts Section - LAYOUT MENYAMPING KE KANAN --}}
+    <div class="space-y-8 mb-8">
+        {{-- Grafik Penjualan 7 Hari Terakhir - Full Width --}}
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Penjualan 7 Hari Terakhir
+            </h3>
+            <div class="h-80">
+                <canvas id="dailySalesChart"></canvas>
+            </div>
         </div>
 
-        {{-- Grafik Penjualan 30 Hari Terakhir --}}
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Penjualan 30 Hari Terakhir</h3>
-            <canvas id="monthlySalesChart" width="400" height="200"></canvas>
+        {{-- Grafik Penjualan 30 Hari Terakhir - Full Width --}}
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Penjualan 30 Hari Terakhir
+            </h3>
+            <div class="h-80">
+                <canvas id="monthlySalesChart"></canvas>
+            </div>
         </div>
 
-        {{-- Grafik Penjualan 12 Bulan Terakhir --}}
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Penjualan 12 Bulan Terakhir</h3>
-            <canvas id="yearlySalesChart" width="400" height="200"></canvas>
+        {{-- Grafik Penjualan 12 Bulan Terakhir - Full Width --}}
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Penjualan 12 Bulan Terakhir
+            </h3>
+            <div class="h-80">
+                <canvas id="yearlySalesChart"></canvas>
+            </div>
         </div>
 
-        {{-- Grafik Penjualan 5 Tahun Terakhir --}}
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Penjualan 5 Tahun Terakhir</h3>
-            <canvas id="yearlyComparisonChart" width="400" height="200"></canvas>
+        {{-- Grafik Penjualan 5 Tahun Terakhir - Full Width --}}
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Penjualan 5 Tahun Terakhir
+            </h3>
+            <div class="h-80">
+                <canvas id="yearlyComparisonChart"></canvas>
+            </div>
         </div>
     </div>
 
