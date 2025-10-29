@@ -284,7 +284,7 @@
                                     <div class="p-5 text-center">
                                         <h3 class="font-semibold text-gray-800 text-lg mb-2 group-hover:text-teal-600 transition-colors">{{ $product->name }}</h3>
                                         <p class="text-sm text-gray-600 mb-2">Ukuran: {{ $product->size }}</p>
-                                        <p class="text-lg font-bold text-teal-600">Rp {{ number_format($product->price) }}</p>
+                                        <p class="text-lg font-bold text-teal-600">Rp {{ $product->price_range }}</p>
                                     </div>
                                 </div>
                             </div>

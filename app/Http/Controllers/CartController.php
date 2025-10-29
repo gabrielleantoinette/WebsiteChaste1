@@ -26,6 +26,7 @@ class CartController extends Controller
         $user = Session::get('user');
         $quantity = $request->quantity ?? 1;
         $variantId = $request->variant_id; // Ambil variant_id dari form
+        $selectedSize = $request->selected_size; // Ambil ukuran yang dipilih
         $negotiatedPrice = $request->negotiated_price ?? null;
 
         // Cari produk
@@ -60,9 +61,10 @@ class CartController extends Controller
             }
         }
 
-        // Cek apakah sudah ada di cart dengan variant yang sama
+        // Cek apakah sudah ada di cart dengan variant dan ukuran yang sama
         $cartExist = Cart::where('user_id', $user['id'])
                         ->where('variant_id', $variant->id)
+                        ->where('selected_size', $selectedSize)
                         ->whereNull('kebutuhan_custom')
                         ->first();
 
@@ -75,6 +77,7 @@ class CartController extends Controller
             $cart = new Cart();
             $cart->user_id = $user['id'];
             $cart->variant_id = $variant->id;
+            $cart->selected_size = $selectedSize;
             $cart->quantity = $quantity;
             
             // Jika ada harga negosiasi, simpan sebagai harga custom

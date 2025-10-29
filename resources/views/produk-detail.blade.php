@@ -43,10 +43,9 @@
                 @endif
                 <h1 class="text-3xl font-bold text-gray-800">
                     {{ $product->name }}
-                    <span class="text-lg text-gray-600">({{ $product->size }})</span>
                 </h1>
                 <p class="text-xl text-teal-600 font-semibold">
-                    Rp {{ number_format($product->price, 0, ',', '.') }}
+                    Rp {{ $priceRange }}
                     <span class="text-sm text-gray-500">/ unit</span>
                 </p>
                 <p class="text-sm text-yellow-600 bg-yellow-50 px-3 py-2 rounded-lg border border-pink-200">
@@ -54,8 +53,20 @@
                 </p>
                 <p class="text-gray-600">{{ $product->description }}</p>
 
-                <!-- Variant & Quantity -->
+                <!-- Size, Variant & Quantity -->
                 <div class="space-y-4">
+                    @if(isset($sizeOptions) && count($sizeOptions) > 0)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ukuran</label>
+                        <select id="sizeSelect" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-teal-400">
+                            @foreach($sizeOptions as $opt)
+                                <option value="{{ $opt['size'] }}" data-price="{{ $opt['price'] }}" {{ $opt['size'] == '2x3' ? 'selected' : '' }}>
+                                    {{ $opt['size'] }} (Rp {{ number_format($opt['price'], 0, ',', '.') }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Warna</label>
                         <select id="variantSelect"
@@ -97,6 +108,7 @@
                             @csrf
                             <input type="hidden" name="variant_id" id="cartVariantId" value="">
                             <input type="hidden" name="quantity" id="cartQuantity" value="1">
+                            <input type="hidden" name="selected_size" id="cartSelectedSize" value="2x3">
                             <button type="submit" id="addToCartButton"
                                 class="w-full bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition">
                                 Tambah ke Keranjang
@@ -215,6 +227,16 @@
         // Initialize stock display on page load
         document.addEventListener('DOMContentLoaded', function() {
             updateStockDisplay();
+            updatePriceDisplay();
+            
+            // Add event listener for size selection change
+            const sizeSelect = document.getElementById('sizeSelect');
+            if (sizeSelect) {
+                sizeSelect.addEventListener('change', function() {
+                    updatePriceDisplay();
+                    updateCartForm();
+                });
+            }
             
             // Add event listener for variant selection change
             const variantSelect = document.getElementById('variantSelect');
@@ -268,6 +290,33 @@
             } else {
                 stockText.textContent = 'Stok habis';
                 stockText.className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800';
+            }
+        }
+        
+        function updatePriceDisplay() {
+            const sizeSelect = document.getElementById('sizeSelect');
+            const priceDisplay = document.getElementById('priceDisplay');
+            
+            if (!sizeSelect || !priceDisplay) return;
+            
+            const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+            const price = selectedOption ? parseInt(selectedOption.dataset.price) : 0;
+            
+            priceDisplay.innerHTML = `Rp ${price.toLocaleString('id-ID')} <span class="text-sm text-gray-500">/ unit</span>`;
+        }
+        
+        function updateCartForm() {
+            const sizeSelect = document.getElementById('sizeSelect');
+            const variantSelect = document.getElementById('variantSelect');
+            const cartVariantId = document.getElementById('cartVariantId');
+            const cartSelectedSize = document.getElementById('cartSelectedSize');
+            
+            if (sizeSelect && cartSelectedSize) {
+                cartSelectedSize.value = sizeSelect.value;
+            }
+            
+            if (variantSelect && cartVariantId) {
+                cartVariantId.value = variantSelect.value;
             }
         }
         

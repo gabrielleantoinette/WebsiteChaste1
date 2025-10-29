@@ -163,6 +163,27 @@ class CustomerController extends Controller
 
         $products = $products->paginate(9)->withQueryString();
 
+        // Add price range to each product
+        $products->getCollection()->transform(function ($product) {
+            $pricePerM2 = $product->price / (2 * 3); // Assuming current price is for 2x3
+            $sizes = [
+                ['width' => 2, 'height' => 3],
+                ['width' => 3, 'height' => 4],
+                ['width' => 4, 'height' => 6],
+                ['width' => 6, 'height' => 8]
+            ];
+            
+            $prices = collect($sizes)->map(function ($size) use ($pricePerM2) {
+                return $pricePerM2 * $size['width'] * $size['height'];
+            });
+            
+            $minPrice = $prices->min();
+            $maxPrice = $prices->max();
+            $product->price_range = $minPrice == $maxPrice ? number_format($minPrice, 0, ',', '.') : number_format($minPrice, 0, ',', '.') . ' - ' . number_format($maxPrice, 0, ',', '.');
+            
+            return $product;
+        });
+
         return view('produk', compact('products'));
     }
 
@@ -171,6 +192,30 @@ class CustomerController extends Controller
     {
         $product = Product::find($id);
         $variants = ProductVariant::where('product_id', $id)->get();
+
+        // Calculate price per m2 from current product price (assuming it's for 2x3)
+        $pricePerM2 = $product ? $product->price / (2 * 3) : 0;
+        
+        // Build size options with calculated prices
+        $sizes = [
+            ['name' => '2x3', 'width' => 2, 'height' => 3],
+            ['name' => '3x4', 'width' => 3, 'height' => 4],
+            ['name' => '4x6', 'width' => 4, 'height' => 6],
+            ['name' => '6x8', 'width' => 6, 'height' => 8]
+        ];
+
+        $sizeOptions = collect($sizes)->map(function ($size) use ($pricePerM2) {
+            return [
+                'size' => $size['name'],
+                'price' => $pricePerM2 * $size['width'] * $size['height'],
+            ];
+        });
+
+        // Calculate price range for display
+        $prices = $sizeOptions->pluck('price');
+        $minPrice = $prices->min();
+        $maxPrice = $prices->max();
+        $priceRange = $minPrice == $maxPrice ? number_format($minPrice, 0, ',', '.') : number_format($minPrice, 0, ',', '.') . ' - ' . number_format($maxPrice, 0, ',', '.');
         
         // Ambil review untuk produk ini
         $reviews = \App\Models\ProductReview::with(['user', 'order'])
@@ -182,7 +227,7 @@ class CustomerController extends Controller
         $averageRating = $reviews->avg('rating');
         $totalReviews = $reviews->count();
         
-        return view('produk-detail', compact('product', 'variants', 'reviews', 'averageRating', 'totalReviews'));
+        return view('produk-detail', compact('product', 'variants', 'reviews', 'averageRating', 'totalReviews', 'sizeOptions', 'priceRange'));
     }
 
     public function viewTransaction(Request $request)

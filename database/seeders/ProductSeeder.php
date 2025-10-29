@@ -73,19 +73,21 @@ class ProductSeeder extends Seeder
         foreach ($products as $productData) {
             $description = $categoryName . ' ' . $productData['code'] . ' dengan kualitas unggul, tahan cuaca, dan cocok untuk berbagai kebutuhan industri maupun rumah tangga.';
             $codeSlug = strtolower(str_replace(' ', '-', $productData['code']));
+            
+            // Create ONE product per code (without size in name)
             $product = Product::create([
                 'name' => $categoryName . ' ' . $productData['code'],
                 'description' => $description,
                 'image' => 'terpal-' . $codeSlug . '.jpg',
-                'price' => $productData['price_per_m2'] * 2 * 3, // default for size 2x3
+                'price' => $productData['price_per_m2'] * 2 * 3, // Default price for 2x3
                 'min_price' => $productData['price_per_m2'] * 2 * 3,
                 'min_buying_stock' => 10,
-                'size' => $sizesText,
+                'size' => $sizesText, // All available sizes
                 'live' => true,
                 'category_id' => $category->id,
             ]);
 
-            // Variants are colors only; sizes are fixed options on the product
+            // Attach ALL colors as variants under this product
             foreach ($colors as $color) {
                 ProductVariant::create([
                     'product_id' => $product->id,

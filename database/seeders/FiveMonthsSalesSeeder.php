@@ -7,6 +7,7 @@ use App\Models\DInvoice;
 use App\Models\PaymentModel;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\Customer;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
 
@@ -507,10 +508,40 @@ class FiveMonthsSalesSeeder extends Seeder
                 continue;
             }
 
+            // Resolve customer by id or name
+            $customerId = $sale['customer_id'] ?? null;
+            if (!$customerId && !empty($sale['customer_name'])) {
+                // Cari customer berdasarkan nama
+                $customer = Customer::where('name', $sale['customer_name'])->first();
+                
+                if (!$customer) {
+                    // Generate email dari nama customer
+                    $email = strtolower(str_replace(' ', '.', preg_replace('/[^A-Za-z0-9 ]/', '', $sale['customer_name']))) . '@example.com';
+                    
+                    // Generate phone number
+                    $phone = '08' . rand(1000000000, 9999999999);
+                    
+                    // Buat Customer record (tanpa User account terpisah)
+                    $customer = Customer::create([
+                        'name' => $sale['customer_name'],
+                        'email' => $email,
+                        'phone' => $phone,
+                        'address' => 'Alamat ' . $sale['customer_name'],
+                        'password' => '123',
+                    ]);
+                    
+                    $this->command->info("Created new customer: {$sale['customer_name']}");
+                } else {
+                    $this->command->info("Using existing customer: {$sale['customer_name']}");
+                }
+                
+                $customerId = $customer->id;
+            }
+
             // Buat header invoice
             $invoice = HInvoice::create([
                 'code' => $sale['code'],
-                'customer_id' => $sale['customer_id'],
+                'customer_id' => $customerId ?? $sale['customer_id'],
                 'employee_id' => $sale['employee_id'],
                 'driver_id' => $sale['driver_id'],
                 'gudang_id' => $sale['gudang_id'],

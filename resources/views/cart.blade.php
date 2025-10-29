@@ -79,9 +79,9 @@
                                 </div>
                             @else
                                 <p class="text-sm text-gray-500">
-                                    Variasi: {{ $item->variant->color ?? '-' }}
-                                    @if ($item->variant->product->size)
-                                        <br>Ukuran: {{ $item->variant->product->size }}
+                                    Warna: {{ ucfirst($item->variant->color ?? '-') }}
+                                    @if ($item->selected_size)
+                                        <br>Ukuran: {{ $item->selected_size }}
                                     @endif
                                 </p>
                             @endif
@@ -94,8 +94,21 @@
                                     <span class="text-teal-600">Rp {{ number_format($item->harga_custom * $item->quantity, 0, ',', '.') }}</span>
                                     <div class="text-xs text-gray-500">(Hasil Negosiasi - Rp {{ number_format($item->harga_custom, 0, ',', '.') }} × {{ $item->quantity }})</div>
                                 @elseif ($item->variant)
-                                    <!-- Harga normal produk -->
-                                    Rp {{ number_format($item->variant->product->price * $item->quantity, 0, ',', '.') }}
+                                    <!-- Harga normal produk berdasarkan ukuran yang dipilih -->
+                                    @php
+                                        $pricePerM2 = $item->variant->product->price / (2 * 3); // Assuming current price is for 2x3
+                                        $sizeMap = [
+                                            '2x3' => ['width' => 2, 'height' => 3],
+                                            '3x4' => ['width' => 3, 'height' => 4],
+                                            '4x6' => ['width' => 4, 'height' => 6],
+                                            '6x8' => ['width' => 6, 'height' => 8]
+                                        ];
+                                        $selectedSize = $item->selected_size ?? '2x3';
+                                        $size = $sizeMap[$selectedSize] ?? $sizeMap['2x3'];
+                                        $calculatedPrice = $pricePerM2 * $size['width'] * $size['height'];
+                                    @endphp
+                                    Rp {{ number_format($calculatedPrice * $item->quantity, 0, ',', '.') }}
+                                    <div class="text-xs text-gray-500">(Rp {{ number_format($calculatedPrice, 0, ',', '.') }} × {{ $item->quantity }})</div>
                                 @else
                                     <!-- Harga custom terpal -->
                                     Rp {{ number_format($item->harga_custom ?? 0, 0, ',', '.') }}
@@ -146,14 +159,26 @@
                     price: @if ($item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi'))
                         {{ $item->harga_custom }}
                     @elseif ($item->variant)
-                        {{ $item->variant->product->price }}
+                        @php
+                            $pricePerM2 = $item->variant->product->price / (2 * 3); // Assuming current price is for 2x3
+                            $sizeMap = [
+                                '2x3' => ['width' => 2, 'height' => 3],
+                                '3x4' => ['width' => 3, 'height' => 4],
+                                '4x6' => ['width' => 4, 'height' => 6],
+                                '6x8' => ['width' => 6, 'height' => 8]
+                            ];
+                            $selectedSize = $item->selected_size ?? '2x3';
+                            $size = $sizeMap[$selectedSize] ?? $sizeMap['2x3'];
+                            $calculatedPrice = $pricePerM2 * $size['width'] * $size['height'];
+                        @endphp
+                        {{ $calculatedPrice }}
                     @else
                         {{ $item->harga_custom ?? 0 }}
                     @endif,
                     quantity: {{ $item->quantity }},
                     name: "{{ $item->variant && $item->variant->product ? $item->variant->product->name : 'Custom Terpal' }}",
-                    color: "{{ $item->variant ? $item->variant->color : ($item->warna_custom ?? '-') }}",
-                    size: "{{ $item->variant && $item->variant->product ? $item->variant->product->size : ($item->ukuran_custom ?? '-') }}",
+                    color: "{{ $item->variant ? ucfirst($item->variant->color) : ($item->warna_custom ?? '-') }}",
+                    size: "{{ $item->selected_size ?? ($item->ukuran_custom ?? '-') }}",
                     isNegotiated: {{ $item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi') ? 'true' : 'false' }}
                 },
             @endforeach
