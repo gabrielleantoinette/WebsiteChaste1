@@ -12,9 +12,15 @@ class ProductController extends Controller
 {
     public function view()
     {
-        return view('admin.products.view', [
-            'products' => Product::with('variants')->paginate(12),
-        ]);
+        $products = Product::with('variants')->paginate(12);
+        $totalProducts = Product::count();
+        $activeProducts = Product::where('live', 1)->count();
+        $inactiveProducts = $totalProducts - $activeProducts;
+        $totalCategories = \App\Models\Categories::count();
+
+        return view('admin.products.view', compact(
+            'products', 'totalProducts', 'activeProducts', 'inactiveProducts', 'totalCategories'
+        ));
     }
 
     public function create()

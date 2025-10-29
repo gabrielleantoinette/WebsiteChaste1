@@ -24,7 +24,6 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
-        $this->createProduct();
         $this->createUser();
         
         // Seed customers
@@ -36,122 +35,13 @@ class DatabaseSeeder extends Seeder
         // Seed categories
         $this->call(CategorySeeder::class);
         
+        // Seed products
+        $this->call(ProductSeeder::class);
+        
         // Seed sales data
         $this->call(FiveMonthsSalesSeeder::class);
     }
 
-    function createProduct()
-    {
-        Product::create([
-            'id' => 1,
-            'name' => 'Terpal A5',
-            'description' => 'Description 1',
-            'price' => 1000,
-            'min_price' => 650,
-            'min_buying_stock' => 5,
-            'size' => '2x3',
-            'live' => 1,
-        ]);
-        Product::create([
-            'id' => 2,
-            'name' => 'Terpal A5',
-            'description' => 'Description 1',
-            'price' => 2000,
-            'min_price' => 1300,
-            'min_buying_stock' => 3,
-            'size' => '3x4',
-            'live' => 1,
-        ]);
-        Product::create([
-            'id' => 3,
-            'name' => 'Terpal A5',
-            'description' => 'Description 1',
-            'price' => 3000,
-            'min_price' => 1950,
-            'min_buying_stock' => 2,
-            'size' => '4x6',
-            'live' => 1,
-        ]);
-
-        ProductVariant::create([
-            'product_id' => 1,
-            'color' => 'biru silver',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 1,
-            'color' => 'biru polos',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 1,
-            'color' => 'oranye silver',
-            'stock' => 100,
-        ]);
-
-        ProductVariant::create([
-            'product_id' => 2,
-            'color' => 'biru silver',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 2,
-            'color' => 'biru polos',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 2,
-            'color' => 'oranye silver',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 2,
-            'color' => 'oranye polos',
-            'stock' => 100,
-        ]);
-
-        // Product variants untuk Product ID 3
-        ProductVariant::create([
-            'product_id' => 3,
-            'color' => 'biru silver',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 3,
-            'color' => 'biru polos',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 3,
-            'color' => 'oranye silver',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 3,
-            'color' => 'oranye polos',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 3,
-            'color' => 'hijau polos',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 3,
-            'color' => 'hijau silver',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 3,
-            'color' => 'coklat silver',
-            'stock' => 100,
-        ]);
-        ProductVariant::create([
-            'product_id' => 3,
-            'color' => 'coklat polos',
-            'stock' => 100,
-        ]);
-    }
 
     function createUser()
     {

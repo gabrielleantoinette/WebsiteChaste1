@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\HInvoice;
 use App\Models\DInvoice;
 use App\Models\PaymentModel;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
 
@@ -496,6 +498,9 @@ class FiveMonthsSalesSeeder extends Seeder
         // Merge original data with new data
         $salesData = array_merge($originalSalesData, $salesData);
 
+        // Preload products for resolution by code keywords
+        $allProducts = Product::with('variants')->get();
+
         foreach ($salesData as $sale) {
             // Cek apakah invoice sudah ada
             if (HInvoice::where('code', $sale['code'])->exists()) {
@@ -529,18 +534,88 @@ class FiveMonthsSalesSeeder extends Seeder
             ]);
 
             // Buat detail invoice
+            $computedGrandTotal = 0;
             foreach ($sale['items'] as $item) {
-                DInvoice::create([
+                $kebutuhan = $item['kebutuhan_custom'] ?? '';
+                $warna = strtolower($item['warna_custom'] ?? '');
+                $qty = $item['quantity'] ?? 1;
+
+                // Resolve product by code within kebutuhan_custom (e.g., A20, A3A -> A3)
+                $resolvedProduct = null;
+                // Ulin variants
+                if (stripos($kebutuhan, 'ULIN') !== false) {
+                    if (stripos($kebutuhan, 'ORCH') !== false) {
+                        $resolvedProduct = $allProducts->first(function($p){ return stripos($p->name, 'Terpal Karet ULIN ORCHID') !== false; });
+                    } elseif (stripos($kebutuhan, 'SAMHE') !== false) {
+                        $resolvedProduct = $allProducts->first(function($p){ return stripos($p->name, 'Terpal Karet ULIN SAMHE') !== false; });
+                    } else {
+                        $resolvedProduct = $allProducts->first(function($p){ return stripos($p->name, 'Terpal Karet ULIN DD') !== false; });
+                    }
+                }
+
+                if (!$resolvedProduct) {
+                    if (preg_match('/A\s*(\d{1,2})/i', $kebutuhan, $m)) {
+                        $anum = $m[1];
+                        $resolvedProduct = $allProducts->first(function($p) use ($anum){
+                            return preg_match('/A\s*' . $anum . '\b/i', $p->name);
+                        });
+                    }
+                }
+
+                // Fallbacks for kain (if any appear)
+                if (!$resolvedProduct) {
+                    if (stripos($kebutuhan, 'JP') !== false) {
+                        $resolvedProduct = $allProducts->first(function($p){ return stripos($p->name, 'Terpal Kain JP') !== false; });
+                    } elseif (stripos($kebutuhan, 'KEEP') !== false || stripos($kebutuhan, 'JEP') !== false) {
+                        $resolvedProduct = $allProducts->first(function($p){ return stripos($p->name, 'Terpal Kain KEEP JEP') !== false; });
+                    } elseif (stripos($kebutuhan, 'SUPER') !== false) {
+                        $resolvedProduct = $allProducts->first(function($p){ return stripos($p->name, 'Terpal Kain SUPER') !== false; });
+                    }
+                }
+
+                // If still not found, pick the first product as a very last resort to avoid seeding failure
+                if (!$resolvedProduct) {
+                    $resolvedProduct = $allProducts->first();
+                }
+
+                // Find variant by color
+                $variantId = null;
+                if ($resolvedProduct) {
+                    $variant = $resolvedProduct->variants->first(function($v) use ($warna){
+                        return strtolower($v->color) === $warna;
+                    }) ?? $resolvedProduct->variants->first();
+                    $variantId = $variant ? $variant->id : null;
+                }
+
+                // Determine size area: prefer size in kebutuhan_custom like (6x8), else default 6x8
+                $width = 6; $height = 8;
+                if (preg_match('/\((\d+)x(\d+)\)/', $kebutuhan, $mm)) {
+                    $width = (int)$mm[1];
+                    $height = (int)$mm[2];
+                }
+                $area = $width * $height; // in square meters
+
+                // Compute price per m2 from product default price (stored as 2x3 price)
+                $perM2 = $resolvedProduct ? ($resolvedProduct->price / 6) : ($item['price'] ?? 0);
+                $computedSubtotal = $perM2 * $area * $qty;
+
+                $detail = DInvoice::create([
                     'hinvoice_id' => $invoice->id,
-                    'product_id' => $item['product_id'],
-                    'variant_id' => $item['variant_id'],
-                    'price' => $item['price'],
-                    'quantity' => $item['quantity'],
-                    'subtotal' => $item['subtotal'],
-                    'kebutuhan_custom' => $item['kebutuhan_custom'],
-                    'warna_custom' => $item['warna_custom'],
+                    'product_id' => $resolvedProduct ? $resolvedProduct->id : null,
+                    'variant_id' => $variantId,
+                    'price' => $perM2,
+                    'quantity' => $qty,
+                    'subtotal' => $computedSubtotal,
+                    'kebutuhan_custom' => $kebutuhan,
+                    'warna_custom' => $item['warna_custom'] ?? null,
                 ]);
+                $computedGrandTotal += $computedSubtotal;
             }
+
+            // Update grand total and payment amount based on computed details
+            $invoice->grand_total = $computedGrandTotal;
+            $invoice->paid_amount = $computedGrandTotal;
+            $invoice->save();
 
             // Buat payment
             PaymentModel::create([
@@ -548,7 +623,7 @@ class FiveMonthsSalesSeeder extends Seeder
                 'method' => $sale['payment']['method'],
                 'type' => $sale['payment']['type'],
                 'is_paid' => $sale['payment']['is_paid'],
-                'amount' => $sale['payment']['amount'],
+                'amount' => $computedGrandTotal,
                 'snap_token' => $sale['payment']['snap_token'],
             ]);
         }

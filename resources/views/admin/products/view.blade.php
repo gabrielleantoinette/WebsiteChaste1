@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\Storage;
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm font-medium text-gray-600">Total Produk</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $products->count() }}</p>
+                <p class="text-2xl font-bold text-gray-900">{{ $totalProducts ?? 0 }}</p>
             </div>
             <div class="p-3 bg-teal-100 rounded-lg">
                 <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +48,7 @@ use Illuminate\Support\Facades\Storage;
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm font-medium text-gray-600">Produk Aktif</p>
-                <p class="text-2xl font-bold text-emerald-600">{{ $products->where('live', true)->count() }}</p>
+                <p class="text-2xl font-bold text-emerald-600">{{ $activeProducts ?? 0 }}</p>
             </div>
             <div class="p-3 bg-emerald-100 rounded-lg">
                 <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +62,7 @@ use Illuminate\Support\Facades\Storage;
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm font-medium text-gray-600">Produk Non-Aktif</p>
-                <p class="text-2xl font-bold text-red-600">{{ $products->where('live', false)->count() }}</p>
+                <p class="text-2xl font-bold text-red-600">{{ $inactiveProducts ?? 0 }}</p>
             </div>
             <div class="p-3 bg-red-100 rounded-lg">
                 <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,7 +76,7 @@ use Illuminate\Support\Facades\Storage;
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm font-medium text-gray-600">Total Kategori</p>
-                <p class="text-2xl font-bold text-blue-600">{{ $products->groupBy('category_id')->count() }}</p>
+                <p class="text-2xl font-bold text-blue-600">{{ $totalCategories ?? 0 }}</p>
             </div>
             <div class="p-3 bg-blue-100 rounded-lg">
                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
