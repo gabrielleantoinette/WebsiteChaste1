@@ -8,15 +8,18 @@ use App\Models\PaymentModel;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
 
-class SalesDataSeeder extends Seeder
+class FiveMonthsSalesSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        // Data penjualan November 2024
-        $salesData = [
+        // Load data from external file
+        $salesData = include base_path('sales_data_5_months.php');
+
+        // Add data from original SalesDataSeeder (BP GILANG, GRACIA, dll)
+        $originalSalesData = [
             [
                 'code' => 'INV-20241101-001',
                 'customer_id' => 2, // BP GILANG
@@ -102,7 +105,7 @@ class SalesDataSeeder extends Seeder
             // Transaksi 3 - PT TAN (BP TEKKO)
             [
                 'code' => 'INV-20241101-003',
-                'customer_id' => 4, // PT TAN (BP TEKKO) - akan dibuat
+                'customer_id' => 4, // PT TAN (BP TEKKO)
                 'employee_id' => 1, // Admin
                 'driver_id' => 5, // Driver
                 'gudang_id' => 4, // Gudang
@@ -144,7 +147,7 @@ class SalesDataSeeder extends Seeder
             // Transaksi 4 - AZHAR JAYA
             [
                 'code' => 'INV-20241101-004',
-                'customer_id' => 5, // AZHAR JAYA - akan dibuat
+                'customer_id' => 5, // AZHAR JAYA
                 'employee_id' => 1, // Admin
                 'driver_id' => 5, // Driver
                 'gudang_id' => 4, // Gudang
@@ -186,7 +189,7 @@ class SalesDataSeeder extends Seeder
             // Transaksi 5 - BP SOLEH
             [
                 'code' => 'INV-20241104-001',
-                'customer_id' => 6, // BP SOLEH - akan dibuat
+                'customer_id' => 6, // BP SOLEH
                 'employee_id' => 1, // Admin
                 'driver_id' => 5, // Driver
                 'gudang_id' => 4, // Gudang
@@ -490,6 +493,9 @@ class SalesDataSeeder extends Seeder
             ],
         ];
 
+        // Merge original data with new data
+        $salesData = array_merge($originalSalesData, $salesData);
+
         foreach ($salesData as $sale) {
             // Cek apakah invoice sudah ada
             if (HInvoice::where('code', $sale['code'])->exists()) {
@@ -547,6 +553,6 @@ class SalesDataSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Sales data seeded successfully!');
+        $this->command->info('5 months sales data seeded successfully!');
     }
 }

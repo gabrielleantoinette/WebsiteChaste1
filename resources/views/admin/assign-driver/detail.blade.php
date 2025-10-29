@@ -76,7 +76,7 @@
             <tbody>
                 @foreach ($invoice->details as $detail)
                     <tr>
-                        <td>{{ $detail->id }}</td>
+                        <td>{{ $loop->iteration }}</td>
                         <td>{{ $detail->product->name }}</td>
                         <td>{{ $detail->price }}</td>
                         <td>{{ $detail->variant->color }}</td>

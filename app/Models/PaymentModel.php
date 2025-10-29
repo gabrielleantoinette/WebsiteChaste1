@@ -18,4 +18,9 @@ class PaymentModel extends Model
         'snap_token',
         'is_paid',
     ];
+
+    public function hinvoice()
+    {
+        return $this->belongsTo(HInvoice::class, 'invoice_id');
+    }
 }

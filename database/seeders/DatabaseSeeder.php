@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CategorySeeder::class);
         
         // Seed sales data
-        $this->call(SalesDataSeeder::class);
+        $this->call(FiveMonthsSalesSeeder::class);
     }
 
     function createProduct()
@@ -107,6 +107,48 @@ class DatabaseSeeder extends Seeder
         ProductVariant::create([
             'product_id' => 2,
             'color' => 'oranye polos',
+            'stock' => 100,
+        ]);
+
+        // Product variants untuk Product ID 3
+        ProductVariant::create([
+            'product_id' => 3,
+            'color' => 'biru silver',
+            'stock' => 100,
+        ]);
+        ProductVariant::create([
+            'product_id' => 3,
+            'color' => 'biru polos',
+            'stock' => 100,
+        ]);
+        ProductVariant::create([
+            'product_id' => 3,
+            'color' => 'oranye silver',
+            'stock' => 100,
+        ]);
+        ProductVariant::create([
+            'product_id' => 3,
+            'color' => 'oranye polos',
+            'stock' => 100,
+        ]);
+        ProductVariant::create([
+            'product_id' => 3,
+            'color' => 'hijau polos',
+            'stock' => 100,
+        ]);
+        ProductVariant::create([
+            'product_id' => 3,
+            'color' => 'hijau silver',
+            'stock' => 100,
+        ]);
+        ProductVariant::create([
+            'product_id' => 3,
+            'color' => 'coklat silver',
+            'stock' => 100,
+        ]);
+        ProductVariant::create([
+            'product_id' => 3,
+            'color' => 'coklat polos',
             'stock' => 100,
         ]);
     }

@@ -57,7 +57,7 @@
                 <tbody>
                     @foreach ($invoice->details as $detail)
                         <tr class="border-t border-gray-200 hover:bg-gray-50">
-                            <td class="px-4 py-2">{{ $detail->id }}</td>
+                            <td class="px-4 py-2">{{ $loop->iteration }}</td>
                             <td class="px-4 py-2">{{ $detail->product->name }}</td>
                             <td class="px-4 py-2">Rp {{ number_format($detail->price) }}</td>
                             <td class="px-4 py-2">{{ $detail->variant->color }}</td>

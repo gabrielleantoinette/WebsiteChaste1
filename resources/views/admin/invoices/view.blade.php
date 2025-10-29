@@ -11,17 +11,17 @@
                     <p class="text-teal-100">Kelola transaksi dan penjualan Anda</p>
                 </div>
                 <div class="flex gap-3">
-                    @if (Session::get('user')->role !== 'owner')
-                        <a href="{{ url('/admin/invoices/create-customer') }}"
+            @if (Session::get('user')->role !== 'owner')
+                <a href="{{ url('/admin/invoices/create-customer') }}"
                            class="inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-medium rounded-lg hover:bg-white/30 transition-all duration-300 shadow-lg border border-white/20">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
                                  stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                             </svg>
-                            + Tambah Transaksi Toko
-                        </a>
-                    @endif
-                    
+                    + Tambah Transaksi Toko
+                </a>
+            @endif
+    
                     {{-- Export Dropdown --}}
                     <div class="relative">
                         <button id="exportDropdownBtn"
@@ -33,10 +33,10 @@
                         </button>
                         <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                             <div class="py-2">
-                                <a href="{{ route('invoices.export.pdf') }}"
+            <a href="{{ route('invoices.export.pdf') }}"
                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    📄 Export PDF
-                                </a>
+                📄 Export PDF
+            </a>
                                 <a href="{{ route('laporan.penjualan.pdf') }}"
                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     📦 Laporan Penjualan
@@ -63,7 +63,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Transaksi</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $invoices->count() }}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $totalInvoices }}</p>
                 </div>
                 <div class="p-3 bg-teal-100 rounded-lg">
                     <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,12 +72,12 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Transaksi Selesai</p>
-                    <p class="text-2xl font-bold text-emerald-600">{{ $invoices->where('status', 'completed')->count() }}</p>
+                    <p class="text-2xl font-bold text-emerald-600">{{ $completedInvoices }}</p>
                 </div>
                 <div class="p-3 bg-emerald-100 rounded-lg">
                     <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,12 +86,12 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Transaksi Pending</p>
-                    <p class="text-2xl font-bold text-yellow-600">{{ $invoices->where('status', 'pending')->count() }}</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ $pendingInvoices }}</p>
                 </div>
                 <div class="p-3 bg-yellow-100 rounded-lg">
                     <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,17 +100,17 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Penjualan</p>
-                    <p class="text-2xl font-bold text-green-600">Rp {{ number_format($invoices->sum('grand_total')) }}</p>
+                    <p class="text-2xl font-bold text-green-600">Rp {{ number_format($totalSales) }}</p>
                 </div>
                 <div class="p-3 bg-green-100 rounded-lg">
                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                    </svg>
+                </svg>
                 </div>
             </div>
         </div>
@@ -175,12 +175,12 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Jenis Pembelian</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
+            </tr>
+        </thead>
                 <tbody class="divide-y divide-gray-200">
                     @forelse ($invoices as $invoice)
                         <tr class="hover:bg-gray-50 transition-colors duration-200">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $invoice->id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ ($invoices->currentPage() - 1) * $invoices->perPage() + $loop->iteration }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-teal-600">{{ $invoice->code }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $invoice->customer->name }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $invoice->employee->name }}</td>
@@ -207,11 +207,11 @@
                                    class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 shadow-md hover:shadow-lg">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    Detail
-                                </a>
-                            </td>
-                        </tr>
+                            </svg>
+                            Detail
+                        </a>
+                    </td>
+                </tr>
                     @empty
                         <tr>
                             <td colspan="12" class="px-6 py-12 text-center">
@@ -235,10 +235,19 @@
                             </td>
                         </tr>
                     @endforelse
-                </tbody>
-            </table>
+        </tbody>
+    </table>
         </div>
     </div>
+
+    {{-- Pagination --}}
+    @if($invoices->hasPages())
+    <div class="mt-8 flex justify-center">
+        <div class="bg-white rounded-lg shadow-lg border border-gray-100 p-4">
+            {{ $invoices->links() }}
+        </div>
+    </div>
+    @endif
 
     <script>
         // Export dropdown functionality

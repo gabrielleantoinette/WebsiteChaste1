@@ -55,9 +55,15 @@ class InvoiceController extends Controller
             });
         }
         
-        $invoices = $query->orderBy('created_at', 'desc')->paginate(10);
+        // Get total counts for statistics
+        $totalInvoices = HInvoice::count();
+        $completedInvoices = HInvoice::where('status', 'completed')->count();
+        $pendingInvoices = HInvoice::where('status', 'pending')->count();
+        $totalSales = HInvoice::sum('grand_total');
         
-        return view('admin.invoices.view', compact('invoices'));
+        $invoices = $query->orderBy('receive_date', 'desc')->paginate(10);
+        
+        return view('admin.invoices.view', compact('invoices', 'totalInvoices', 'completedInvoices', 'pendingInvoices', 'totalSales'));
     }
 
     public function createCustomer()

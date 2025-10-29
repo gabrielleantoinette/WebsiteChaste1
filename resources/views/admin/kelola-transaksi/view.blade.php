@@ -49,7 +49,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Transaksi</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $payments->count() }}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $totalPayments ?? 0 }}</p>
                 </div>
                 <div class="p-3 bg-teal-100 rounded-lg">
                     <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,7 +63,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Transaksi Lunas</p>
-                    <p class="text-2xl font-bold text-emerald-600">{{ $payments->where('is_paid', true)->count() }}</p>
+                    <p class="text-2xl font-bold text-emerald-600">{{ $paidPayments ?? 0 }}</p>
                 </div>
                 <div class="p-3 bg-emerald-100 rounded-lg">
                     <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +77,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Belum Lunas</p>
-                    <p class="text-2xl font-bold text-red-600">{{ $payments->where('is_paid', false)->count() }}</p>
+                    <p class="text-2xl font-bold text-red-600">{{ $unpaidPayments ?? 0 }}</p>
                 </div>
                 <div class="p-3 bg-red-100 rounded-lg">
                     <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,7 +91,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Pembayaran</p>
-                    <p class="text-2xl font-bold text-green-600">Rp {{ number_format($payments->sum('amount')) }}</p>
+                    <p class="text-2xl font-bold text-green-600">Rp {{ number_format($totalPaymentsAmount ?? 0) }}</p>
                 </div>
                 <div class="p-3 bg-green-100 rounded-lg">
                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,6 +113,7 @@
                     <label for="filter" class="text-sm font-semibold text-gray-700">Filter Waktu:</label>
                 </div>
                 <select name="filter" id="filter" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white shadow-sm">
+                    <option value="semua" {{ request('filter', $filter) == 'semua' ? 'selected' : '' }}>Semua</option>
                     <option value="hari" {{ request('filter', $filter) == 'hari' ? 'selected' : '' }}>Hari Ini</option>
                     <option value="minggu" {{ request('filter', $filter) == 'minggu' ? 'selected' : '' }}>Minggu Ini</option>
                     <option value="bulan" {{ request('filter', $filter) == 'bulan' ? 'selected' : '' }}>Bulan Ini</option>
@@ -162,7 +163,7 @@
                 <tbody class="divide-y divide-gray-200">
                     @forelse ($payments as $p)
                         <tr class="hover:bg-gray-50 transition-colors duration-200">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $p->id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ ($payments->currentPage() - 1) * $payments->perPage() + $loop->iteration }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-teal-600">{{ $p->hinvoice->code }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $p->hinvoice->customer->name }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $p->hinvoice->receive_date ? \Carbon\Carbon::parse($p->hinvoice->receive_date)->format('d M Y') : ($p->hinvoice->created_at ? \Carbon\Carbon::parse($p->hinvoice->created_at)->format('d M Y') : '-') }}</td>
@@ -244,6 +245,15 @@
             </table>
         </div>
     </div>
+
+    {{-- Pagination --}}
+    @if($payments->hasPages())
+    <div class="mt-8 flex justify-center">
+        <div class="bg-white rounded-lg shadow-lg border border-gray-100 p-4">
+            {{ $payments->links() }}
+        </div>
+    </div>
+    @endif
 
     <script>
         // Download dropdown functionality

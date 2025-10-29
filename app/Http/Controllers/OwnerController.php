@@ -77,55 +77,91 @@ class OwnerController extends Controller
 
     public function transactionsIndex(Request $request)
     {
-        $filter = $request->input('filter', 'bulan');
+        $filter = $request->input('filter', 'semua');
         $search = $request->input('search');
-        $now = Carbon::now();
 
-        // Filter waktu
-        switch ($filter) {
-            case 'hari':
-                $start = $now->copy()->startOfDay();
-                $end = $now->copy()->endOfDay();
-                break;
-            case 'minggu':
-                $start = $now->copy()->startOfWeek();
-                $end = $now->copy()->endOfWeek();
-                break;
-            case 'tahun':
-                $start = $now->copy()->startOfYear();
-                $end = $now->copy()->endOfYear();
-                break;
-            case 'bulan':
-            default:
-                $start = $now->copy()->startOfMonth();
-                $end = $now->copy()->endOfMonth();
-                break;
+        // Filter waktu - menggunakan receive_date untuk data yang benar
+        if ($filter !== 'semua') {
+            $now = Carbon::now();
+            switch ($filter) {
+                case 'hari':
+                    $start = $now->copy()->startOfDay();
+                    $end = $now->copy()->endOfDay();
+                    break;
+                case 'minggu':
+                    $start = $now->copy()->startOfWeek();
+                    $end = $now->copy()->endOfWeek();
+                    break;
+                case 'tahun':
+                    $start = $now->copy()->startOfYear();
+                    $end = $now->copy()->endOfYear();
+                    break;
+                case 'bulan':
+                default:
+                    $start = $now->copy()->startOfMonth();
+                    $end = $now->copy()->endOfMonth();
+                    break;
+            }
         }
 
-        // Pendapatan (HInvoice)
-        $pendapatan = \App\Models\HInvoice::whereBetween('created_at', [$start, $end]);
+        // Pendapatan (HInvoice) - menggunakan receive_date
+        $pendapatanQuery = \App\Models\HInvoice::query();
+        if ($filter !== 'semua') {
+            $pendapatanQuery->whereBetween('receive_date', [$start, $end]);
+        }
         if ($search) {
-            $pendapatan = $pendapatan->where('code', 'like', "%$search%");
+            $pendapatanQuery->where('code', 'like', "%$search%");
         }
-        $pendapatan = $pendapatan->get();
+        $pendapatan = $pendapatanQuery->get();
 
         // Pengeluaran (DebtPayment)
-        $pengeluaran = DebtPayment::whereBetween('payment_date', [$start, $end]);
+        $pengeluaranQuery = DebtPayment::query();
+        if ($filter !== 'semua') {
+            $pengeluaranQuery->whereBetween('payment_date', [$start, $end]);
+        }
         if ($search) {
-            $pengeluaran = $pengeluaran->whereHas('purchaseOrder', function($q) use ($search) {
+            $pengeluaranQuery->whereHas('purchaseOrder', function($q) use ($search) {
                 $q->where('code', 'like', "%$search%");
             });
         }
-        $pengeluaran = $pengeluaran->get();
+        $pengeluaran = $pengeluaranQuery->get();
 
         // Hutang Piutang (PurchaseOrder)
-        $hutang = PurchaseOrder::whereBetween('order_date', [$start, $end]);
-        if ($search) {
-            $hutang = $hutang->where('code', 'like', "%$search%");
+        $hutangQuery = PurchaseOrder::query();
+        if ($filter !== 'semua') {
+            $hutangQuery->whereBetween('order_date', [$start, $end]);
         }
-        $hutang = $hutang->get();
+        if ($search) {
+            $hutangQuery->where('code', 'like', "%$search%");
+        }
+        $hutang = $hutangQuery->get();
 
-        return view('admin.kelola-transaksi.view', compact('pendapatan', 'pengeluaran', 'hutang', 'filter', 'search'));
+        // Payments data untuk view - menggunakan receive_date dengan pagination
+        $paymentsQuery = \App\Models\PaymentModel::with(['hinvoice.customer']);
+        if ($filter !== 'semua') {
+            $paymentsQuery->whereHas('hinvoice', function($q) use ($start, $end) {
+                $q->whereBetween('receive_date', [$start, $end]);
+            });
+        }
+        if ($search) {
+            $paymentsQuery->whereHas('hinvoice', function($q) use ($search) {
+                $q->where('code', 'like', "%$search%");
+            });
+        }
+        // Stats (global totals, not limited by pagination)
+        $paymentsStatsQuery = clone $paymentsQuery;
+        $totalPayments = (clone $paymentsStatsQuery)->count();
+        $paidPayments = (clone $paymentsStatsQuery)->where('is_paid', true)->count();
+        $unpaidPayments = $totalPayments - $paidPayments;
+        $totalPaymentsAmount = (clone $paymentsStatsQuery)->sum('amount');
+
+        // Paginated list
+        $payments = $paymentsQuery->orderByDesc('created_at')->paginate(10)->withQueryString();
+
+        return view('admin.kelola-transaksi.view', compact(
+            'pendapatan', 'pengeluaran', 'hutang', 'payments', 'filter', 'search',
+            'totalPayments', 'paidPayments', 'unpaidPayments', 'totalPaymentsAmount'
+        ));
     }
 
 
