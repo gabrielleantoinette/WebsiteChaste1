@@ -144,8 +144,12 @@ class OwnerController extends Controller
             });
         }
         if ($search) {
-            $paymentsQuery->whereHas('hinvoice', function($q) use ($search) {
-                $q->where('code', 'like', "%$search%");
+            $paymentsQuery->where(function($query) use ($search) {
+                $query->whereHas('hinvoice', function($q) use ($search) {
+                    $q->where('code', 'like', "%$search%");
+                })->orWhereHas('hinvoice.customer', function($q) use ($search) {
+                    $q->where('name', 'like', "%$search%");
+                });
             });
         }
         // Stats (global totals, not limited by pagination)

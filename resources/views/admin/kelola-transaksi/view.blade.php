@@ -104,7 +104,7 @@
 
     {{-- Filter Waktu & Search dengan Card --}}
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
-        <form method="GET" action="" class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <form method="GET" action="{{ route('owner.transactions.index') }}" class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,8 +128,8 @@
                     <input type="text" name="search" placeholder="Cari kode/nama/ket" value="{{ request('search', $search) }}" class="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 shadow-sm" />
                 </div>
                 <button type="submit" class="px-6 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white font-medium rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl">Cari</button>
-                @if(request('search') || request('filter'))
-                    <a href="{{ url('/admin/kelola-transaksi') }}" class="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-200">Reset</a>
+                @if(request('search') || (request('filter') && request('filter') != 'semua'))
+                    <a href="{{ route('owner.transactions.index') }}" class="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-200">Reset</a>
                 @endif
             </div>
         </form>

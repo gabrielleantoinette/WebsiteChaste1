@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Categories;
+use Illuminate\Support\Facades\File;
 
 class ProductSeeder extends Seeder
 {
@@ -70,15 +71,24 @@ class ProductSeeder extends Seeder
 
     private function createProducts($products, $category, $categoryName, $colors, $sizesText)
     {
+        // Ensure products directory exists in storage
+        $productsDir = storage_path('app/public/products');
+        if (!File::exists($productsDir)) {
+            File::makeDirectory($productsDir, 0755, true);
+        }
+
         foreach ($products as $productData) {
             $description = $categoryName . ' ' . $productData['code'] . ' dengan kualitas unggul, tahan cuaca, dan cocok untuk berbagai kebutuhan industri maupun rumah tangga.';
             $codeSlug = strtolower(str_replace(' ', '-', $productData['code']));
+            
+            // Get and copy product image to storage
+            $imagePath = $this->setupProductImage($productData['code'], $categoryName);
             
             // Create ONE product per code (without size in name)
             $product = Product::create([
                 'name' => $categoryName . ' ' . $productData['code'],
                 'description' => $description,
-                'image' => 'terpal-' . $codeSlug . '.jpg',
+                'image' => $imagePath, // Path relative to storage/app/public (for asset('storage/...'))
                 'price' => $productData['price_per_m2'] * 2 * 3, // Default price for 2x3
                 'min_price' => $productData['price_per_m2'] * 2 * 3,
                 'min_buying_stock' => 10,
@@ -96,5 +106,57 @@ class ProductSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    /**
+     * Setup product image: copy from public/images to storage/app/public/products
+     * Returns path relative to storage/app/public (e.g., 'products/Terpal-A2.png')
+     */
+    private function setupProductImage($code, $categoryName)
+    {
+        // Map product codes to source image filenames in public/images
+        $sourceImageMap = [
+            'A2' => 'Terpal-A2.png',
+            'A3B' => 'Terpal-A3B.png',
+            'A3 CN' => 'Terpal-A3CN.png',
+            'A4' => 'Terpal-A4.png',
+            'A5' => 'Terpal-A5.jpg',
+        ];
+        
+        $storageProductsDir = storage_path('app/public/products');
+        $imageFileName = null;
+        $sourcePath = null;
+        
+        // Check if we have a specific image for this product
+        if (isset($sourceImageMap[$code])) {
+            $sourceFileName = $sourceImageMap[$code];
+            $sourcePath = public_path('images/' . $sourceFileName);
+            
+            // Determine extension from source file
+            $ext = pathinfo($sourceFileName, PATHINFO_EXTENSION);
+            $imageFileName = 'terpal-' . strtolower(str_replace(' ', '-', $code)) . '.' . $ext;
+        }
+        
+        // If source image exists, copy it to storage (always update if exists)
+        if ($sourcePath && File::exists($sourcePath)) {
+            $destinationPath = $storageProductsDir . '/' . $imageFileName;
+            
+            // Always copy to update image if source has changed
+            File::copy($sourcePath, $destinationPath);
+            $this->command->info("Copied/Updated image for product {$code}: {$sourceFileName} -> products/{$imageFileName}");
+            
+            return 'products/' . $imageFileName;
+        }
+        
+        // Use default placeholder for products without specific images
+        $placeholderPath = public_path('images/gulungan-terpal.png');
+        $placeholderFileName = 'terpal-' . strtolower(str_replace(' ', '-', $code)) . '.png';
+        $placeholderDestination = $storageProductsDir . '/' . $placeholderFileName;
+        
+        if (File::exists($placeholderPath) && !File::exists($placeholderDestination)) {
+            File::copy($placeholderPath, $placeholderDestination);
+        }
+        
+        return 'products/' . $placeholderFileName;
     }
 }
