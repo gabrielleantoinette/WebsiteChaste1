@@ -121,6 +121,7 @@ class ProductSeeder extends Seeder
             'A3 CN' => 'Terpal-A3CN.png',
             'A4' => 'Terpal-A4.png',
             'A5' => 'Terpal-A5.jpg',
+            'A6' => 'Terpal-A6.png',
         ];
         
         $storageProductsDir = storage_path('app/public/products');
