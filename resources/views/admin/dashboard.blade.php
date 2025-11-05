@@ -7,7 +7,7 @@
         <div class="relative px-8 py-6">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold text-white mb-2">📊 Dashboard Admin</h1>
+                    <h1 class="text-3xl font-bold text-white mb-2">📊 Dashboard Owner</h1>
                     <p class="text-teal-100">Selamat datang di panel administrasi</p>
                 </div>
                 <div class="flex gap-3">

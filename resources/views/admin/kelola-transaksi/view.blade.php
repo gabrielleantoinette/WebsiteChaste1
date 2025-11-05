@@ -11,31 +11,31 @@
                     <p class="text-teal-100">Kelola dan monitor semua transaksi</p>
                 </div>
                 <div class="flex gap-3">
-                    {{-- Tombol Download dengan Dropdown --}}
-                    <div class="relative">
+        {{-- Tombol Download dengan Dropdown --}}
+        <div class="relative">
                         <button id="downloadBtn" class="inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-medium rounded-lg hover:bg-white/30 transition-all duration-300 shadow-lg border border-white/20">
-                            📄 Unduh Laporan
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        
-                        {{-- Dropdown Menu --}}
+                📄 Unduh Laporan
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            
+            {{-- Dropdown Menu --}}
                         <div id="downloadDropdown" class="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden">
-                            <div class="py-2">
-                                <a href="{{ url('/admin/laporan-transaksi/download?filter=' . request('filter', $filter)) }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    📊 Laporan Transaksi
-                                </a>
-                                <a href="{{ url('/admin/laporan-payment-gateway/download?filter=' . request('filter', $filter)) }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    💳 Laporan Payment Gateway
-                                </a>
-                                <a href="{{ url('/admin/laporan-negosiasi/download?filter=' . request('filter', $filter)) }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    🤝 Laporan Negosiasi Harga
-                                </a>
-                            </div>
+                <div class="py-2">
+                    <a href="{{ url('/admin/laporan-transaksi/download?filter=' . request('filter', $filter)) }}" 
+                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        📊 Laporan Transaksi
+                    </a>
+                    <a href="{{ url('/admin/laporan-payment-gateway/download?filter=' . request('filter', $filter)) }}" 
+                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        💳 Laporan Payment Gateway
+                    </a>
+                    <a href="{{ url('/admin/laporan-negosiasi/download?filter=' . request('filter', $filter)) }}" 
+                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        🤝 Laporan Negosiasi Harga
+                    </a>
+                </div>
                         </div>
                     </div>
                 </div>
@@ -83,10 +83,10 @@
                     <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
-                </div>
             </div>
         </div>
-        
+    </div>
+
         <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
             <div class="flex items-center justify-between">
                 <div>
@@ -106,7 +106,7 @@
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
         <form method="GET" action="{{ route('owner.transactions.index') }}" class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"/>
                     </svg>
@@ -255,7 +255,7 @@
     </div>
     @endif
 
-    <script>
+<script>
         // Download dropdown functionality
         document.getElementById('downloadBtn').addEventListener('click', function() {
             const dropdown = document.getElementById('downloadDropdown');
@@ -270,6 +270,6 @@
             if (!button.contains(event.target) && !dropdown.contains(event.target)) {
                 dropdown.classList.add('hidden');
             }
-        });
-    </script>
-@endsection
+});
+</script>
+@endsection 

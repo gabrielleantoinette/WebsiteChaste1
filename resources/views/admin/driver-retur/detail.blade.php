@@ -4,14 +4,14 @@
 <div class="py-6">
     <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Detail Pengambilan Retur</h1>
-            <a href="{{ url('/admin/dashboard-driver') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm">
-                ← Kembali ke Dashboard
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Detail Pengambilan Retur</h1>
+            <a href="{{ route('driver-retur.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm">
+                ← Kembali ke Daftar Retur
             </a>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Informasi Invoice</h2>
+        <div class="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Informasi Invoice</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <p class="text-sm text-gray-500">Kode Invoice</p>
@@ -40,8 +40,8 @@
             </div>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Informasi Customer</h2>
+        <div class="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Informasi Customer</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <p class="text-sm text-gray-500">Nama Customer</p>
@@ -55,8 +55,8 @@
         </div>
 
         @if($invoice->returns && $invoice->returns->count() > 0)
-        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Detail Retur</h2>
+        <div class="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Detail Retur</h2>
             @foreach($invoice->returns as $retur)
             <div class="border-b border-gray-100 pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
                 <div class="grid grid-cols-1 gap-4">
@@ -97,8 +97,8 @@
         @endif
 
         @if($invoice->status == 'retur_diambil')
-        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Aksi Pengambilan</h2>
+        <div class="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+            <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Aksi Pengambilan</h2>
             <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
                 <div class="flex items-center">
                     <svg class="w-5 h-5 text-orange-500 mr-2" fill="currentColor" viewBox="0 0 20 20">

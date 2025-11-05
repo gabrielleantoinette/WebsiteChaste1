@@ -94,7 +94,7 @@ class DashboardController extends Controller
                 'employeeCount', 'customerCount', 'productCount', 'totalPenjualan',
                 'recentInvoices', 'dailyLabels', 'dailySales',
                 'monthlyLabels', 'monthlySales', 'yearLabels', 'yearSales',
-                'yearlyLabels', 'yearlySales'
+                'yearlyLabels', 'yearlySales', 'role'
             ));
         }
     }

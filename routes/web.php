@@ -249,6 +249,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
 
 
     Route::prefix('driver-retur')->group(function () {
+        Route::get('/', [DriverController::class, 'viewReturDriver'])->name('driver-retur.index');
         Route::get('/detail/{id}', [DriverController::class, 'detailRetur'])->name('driver-retur.detail');
         Route::post('/pickup/{id}', [DriverController::class, 'pickupRetur'])->name('driver-retur.pickup');
     });

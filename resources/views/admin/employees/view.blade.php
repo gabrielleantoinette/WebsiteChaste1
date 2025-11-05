@@ -13,9 +13,9 @@
                 <div class="flex gap-3">
                     <a href="{{ url('/admin/employees/create') }}" 
                        class="inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-medium rounded-lg hover:bg-white/30 transition-all duration-300 shadow-lg border border-white/20">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
                              stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                         Tambah Pegawai
                     </a>
@@ -139,8 +139,8 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
+            </tr>
+        </thead>
                 <tbody class="divide-y divide-gray-200">
                     @forelse ($products as $employee)
                         <tr class="hover:bg-gray-50 transition-colors duration-200">
@@ -207,10 +207,10 @@
                                     </a>
                                 </div>
                             </td>
-                        </tr>
+                </tr>
                     @endforelse
-                </tbody>
-            </table>
+        </tbody>
+    </table>
         </div>
     </div>
 @endsection

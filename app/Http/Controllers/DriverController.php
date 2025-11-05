@@ -205,6 +205,21 @@ class DriverController extends Controller
         }
     }
 
+    // Method untuk melihat daftar retur
+    public function viewReturDriver()
+    {
+        $user = Session::get('user');
+        
+        // Ambil semua retur yang di-assign ke driver ini
+        $returns = HInvoice::where('driver_id', $user->id)
+            ->whereIn('status', ['retur_diajukan', 'retur_diambil', 'retur_selesai'])
+            ->with(['customer', 'returns'])
+            ->orderBy('receive_date', 'desc')
+            ->get();
+            
+        return view('admin.driver-retur.view', compact('returns'));
+    }
+
     // Method untuk melihat detail retur
     public function detailRetur($id)
     {

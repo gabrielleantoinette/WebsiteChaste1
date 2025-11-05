@@ -11,7 +11,7 @@
                     <p class="text-teal-100">Kelola bahan custom dan varian warna</p>
                 </div>
                 <div class="flex gap-3">
-                    <a href="{{ url('/admin/custom-materials/create') }}" 
+        <a href="{{ url('/admin/custom-materials/create') }}" 
                        class="inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-medium rounded-lg hover:bg-white/30 transition-all duration-300 shadow-lg border border-white/20">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
                              stroke-width="2" stroke="currentColor" class="w-5 h-5">
@@ -118,9 +118,9 @@
                 </svg>
                 Data Bahan Custom
             </h3>
-        </div>
-        
-        <div class="overflow-x-auto">
+    </div>
+
+    <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-gray-50">
                     <tr>
@@ -131,10 +131,10 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Stok</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
+                </tr>
+            </thead>
                 <tbody class="divide-y divide-gray-200">
-                    @forelse ($customMaterials as $material)
+                @forelse ($customMaterials as $material)
                         <tr class="hover:bg-gray-50 transition-colors duration-200">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $material->id }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -152,21 +152,21 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-emerald-600">Rp {{ number_format($material->price, 0, ',', '.') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if ($material->variants->count() > 0)
+                            @if ($material->variants->count() > 0)
                                     <div class="space-y-1">
-                                        @foreach ($material->variants as $variant)
+                                @foreach ($material->variants as $variant)
                                             <div class="flex items-center gap-2">
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
                                                     {{ $variant->color }}
                                                 </span>
                                                 <span class="text-sm">{{ $variant->stock }} pcs</span>
                                             </div>
-                                        @endforeach
+                                @endforeach
                                     </div>
-                                @else
+                            @else
                                     <span class="text-gray-400 italic text-sm">Belum ada varian warna</span>
-                                @endif
-                            </td>
+                            @endif
+                        </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                                     {{ $material->variants->sum('stock') }} pcs
@@ -186,12 +186,12 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
-                                    Edit
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
                             <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
                                     <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -209,10 +209,10 @@
                                     </a>
                                 </div>
                             </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
         </div>
     </div>
 @endsection
