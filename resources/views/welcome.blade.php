@@ -97,7 +97,7 @@
                 </div>
 
                 <!-- Image -->
-                <div class="w-full max-w-xs sm:max-w-sm lg:max-w-md rounded-full overflow-hidden border-4 border-white shadow-md">
+                <div class="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl rounded-full overflow-hidden border-4 border-white shadow-md">
                     <img src="{{ asset('images/gulungan-terpal.png') }}" alt="Custom Terpal"
                         class="w-full h-full object-cover">
                 </div>
