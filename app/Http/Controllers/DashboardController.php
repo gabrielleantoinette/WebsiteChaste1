@@ -35,63 +35,67 @@ class DashboardController extends Controller
                         ->get();
 
         // Generate chart data berdasarkan data aktual
-        $dailyData = HInvoice::selectRaw("DATE(COALESCE(receive_date, created_at)) as tanggal, SUM(grand_total) as total")
-            ->groupBy('tanggal')
-            ->orderBy('tanggal', 'desc')
-            ->limit(7)
-            ->get()
-            ->reverse()
-            ->values();
+        $dailyLabels = collect();
+        $dailySales = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $dailyLabels->push($date->translatedFormat('d M'));
+            $total = HInvoice::where(function ($query) use ($date) {
+                $query->whereDate('receive_date', $date->toDateString())
+                    ->orWhere(function ($sub) use ($date) {
+                        $sub->whereNull('receive_date')
+                            ->whereDate('created_at', $date->toDateString());
+                    });
+            })->sum('grand_total');
+            $dailySales->push((float) $total);
+        }
 
-        $dailyLabels = $dailyData->map(function ($row) {
-            return Carbon::parse($row->tanggal)->translatedFormat('d M');
-        });
-        $dailySales = $dailyData->map(function ($row) {
-            return (float) $row->total;
-        });
+        $monthlyLabels = collect();
+        $monthlySales = collect();
+        for ($i = 29; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $monthlyLabels->push($date->translatedFormat('d M'));
+            $total = HInvoice::where(function ($query) use ($date) {
+                $query->whereDate('receive_date', $date->toDateString())
+                    ->orWhere(function ($sub) use ($date) {
+                        $sub->whereNull('receive_date')
+                            ->whereDate('created_at', $date->toDateString());
+                    });
+            })->sum('grand_total');
+            $monthlySales->push((float) $total);
+        }
 
-        $thirtyDayData = HInvoice::selectRaw("DATE(COALESCE(receive_date, created_at)) as tanggal, SUM(grand_total) as total")
-            ->groupBy('tanggal')
-            ->orderBy('tanggal', 'desc')
-            ->limit(30)
-            ->get()
-            ->reverse()
-            ->values();
+        $yearLabels = collect();
+        $yearSales = collect();
+        for ($i = 11; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $yearLabels->push($month->translatedFormat('M Y'));
+            $total = HInvoice::where(function ($query) use ($month) {
+                $query->whereYear('receive_date', $month->year)
+                    ->whereMonth('receive_date', $month->month)
+                    ->orWhere(function ($sub) use ($month) {
+                        $sub->whereNull('receive_date')
+                            ->whereYear('created_at', $month->year)
+                            ->whereMonth('created_at', $month->month);
+                    });
+            })->sum('grand_total');
+            $yearSales->push((float) $total);
+        }
 
-        $monthlyLabels = $thirtyDayData->map(function ($row) {
-            return Carbon::parse($row->tanggal)->translatedFormat('d M');
-        });
-        $monthlySales = $thirtyDayData->map(function ($row) {
-            return (float) $row->total;
-        });
-
-        $monthlyAggregate = HInvoice::selectRaw("DATE_FORMAT(COALESCE(receive_date, created_at), '%Y-%m') as periode, SUM(grand_total) as total")
-            ->groupBy('periode')
-            ->orderBy('periode', 'desc')
-            ->limit(12)
-            ->get()
-            ->reverse()
-            ->values();
-
-        $yearLabels = $monthlyAggregate->map(function ($row) {
-            return Carbon::createFromFormat('Y-m', $row->periode)->translatedFormat('M Y');
-        });
-        $yearSales = $monthlyAggregate->map(function ($row) {
-            return (float) $row->total;
-        });
-
-        $yearlyData = HInvoice::selectRaw("DATE_FORMAT(COALESCE(receive_date, created_at), '%Y') as tahun, SUM(grand_total) as total")
-            ->groupBy('tahun')
-            ->orderBy('tahun', 'desc')
-            ->limit(5)
-            ->get()
-            ->reverse()
-            ->values();
-
-        $yearlyLabels = $yearlyData->pluck('tahun');
-        $yearlySales = $yearlyData->map(function ($row) {
-            return (float) $row->total;
-        });
+        $yearlyLabels = collect();
+        $yearlySales = collect();
+        for ($i = 4; $i >= 0; $i--) {
+            $year = Carbon::now()->subYears($i)->year;
+            $yearlyLabels->push((string) $year);
+            $total = HInvoice::where(function ($query) use ($year) {
+                $query->whereYear('receive_date', $year)
+                    ->orWhere(function ($sub) use ($year) {
+                        $sub->whereNull('receive_date')
+                            ->whereYear('created_at', $year);
+                    });
+            })->sum('grand_total');
+            $yearlySales->push((float) $total);
+        }
 
         if ($role === 'admin') {
             $ordersChartLabels = collect();
