@@ -24,11 +24,32 @@ use App\Http\Middleware\LoggedIn;
 use App\Http\Middleware\GudangRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/public/storage/{path}', function (string $path) {
+    if (str_contains($path, '..')) {
+        abort(403);
+    }
+
+    $cleanPath = ltrim($path, '/');
+    $fullPath = storage_path('app/public/' . $cleanPath);
+
+    if (!File::exists($fullPath) || File::isDirectory($fullPath)) {
+        abort(404);
+    }
+
+    $mimeType = File::mimeType($fullPath) ?: 'application/octet-stream';
+
+    return response()->file($fullPath, [
+        'Content-Type' => $mimeType,
+        'Cache-Control' => 'public, max-age=31536000',
+    ]);
+})->where('path', '.*');
 
 Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 
