@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -20,6 +21,10 @@ class Product extends Model
         'category_id',
     ];
 
+    protected $appends = [
+        'image_url',
+    ];
+
     public function variants()
     {
         return $this->hasMany(ProductVariant::class);
@@ -28,5 +33,23 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Categories::class);
+    }
+
+    public function getImageUrlAttribute(): string
+    {
+        if ($this->image) {
+            if (Storage::disk('public')->exists($this->image)) {
+                return Storage::url($this->image);
+            }
+
+            $fileName = basename($this->image);
+            $publicPath = 'images/products/' . $fileName;
+
+            if (file_exists(public_path($publicPath))) {
+                return asset($publicPath);
+            }
+        }
+
+        return asset('images/gulungan-terpal.png');
     }
 }

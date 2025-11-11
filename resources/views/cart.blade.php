@@ -38,11 +38,11 @@
                         
                         <!-- Gambar Produk -->
                         @if ($item->variant && $item->variant->product)
-                            <img src="{{ $item->variant->product->image ? asset('storage/' . $item->variant->product->image) : asset('images/logo-perusahaan.png') }}" 
+                            <img src="{{ $item->variant->product->image_url }}" 
                                  alt="{{ $item->variant->product->name ?? 'Produk' }}"
                                  class="w-20 h-20 object-cover rounded-md">
                         @else
-                            <img src="{{ asset('images/logo-perusahaan.png') }}" 
+                            <img src="{{ asset('images/gulungan-terpal.png') }}" 
                                  alt="Produk"
                                  class="w-20 h-20 object-cover rounded-md">
                         @endif

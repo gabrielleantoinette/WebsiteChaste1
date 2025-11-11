@@ -24,13 +24,8 @@
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden md:flex">
             <!-- Gambar Produk (Kotak Persegi) -->
             <div class="md:w-1/2">
-                @php
-                    $imgPath = $product->image
-                        ? asset('storage/' . $product->image)
-                        : asset('images/logo-perusahaan.png');
-                @endphp
                 <div class="w-full aspect-square overflow-hidden rounded-l-2xl">
-                    <img src="{{ $imgPath }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                 </div>
             </div>
 

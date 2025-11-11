@@ -1,10 +1,6 @@
 @extends('layouts.admin')
 
 @section('content')
-@php
-use Illuminate\Support\Facades\Storage;
-@endphp
-
 <div class="max-w-3xl mx-auto">
   {{-- Breadcrumb --}}
   <nav class="mb-6">
@@ -49,17 +45,11 @@ use Illuminate\Support\Facades\Storage;
       <label class="block text-sm font-medium text-gray-700 mb-1">Gambar Produk</label>
       
       {{-- Tampilkan gambar yang sudah ada --}}
-      @if($product->image && Storage::disk('public')->exists($product->image))
-        <div class="mb-3">
-          <p class="text-sm text-gray-600 mb-2">Gambar saat ini:</p>
-          <img src="{{ Storage::url($product->image) }}" alt="{{ $product->name }}" 
-               class="w-32 h-32 object-cover rounded-lg border border-gray-200">
-        </div>
-      @else
-        <div class="mb-3">
-          <p class="text-sm text-gray-600 mb-2">Belum ada gambar produk</p>
-        </div>
-      @endif
+      <div class="mb-3">
+        <p class="text-sm text-gray-600 mb-2">Gambar saat ini:</p>
+        <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
+             class="w-32 h-32 object-cover rounded-lg border border-gray-200">
+      </div>
       
       {{-- Upload gambar baru --}}
       <input type="file" name="image" accept="image/*"

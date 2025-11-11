@@ -268,7 +268,7 @@
                                 <div class="relative bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover-lift">
                                     <!-- Gambar Produk -->
                                     <div class="relative w-full h-56">
-                                        <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/logo-perusahaan.png') }}"
+                                        <img src="{{ $product->image_url }}"
                                             alt="{{ $product->name }}"
                                             class="w-full h-full object-cover rounded-t-[20px]">
 
