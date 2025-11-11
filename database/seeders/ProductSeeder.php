@@ -71,8 +71,8 @@ class ProductSeeder extends Seeder
 
     private function createProducts($products, $category, $categoryName, $colors, $sizesText)
     {
-        // Ensure products directory exists in storage
-        $productsDir = storage_path('app/public/products');
+        // Ensure products directory exists in public/images
+        $productsDir = public_path('images/products');
         if (!File::exists($productsDir)) {
             File::makeDirectory($productsDir, 0755, true);
         }
@@ -88,7 +88,7 @@ class ProductSeeder extends Seeder
             $product = Product::create([
                 'name' => $categoryName . ' ' . $productData['code'],
                 'description' => $description,
-                'image' => $imagePath, // Path relative to storage/app/public (for asset('storage/...'))
+                'image' => $imagePath, // Path relative to public (for asset())
                 'price' => $productData['price_per_m2'] * 2 * 3, // Default price for 2x3
                 'min_price' => $productData['price_per_m2'] * 2 * 3,
                 'min_buying_stock' => 10,
@@ -109,8 +109,8 @@ class ProductSeeder extends Seeder
     }
 
     /**
-     * Setup product image: copy from public/images to storage/app/public/products
-     * Returns path relative to storage/app/public (e.g., 'products/Terpal-A2.png')
+     * Setup product image: copy from public/images source to public/images/products
+     * Returns path relative to public (e.g., 'images/products/terpal-a2.png')
      */
     private function setupProductImage($code, $categoryName)
     {
@@ -124,7 +124,7 @@ class ProductSeeder extends Seeder
             'A6' => 'Terpal-A6.png',
         ];
         
-        $storageProductsDir = storage_path('app/public/products');
+        $publicProductsDir = public_path('images/products');
         $imageFileName = null;
         $sourcePath = null;
         
@@ -140,24 +140,24 @@ class ProductSeeder extends Seeder
         
         // If source image exists, copy it to storage (always update if exists)
         if ($sourcePath && File::exists($sourcePath)) {
-            $destinationPath = $storageProductsDir . '/' . $imageFileName;
+            $destinationPath = $publicProductsDir . '/' . $imageFileName;
             
             // Always copy to update image if source has changed
             File::copy($sourcePath, $destinationPath);
-            $this->command->info("Copied/Updated image for product {$code}: {$sourceFileName} -> products/{$imageFileName}");
+            $this->command->info("Copied/Updated image for product {$code}: {$sourceFileName} -> images/products/{$imageFileName}");
             
-            return 'products/' . $imageFileName;
+            return 'images/products/' . $imageFileName;
         }
         
         // Use default placeholder for products without specific images
         $placeholderPath = public_path('images/gulungan-terpal.png');
         $placeholderFileName = 'terpal-' . strtolower(str_replace(' ', '-', $code)) . '.png';
-        $placeholderDestination = $storageProductsDir . '/' . $placeholderFileName;
+        $placeholderDestination = $publicProductsDir . '/' . $placeholderFileName;
         
         if (File::exists($placeholderPath) && !File::exists($placeholderDestination)) {
             File::copy($placeholderPath, $placeholderDestination);
         }
         
-        return 'products/' . $placeholderFileName;
+        return 'images/products/' . $placeholderFileName;
     }
 }
