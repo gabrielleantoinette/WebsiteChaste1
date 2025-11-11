@@ -13,7 +13,7 @@
 <body class="bg-white font-sans text-gray-800">
     {{-- Header --}}
     @include('layouts.customer-nav')
-    <div class="px-[100px] py-12 space-y-10 max-w-5xl mx-auto">
+    <div class="px-4 sm:px-6 lg:px-12 py-10 sm:py-12 space-y-10 max-w-5xl mx-auto">
         <div class="mb-6">
             <div class="flex items-center justify-between mb-4">
                 <x-breadcrumb :items="[['label' => 'Profil']]" />

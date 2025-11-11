@@ -40,10 +40,10 @@
 <body class="bg-white font-sans text-gray-800">
     {{-- Header --}}
     @include('layouts.customer-nav')
-    <div class="px-[100px]">
+    <div class="px-4 sm:px-6 lg:px-12 xl:px-20">
         <!-- Hero -->
-        <section class="bg-[#D9F2F2] py-16 px-6 md:px-20 rounded-[24px] mt-[24px]">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-12">
+        <section class="bg-[#D9F2F2] py-12 sm:py-16 px-6 sm:px-10 lg:px-16 rounded-[24px] mt-6 md:mt-8">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-12">
                 <div class="max-w-xl space-y-8">
                     <h1 class="text-5xl font-extrabold text-gray-900 leading-snug tracking-tight">
                         Butuh terpal tapi ukuran tidak sesuai keinginan?
@@ -53,7 +53,7 @@
                         Kustom Terpalmu Disini!
                     </a>
                 </div>
-                <div class="w-100 h-100 rounded-full overflow-hidden border-4 border-white shadow-md">
+                <div class="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg rounded-full overflow-hidden border-4 border-white shadow-md">
                     <img src="{{ asset('images/gulungan-terpal.png') }}" alt="Custom Terpal"
                         class="w-full h-full object-cover">
                 </div>
@@ -119,9 +119,9 @@
                 </form>
             </div>
 
-            <div class="flex flex-col md:flex-row gap-8">
+            <div class="flex flex-col lg:flex-row gap-8 lg:gap-10">
                 <!-- Sidebar Filter -->
-                <aside class="w-full md:w-1/4 space-y-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <aside class="w-full lg:w-1/4 space-y-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                     <form method="GET" action="{{ route('produk') }}" class="space-y-8">
                         {{-- Kategori --}}
                         <div>
@@ -240,7 +240,7 @@
 
 
                 <!-- Grid Produk -->
-                <div class="w-full md:w-3/4">
+                <div class="w-full lg:w-3/4">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-4">
                             <p class="text-sm text-gray-500">
@@ -262,7 +262,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                         @foreach ($products as $product)
                             <div class="group">
                                 <div class="relative bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover-lift">

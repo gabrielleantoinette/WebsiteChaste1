@@ -15,7 +15,7 @@
     @include('layouts.customer-nav')
     
     <!-- Transaksi -->
-    <section class="px-[100px] h-screen">
+    <section class="px-4 sm:px-6 lg:px-12 min-h-screen">
         <div class="mb-6">
             <x-breadcrumb :items="[
                 ['label' => 'Transaksi']

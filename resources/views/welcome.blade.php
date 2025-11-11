@@ -21,7 +21,7 @@
         @endphp
         
         @if($debtStatus['melebihiLimit'] || $debtStatus['adaHutangTerlambat'])
-            <div class="px-[100px] mt-4">
+            <div class="px-4 sm:px-6 lg:px-12 xl:px-20 mt-4">
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
@@ -57,36 +57,36 @@
         @endif
     @endif
 
-    <div class="px-[100px]">
+    <div class="px-4 sm:px-6 lg:px-12 xl:px-20">
         <!-- Hero Section -->
-        <section class="bg-[#D9F2F2] py-16 px-6 md:px-20 rounded-[24px] mt-[24px]">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <section class="bg-[#D9F2F2] py-12 sm:py-16 px-6 sm:px-10 lg:px-16 rounded-[24px] mt-6 sm:mt-10">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-10">
 
                 <!-- Text -->
-                <div class="w-full md:w-3/5 space-y-8">
-                    <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-relaxed">
+                <div class="w-full lg:w-3/5 space-y-8">
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-snug">
                         Beli terpal anda sekarang!<br>
                         Cari terpal yang <span class="font-extrabold text-teal-600">kuat, tahan air, dan siap
                             pakai?</span>
                         Temukan berbagai tipe dan ukuran dengan harga terbaik di sini!
                     </h1>
 
-                    <div class="flex gap-12 text-gray-700">
-                        <div>
+                    <div class="flex flex-wrap items-center gap-6 sm:gap-12 text-gray-700">
+                        <div class="text-center sm:text-left">
                             <p class="text-3xl font-bold">20+</p>
-                            <p class="text-base">Tipe Terpal</p>
+                            <p class="text-sm sm:text-base">Tipe Terpal</p>
                         </div>
-                        <span>|</span>
-                        <div>
+                        <span class="hidden sm:inline">|</span>
+                        <div class="text-center sm:text-left">
                             <p class="text-3xl font-bold">100+</p>
-                            <p class="text-base">Pelanggan</p>
+                            <p class="text-sm sm:text-base">Pelanggan</p>
                         </div>
                     </div>
                     <div class="relative">
                         <input type="text" placeholder="Apa yang anda cari?"
-                            class="w-full py-5 px-5 pr-14 rounded-[16px] focus:outline-none placeholder:text-gray-500 bg-white">
+                            class="w-full py-4 sm:py-5 px-4 sm:px-5 pr-12 rounded-[16px] focus:outline-none placeholder:text-gray-500 bg-white">
                         <button
-                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-lg bg-[#D9F2F2] rounded-[16px] p-2 w-[48==px] h-[48px] flex items-center justify-center">
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-lg bg-[#D9F2F2] rounded-[16px] p-2 w-11 h-11 flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -97,7 +97,7 @@
                 </div>
 
                 <!-- Image -->
-                <div class="w-150 h-150 rounded-full overflow-hidden border-4 border-white shadow-md">
+                <div class="w-full max-w-xs sm:max-w-sm lg:max-w-md rounded-full overflow-hidden border-4 border-white shadow-md">
                     <img src="{{ asset('images/gulungan-terpal.png') }}" alt="Custom Terpal"
                         class="w-full h-full object-cover">
                 </div>
@@ -105,12 +105,12 @@
         </section>
 
         <!-- Produk Section -->
-        <section class="py-20 bg-white flex gap-[24px]">
-            <div class="mb-12 max-w-[250px]">
-                <h2 class="text-3xl font-bold text-gray-800">Penjualan<br>Terpal Terbaik</h2>
-                <p class="text-gray-600 mt-3">Langkah mudah membeli produk terpal favorit anda!</p>
+        <section class="py-16 sm:py-20 bg-white flex flex-col lg:flex-row gap-10 lg:gap-12">
+            <div class="lg:max-w-xs">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">Penjualan<br>Terpal Terbaik</h2>
+                <p class="text-gray-600 mt-3 text-sm sm:text-base">Langkah mudah membeli produk terpal favorit anda!</p>
                 <a href="{{ route('produk') }}"
-                    class="inline-flex bg-[#D9F2F2] h-[50px] text-gray-800 px-4 py-2 rounded-lg mt-4 items-center gap-2">
+                    class="inline-flex bg-[#D9F2F2] min-h-[48px] text-gray-800 px-4 py-2 rounded-lg mt-4 items-center gap-2 text-sm sm:text-base">
                     Lihat Lebih
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="size-6">
@@ -121,28 +121,28 @@
 
             </div>
 
-            <div class="grid grid-cols-3 gap-10 grow">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 flex-1">
                 <!-- Contoh produk statis -->
-                <div class="min-w-[300px]">
+                <div class="space-y-4">
                     <img src="{{ asset('images/terpal-ayam.png') }}" alt="Terpal Ayam"
-                        class="w-full h-[436px] object-cover overflow-hidden rounded-xl">
-                    <div class='pt-4'>
+                        class="w-full h-72 sm:h-[380px] object-cover overflow-hidden rounded-xl">
+                    <div>
                         <h3 class="text-lg font-semibold text-gray-800">Terpal Ayam Jago Cap A5</h3>
                         <p class="text-gray-600 mt-2">Rp 4.500,00</p>
                     </div>
                 </div>
-                <div class="min-w-[300px]">
+                <div class="space-y-4">
                     <img src="{{ asset('images/terpal-gajah.png') }}" alt="Terpal Gajah"
-                        class="w-full h-[436px] object-cover overflow-hidden rounded-xl">
-                    <div class='pt-4'>
+                        class="w-full h-72 sm:h-[380px] object-cover overflow-hidden rounded-xl">
+                    <div>
                         <h3 class="text-lg font-semibold text-gray-800">Terpal Gajah Surya A2</h3>
                         <p class="text-gray-600 mt-2">Rp 2.600,00</p>
                     </div>
                 </div>
-                <div class="min-w-[300px]">
+                <div class="space-y-4">
                     <img src="{{ asset('images/terpal-lumba.png') }}" alt="Terpal Lumba"
-                        class="w-full h-[436px] object-cover overflow-hidden rounded-xl">
-                    <div class='pt-4'>
+                        class="w-full h-72 sm:h-[380px] object-cover overflow-hidden rounded-xl">
+                    <div>
                         <h3 class="text-lg font-semibold text-gray-800">Terpal Cap Lumba-lumba 5x7</h3>
                         <p class="text-gray-600 mt-2">Rp 3.500,00</p>
                     </div>
@@ -150,7 +150,7 @@
             </div>
         </section>
         <!-- Tentang Kami -->
-        <section class="py-16 px-6 md:px-20 bg-white text-center">
+        <section class="py-16 px-6 sm:px-10 lg:px-16 bg-white text-center">
             <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Tentang kami</h2>
             <p class="text-gray-600 mb-12">Beli sekarang dan rasakan kualitasnya</p>
 
@@ -182,14 +182,14 @@
         </section>
 
         <!-- Kategori -->
-        <section class="py-20 px-6 md:px-20 bg-[#D9F2F2] text-center">
+        <section class="py-20 px-6 sm:px-10 lg:px-16 bg-[#D9F2F2] text-center">
             <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Kategori</h2>
             <p class="text-gray-600 mb-10">Temukan apa yang anda cari</p>
 
             <div class="flex flex-col md:flex-row justify-center items-center gap-10">
                 <!-- Kategori 1 -->
                 <div class="flex flex-col items-center space-y-4">
-                    <div class="w-[180px] h-[240px] overflow-hidden rounded-[20px] shadow-md">
+                    <div class="w-40 sm:w-[180px] h-56 sm:h-[240px] overflow-hidden rounded-[20px] shadow-md">
                         <img src="{{ asset('images/terpal-ayam.png') }}" class="w-full h-full object-cover"
                             alt="Terpal Plastik">
                     </div>
@@ -198,7 +198,7 @@
 
                 <!-- Kategori 2 -->
                 <div class="flex flex-col items-center space-y-4">
-                    <div class="w-[180px] h-[240px] overflow-hidden rounded-[20px] shadow-md">
+                    <div class="w-40 sm:w-[180px] h-56 sm:h-[240px] overflow-hidden rounded-[20px] shadow-md">
                         <img src="{{ asset('images/terpal-gajah.png') }}" class="w-full h-full object-cover"
                             alt="Terpal Kain">
                     </div>
@@ -211,7 +211,7 @@
 
                 <!-- Kategori 3 -->
                 <div class="flex flex-col items-center space-y-4">
-                    <div class="w-[180px] h-[240px] overflow-hidden rounded-[20px] shadow-md">
+                    <div class="w-40 sm:w-[180px] h-56 sm:h-[240px] overflow-hidden rounded-[20px] shadow-md">
                         <img src="{{ asset('images/terpal-lumba.png') }}" class="w-full h-full object-cover"
                             alt="Terpal Karet">
                     </div>

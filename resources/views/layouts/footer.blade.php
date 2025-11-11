@@ -3,7 +3,7 @@
     $setting = Setting::first();
 @endphp
 
-<footer class="bg-[#D9F2F2] py-10 px-[100px] text-sm text-gray-700 mt-20">
+<footer class="bg-[#D9F2F2] py-10 px-4 sm:px-6 lg:px-16 text-sm text-gray-700 mt-20">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- Brand -->
         <div>

@@ -2,11 +2,19 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <!-- Header -->
-<header class="flex items-center justify-between py-5 border-gray-200 px-[100px]">
-    <a href="{{ url('/') }}" class="text-2xl font-bold tracking-wide text-black">CHASTE</a>
+<header class="sticky top-0 z-40 bg-white/95 backdrop-blur flex flex-wrap items-center justify-between gap-4 py-4 border-b border-gray-100 px-4 sm:px-6 lg:px-16">
+    <a href="{{ url('/') }}" class="text-2xl font-bold tracking-wide text-black flex items-center gap-2">
+        <span>CHASTE</span>
+    </a>
+
+    <button id="mobileMenuToggle" class="md:hidden text-gray-700 hover:text-black focus:outline-none" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-7 h-7">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+    </button>
 
     <!-- Menu Utama -->
-    <nav class="hidden md:flex space-x-8 text-sm font-medium">
+    <nav id="desktopMenu" class="hidden md:flex items-center space-x-8 text-sm font-medium">
         <a href="{{ url('/') }}"
             class="{{ request()->is('/') ? 'text-black font-semibold underline' : 'text-gray-600 hover:text-teal-500' }}">
             Beranda
@@ -18,7 +26,7 @@
     </nav>
 
     <!-- Icon Navigasi -->
-    <div class="space-x-4 text-xl text-gray-700 flex items-center gap-4">
+    <div class="flex items-center gap-3 text-xl text-gray-700">
         <a href="{{ route('keranjang') }}"
             class="{{ request()->is('keranjang*') ? 'text-teal-600' : 'hover:text-teal-500' }}">
             <!-- Kantong Belanja SVG -->
@@ -72,6 +80,18 @@
             </svg>
         </a> -->
         
+    </div>
+    <div id="mobileMenu" class="hidden w-full md:hidden">
+        <div class="pt-2 border-t border-gray-100 flex flex-col gap-2 text-sm font-medium">
+            <a href="{{ url('/') }}"
+                class="px-2 py-2 rounded-lg {{ request()->is('/') ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
+                Beranda
+            </a>
+            <a href="{{ route('produk') }}"
+                class="px-2 py-2 rounded-lg {{ request()->is('produk*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
+                Produk
+            </a>
+        </div>
     </div>
 </header>
 
@@ -181,6 +201,21 @@ window.updateCustomerNotificationBadge = function() {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
+    const menuToggle = document.getElementById('mobileMenuToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    if (menuToggle && mobileMenu) {
+        menuToggle.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!mobileMenu.contains(event.target) && !menuToggle.contains(event.target)) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    }
+
     // Update notification badge on page load
     updateCustomerNotificationBadge();
     

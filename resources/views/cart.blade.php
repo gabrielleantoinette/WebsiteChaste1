@@ -14,7 +14,7 @@
 
     @include('layouts.customer-nav')
 
-    <section class="px-6 md:px-30 py-8 min-h-screen">
+    <section class="px-4 sm:px-6 lg:px-12 py-8 min-h-screen">
         <div class="mb-6">
             <x-breadcrumb :items="[
                 ['label' => 'Keranjang']
