@@ -39,17 +39,17 @@ class Product extends Model
     {
         if ($this->image) {
             if (Storage::disk('public')->exists($this->image)) {
-                return Storage::url($this->image);
+                return 'storage/' . ltrim($this->image, '/');
             }
 
             $fileName = basename($this->image);
             $publicPath = 'images/products/' . $fileName;
 
             if (file_exists(public_path($publicPath))) {
-                return asset($publicPath);
+                return $publicPath;
             }
         }
 
-        return asset('images/gulungan-terpal.png');
+        return 'images/gulungan-terpal.png';
     }
 }
