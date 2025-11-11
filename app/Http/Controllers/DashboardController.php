@@ -34,57 +34,125 @@ class DashboardController extends Controller
                         ->limit(10)
                         ->get();
 
-        // Generate chart data HANYA dari data real (tanpa fallback)
-        // 7 Hari Terakhir
-        $dailyLabels = collect();
-        $dailySales = collect();
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $dailyLabels->push($date->format('d M'));
-            $salesAmount = HInvoice::whereDate('receive_date', $date)->sum('grand_total');
-            $dailySales->push($salesAmount);
-        }
+        // Generate chart data berdasarkan data aktual
+        $dailyData = HInvoice::selectRaw("DATE(COALESCE(receive_date, created_at)) as tanggal, SUM(grand_total) as total")
+            ->groupBy('tanggal')
+            ->orderBy('tanggal', 'desc')
+            ->limit(7)
+            ->get()
+            ->reverse()
+            ->values();
 
-        // 30 Hari Terakhir
-        $monthlyLabels = collect();
-        $monthlySales = collect();
-        for ($i = 29; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $monthlyLabels->push($date->format('d M'));
-            $salesAmount = HInvoice::whereDate('receive_date', $date)->sum('grand_total');
-            $monthlySales->push($salesAmount);
-        }
+        $dailyLabels = $dailyData->map(function ($row) {
+            return Carbon::parse($row->tanggal)->translatedFormat('d M');
+        });
+        $dailySales = $dailyData->map(function ($row) {
+            return (float) $row->total;
+        });
 
-        // 12 Bulan Terakhir
-        $yearLabels = collect();
-        $yearSales = collect();
-        for ($i = 11; $i >= 0; $i--) {
-            $month = now()->subMonths($i);
-            $yearLabels->push($month->format('M Y'));
-            $salesAmount = HInvoice::whereYear('receive_date', $month->year)
-                    ->whereMonth('receive_date', $month->month)
-                    ->sum('grand_total');
-            $yearSales->push($salesAmount);
-        }
+        $thirtyDayData = HInvoice::selectRaw("DATE(COALESCE(receive_date, created_at)) as tanggal, SUM(grand_total) as total")
+            ->groupBy('tanggal')
+            ->orderBy('tanggal', 'desc')
+            ->limit(30)
+            ->get()
+            ->reverse()
+            ->values();
 
-        // 5 Tahun Terakhir - PERBAIKAN: Mulai dari tahun 2020
-        $yearlyLabels = collect();
-        $yearlySales = collect();
-        for ($i = 4; $i >= 0; $i--) {
-            $year = now()->subYears($i);
-            $yearlyLabels->push($year->format('Y'));
-            $salesAmount = HInvoice::whereYear('receive_date', $year->year)->sum('grand_total');
-            $yearlySales->push($salesAmount);
-        }
+        $monthlyLabels = $thirtyDayData->map(function ($row) {
+            return Carbon::parse($row->tanggal)->translatedFormat('d M');
+        });
+        $monthlySales = $thirtyDayData->map(function ($row) {
+            return (float) $row->total;
+        });
+
+        $monthlyAggregate = HInvoice::selectRaw("DATE_FORMAT(COALESCE(receive_date, created_at), '%Y-%m') as periode, SUM(grand_total) as total")
+            ->groupBy('periode')
+            ->orderBy('periode', 'desc')
+            ->limit(12)
+            ->get()
+            ->reverse()
+            ->values();
+
+        $yearLabels = $monthlyAggregate->map(function ($row) {
+            return Carbon::createFromFormat('Y-m', $row->periode)->translatedFormat('M Y');
+        });
+        $yearSales = $monthlyAggregate->map(function ($row) {
+            return (float) $row->total;
+        });
+
+        $yearlyData = HInvoice::selectRaw("DATE_FORMAT(COALESCE(receive_date, created_at), '%Y') as tahun, SUM(grand_total) as total")
+            ->groupBy('tahun')
+            ->orderBy('tahun', 'desc')
+            ->limit(5)
+            ->get()
+            ->reverse()
+            ->values();
+
+        $yearlyLabels = $yearlyData->pluck('tahun');
+        $yearlySales = $yearlyData->map(function ($row) {
+            return (float) $row->total;
+        });
 
         if ($role === 'admin') {
+            $ordersChartLabels = collect();
+            $ordersChartData = collect();
+
+            for ($i = 6; $i >= 0; $i--) {
+                $date = Carbon::now()->subDays($i);
+                $ordersChartLabels->push($date->translatedFormat('D'));
+
+                $count = HInvoice::where(function ($query) use ($date) {
+                    $query->whereDate('receive_date', $date->toDateString())
+                        ->orWhere(function ($sub) use ($date) {
+                            $sub->whereNull('receive_date')
+                                ->whereDate('created_at', $date->toDateString());
+                        });
+                })->count();
+
+                $ordersChartData->push($count);
+            }
+
+            $rawStatusCounts = HInvoice::select('status', DB::raw('COUNT(*) as total'))
+                ->groupBy('status')
+                ->pluck('total', 'status');
+
+            $statusBuckets = [
+                'Menunggu Pembayaran' => [
+                    'menunggu pembayaran', 'Menunggu Pembayaran', 'pending', 'unpaid'
+                ],
+                'Diproses' => [
+                    'diproses', 'Diproses', 'processing', 'dikemas'
+                ],
+                'Selesai' => [
+                    'selesai', 'Selesai', 'completed', 'sampai', 'lunas'
+                ],
+                'Dibatalkan' => [
+                    'dibatalkan', 'Dibatalkan', 'cancelled'
+                ],
+            ];
+
+            $statusChartLabels = array_keys($statusBuckets);
+            $statusChartData = array_map(function ($aliases) use ($rawStatusCounts) {
+                return collect($aliases)->sum(function ($alias) use ($rawStatusCounts) {
+                    return $rawStatusCounts[$alias] ?? 0;
+                });
+            }, $statusBuckets);
+
             $pendingOrders = HInvoice::with('customer')
                 ->whereIn('status', ['Menunggu Pembayaran', 'Diproses'])
                 ->limit(20)
                 ->get();
             $lowStocks = ProductVariant::where('stock', '<', 10)->limit(20)->get();
             $returCount = Returns::where('status', 'diajukan')->count();
-            return view('admin.dashboardadmin', compact('pendingOrders', 'lowStocks', 'returCount'));
+            return view('admin.dashboardadmin', compact(
+                'pendingOrders',
+                'lowStocks',
+                'returCount',
+                'ordersChartLabels',
+                'ordersChartData',
+                'statusChartLabels',
+                'statusChartData'
+            ));
         } elseif ($role === 'keuangan') {
             return redirect()->route('keuangan.dashboard');
         } elseif ($role === 'driver') {

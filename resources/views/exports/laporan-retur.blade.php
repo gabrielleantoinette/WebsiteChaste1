@@ -70,10 +70,20 @@
     </style>
 </head>
 <body>
+    @include('exports.partials.header')
+
     <h1>Laporan Barang Retur</h1>
 
     <div class="summary-box">
-        <div class="summary-title">Ringkasan Periode: {{ $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : 'N/A' }} - {{ $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : 'N/A' }}</div>
+        <div class="summary-title">
+            Ringkasan Periode: {{ $periodeLabel ?? '-' }}<br>
+            <span style="font-size: 11px; color: #475569;">
+                Rentang tanggal:
+                {{ isset($periodeStart) ? \Carbon\Carbon::parse($periodeStart)->translatedFormat('d F Y') : 'N/A' }}
+                &mdash;
+                {{ isset($periodeEnd) ? \Carbon\Carbon::parse($periodeEnd)->translatedFormat('d F Y') : 'N/A' }}
+            </span>
+        </div>
         <div class="summary-item">Total Retur: <strong>{{ $totalReturns }}</strong></div>
         <div class="summary-item">Customer Terlibat: <strong>{{ $totalCustomers }}</strong></div>
         <div class="summary-item">Rata-rata retur per customer: <strong>{{ $totalCustomers > 0 ? round($totalReturns / $totalCustomers, 2) : 0 }}</strong></div>
@@ -229,6 +239,6 @@
         <div class="summary-item">• Rekomendasi: Perlu evaluasi kualitas produk dan proses QC untuk mengurangi retur</div>
     </div>
 
-    <p style="margin-top: 50px; font-size: 10px; color: #888;">Laporan dibuat pada {{ now()->format('d F Y H:i') }}</p>
+    <p style="margin-top: 50px; font-size: 10px; color: #888;">Laporan dibuat pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }}</p>
 </body>
 </html>

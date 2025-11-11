@@ -1,8 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $reportRangeOptions = \App\Support\ReportDateRange::options();
+    @endphp
+
     {{-- Header dengan Gradient Background --}}
-    <div class="relative overflow-hidden bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl mb-8">
+    <div class="relative bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl mb-8 overflow-visible">
         <div class="absolute inset-0 bg-black opacity-10"></div>
         <div class="relative px-8 py-6">
             <div class="flex justify-between items-center">
@@ -31,24 +35,132 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
-                        <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                            <div class="py-2">
-            <a href="{{ route('invoices.export.pdf') }}"
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                📄 Export PDF
-            </a>
-                                <a href="{{ route('laporan.penjualan.pdf') }}"
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    📦 Laporan Penjualan
-                                </a>
-                                <a href="{{ route('laporan.retur.pdf') }}"
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    ↩️ Laporan Barang Retur
-                                </a>
-                                <a href="{{ route('laporan.ratarata.pdf') }}"
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    📊 Laporan Rata-Rata Pesanan
-                                </a>
+                        <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                            <div class="py-3 px-4 space-y-4">
+                                <div class="space-y-2 border-b border-gray-200 pb-3">
+                                    <h4 class="text-sm font-semibold text-gray-700">📄 Export PDF Transaksi</h4>
+                                    <a href="{{ route('invoices.export.pdf') }}"
+                                       class="block px-4 py-2 text-sm text-teal-700 bg-teal-50 border border-teal-100 rounded-lg hover:bg-teal-100 transition">
+                                        Unduh Semua Transaksi
+                                    </a>
+                                </div>
+
+                                <div class="space-y-3 border-b border-gray-200 pb-4">
+                                    <h4 class="text-sm font-semibold text-gray-700">📦 Laporan Penjualan</h4>
+                                    <form method="GET" action="{{ route('laporan.penjualan.pdf') }}" class="space-y-2">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Rentang Waktu</label>
+                                            <select name="range" data-report-range data-description-target="penjualan-desc" data-field-prefix="penjualan"
+                                                    class="report-range-select w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                                @foreach($reportRangeOptions as $option)
+                                                    <option value="{{ $option['value'] }}" data-description="{{ $option['description'] }}">{{ $option['label'] }}</option>
+                                                @endforeach
+                                            </select>
+                                            <p id="penjualan-desc" class="text-[11px] text-gray-400 mt-1">{{ $reportRangeOptions[0]['description'] }}</p>
+                                        </div>
+                                        <div id="penjualan-date" class="hidden space-y-1">
+                                            <label class="block text-xs font-semibold text-gray-600">Tanggal</label>
+                                            <input type="date" name="date" disabled
+                                                   value="{{ request('date', now()->toDateString()) }}"
+                                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                        </div>
+                                        <div id="penjualan-month" class="hidden space-y-1">
+                                            <label class="block text-xs font-semibold text-gray-600">Bulan</label>
+                                            <input type="month" name="month" disabled
+                                                   value="{{ request('month', now()->format('Y-m')) }}"
+                                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                        </div>
+                                        <div id="penjualan-year" class="hidden space-y-1">
+                                            <label class="block text-xs font-semibold text-gray-600">Tahun</label>
+                                            <input type="number" name="year" min="2000" max="{{ now()->year }}" disabled
+                                                   value="{{ request('year', now()->year) }}"
+                                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                                   placeholder="Contoh: {{ now()->year }}">
+                                        </div>
+                                        <button type="submit"
+                                                class="w-full inline-flex justify-center items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-semibold rounded-lg hover:from-teal-600 hover:to-teal-700 transition">
+                                            Unduh PDF
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div class="space-y-3 border-b border-gray-200 pb-4">
+                                    <h4 class="text-sm font-semibold text-gray-700">↩️ Laporan Barang Retur</h4>
+                                    <form method="GET" action="{{ route('laporan.retur.pdf') }}" class="space-y-2">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Rentang Waktu</label>
+                                            <select name="range" data-report-range data-description-target="retur-desc" data-field-prefix="retur"
+                                                    class="report-range-select w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                                @foreach($reportRangeOptions as $option)
+                                                    <option value="{{ $option['value'] }}" data-description="{{ $option['description'] }}">{{ $option['label'] }}</option>
+                                                @endforeach
+                                            </select>
+                                            <p id="retur-desc" class="text-[11px] text-gray-400 mt-1">{{ $reportRangeOptions[0]['description'] }}</p>
+                                        </div>
+                                        <div id="retur-date" class="hidden space-y-1">
+                                            <label class="block text-xs font-semibold text-gray-600">Tanggal</label>
+                                            <input type="date" name="date" disabled
+                                                   value="{{ request('date', now()->toDateString()) }}"
+                                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                        </div>
+                                        <div id="retur-month" class="hidden space-y-1">
+                                            <label class="block text-xs font-semibold text-gray-600">Bulan</label>
+                                            <input type="month" name="month" disabled
+                                                   value="{{ request('month', now()->format('Y-m')) }}"
+                                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                        </div>
+                                        <div id="retur-year" class="hidden space-y-1">
+                                            <label class="block text-xs font-semibold text-gray-600">Tahun</label>
+                                            <input type="number" name="year" min="2000" max="{{ now()->year }}" disabled
+                                                   value="{{ request('year', now()->year) }}"
+                                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                                   placeholder="Contoh: {{ now()->year }}">
+                                        </div>
+                                        <button type="submit"
+                                                class="w-full inline-flex justify-center items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transition">
+                                            Unduh PDF
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <h4 class="text-sm font-semibold text-gray-700">📊 Laporan Rata-Rata Pesanan</h4>
+                                    <form method="GET" action="{{ route('laporan.ratarata.pdf') }}" class="space-y-2">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Rentang Waktu</label>
+                                            <select name="range" data-report-range data-description-target="ratarata-desc" data-field-prefix="ratarata"
+                                                    class="report-range-select w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                                @foreach($reportRangeOptions as $option)
+                                                    <option value="{{ $option['value'] }}" data-description="{{ $option['description'] }}">{{ $option['label'] }}</option>
+                                                @endforeach
+                                            </select>
+                                            <p id="ratarata-desc" class="text-[11px] text-gray-400 mt-1">{{ $reportRangeOptions[0]['description'] }}</p>
+                                        </div>
+                                        <div id="ratarata-date" class="hidden space-y-1">
+                                            <label class="block text-xs font-semibold text-gray-600">Tanggal</label>
+                                            <input type="date" name="date" disabled
+                                                   value="{{ request('date', now()->toDateString()) }}"
+                                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                        </div>
+                                        <div id="ratarata-month" class="hidden space-y-1">
+                                            <label class="block text-xs font-semibold text-gray-600">Bulan</label>
+                                            <input type="month" name="month" disabled
+                                                   value="{{ request('month', now()->format('Y-m')) }}"
+                                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                        </div>
+                                        <div id="ratarata-year" class="hidden space-y-1">
+                                            <label class="block text-xs font-semibold text-gray-600">Tahun</label>
+                                            <input type="number" name="year" min="2000" max="{{ now()->year }}" disabled
+                                                   value="{{ request('year', now()->year) }}"
+                                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                                   placeholder="Contoh: {{ now()->year }}">
+                                        </div>
+                                        <button type="submit"
+                                                class="w-full inline-flex justify-center items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-sm font-semibold rounded-lg hover:from-sky-600 hover:to-indigo-600 transition">
+                                            Unduh PDF
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -264,6 +376,49 @@
             if (!button.contains(event.target) && !dropdown.contains(event.target)) {
                 dropdown.classList.add('hidden');
             }
+        });
+
+        document.querySelectorAll('[data-report-range]').forEach(function(select) {
+            const descriptionId = select.getAttribute('data-description-target');
+            const descriptionElement = descriptionId ? document.getElementById(descriptionId) : null;
+            const prefix = select.getAttribute('data-field-prefix');
+
+            const toggleRangeFields = () => {
+                if (!prefix) return;
+                const fieldMap = {
+                    harian: document.getElementById(`${prefix}-date`),
+                    bulanan: document.getElementById(`${prefix}-month`),
+                    tahunan: document.getElementById(`${prefix}-year`),
+                };
+
+                Object.entries(fieldMap).forEach(([rangeKey, element]) => {
+                    if (!element) {
+                        return;
+                    }
+                    const inputs = element.querySelectorAll('input, select');
+                    if (select.value === rangeKey) {
+                        element.classList.remove('hidden');
+                        inputs.forEach(input => input.disabled = false);
+                    } else {
+                        element.classList.add('hidden');
+                        inputs.forEach(input => input.disabled = true);
+                    }
+                });
+            };
+
+            const updateDescription = () => {
+                if (!descriptionElement) return;
+                const selectedOption = select.options[select.selectedIndex];
+                descriptionElement.textContent = selectedOption?.getAttribute('data-description') || '';
+            };
+
+            select.addEventListener('change', () => {
+                toggleRangeFields();
+                updateDescription();
+            });
+
+            toggleRangeFields();
+            updateDescription();
         });
     </script>
 @endsection

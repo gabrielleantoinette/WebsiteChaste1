@@ -261,6 +261,11 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/download', [OwnerController::class, 'downloadLaporanNegosiasi'])->name('owner.laporan.negosiasi');
     });
 
+    // Laporan Driver
+    Route::prefix('laporan-driver')->group(function () {
+        Route::get('/download', [OwnerController::class, 'downloadLaporanDriver'])->name('owner.laporan.driver');
+    });
+
     Route::prefix('driver-transaksi')->group(function () {
         Route::get('/', [DriverController::class, 'viewTransaksiDriver']);
         Route::get('/detail/{id}', [DriverController::class, 'detailTransaksiDriver'])->name('driver-transaksi.detail');

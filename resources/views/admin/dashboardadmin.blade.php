@@ -2,7 +2,7 @@
 
 @section('content')
     {{-- Header dengan Gradient Background --}}
-    <div class="relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl mb-8">
+    <div class="relative overflow-hidden bg-gradient-to-r from-teal-500 via-teal-600 to-teal-700 rounded-xl mb-8">
         <div class="absolute inset-0 bg-black opacity-10"></div>
         <div class="relative px-8 py-6">
             <div class="flex justify-between items-center">
@@ -92,15 +92,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Grafik Pesanan 7 Hari Terakhir
             const ordersCtx = document.getElementById('adminOrdersChart').getContext('2d');
+            const ordersChartLabels = @json(($ordersChartLabels ?? collect())->values());
+            const ordersChartData = @json(($ordersChartData ?? collect())->values());
+
+            const ordersLabels = ordersChartLabels.length ? ordersChartLabels : ['-'];
+            const ordersData = ordersChartData.length ? ordersChartData : [0];
+
+            const tealLineColor = 'rgb(20, 184, 166)';
+            const tealFillColor = 'rgba(20, 184, 166, 0.15)';
+
             new Chart(ordersCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                    labels: ordersLabels,
                     datasets: [{
                         label: 'Jumlah Pesanan',
-                        data: [12, 19, 8, 15, 22, 18, 25],
-                        borderColor: 'rgb(59, 130, 246)',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        data: ordersData,
+                        borderColor: tealLineColor,
+                        backgroundColor: tealFillColor,
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4
@@ -127,26 +136,37 @@
 
             // Grafik Status Pesanan
             const statusCtx = document.getElementById('adminStatusChart').getContext('2d');
+            const statusChartLabels = @json(($statusChartLabels ?? []));
+            const rawStatusData = @json(($statusChartData ?? []));
+            const statusLabels = statusChartLabels.length ? statusChartLabels : ['Tidak Ada Data'];
+            const statusData = rawStatusData.length ? rawStatusData : [1];
+
+            const baseColors = [
+                'rgba(13, 148, 136, 0.85)',   // teal-600
+                'rgba(45, 212, 191, 0.85)',   // teal-400
+                'rgba(15, 118, 110, 0.85)',   // teal-700
+                'rgba(94, 234, 212, 0.85)',   // teal-300
+                'rgba(20, 83, 75, 0.85)'      // teal-800
+            ];
+            const borderColors = [
+                'rgb(13, 148, 136)',
+                'rgb(45, 212, 191)',
+                'rgb(15, 118, 110)',
+                'rgb(94, 234, 212)',
+                'rgb(20, 83, 75)'
+            ];
+
+            const computedBackground = statusLabels.map((_, idx) => baseColors[idx % baseColors.length]);
+            const computedBorder = statusLabels.map((_, idx) => borderColors[idx % borderColors.length]);
+
             new Chart(statusCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Menunggu Pembayaran', 'Diproses', 'Selesai', 'Dibatalkan'],
+                    labels: statusLabels,
                     datasets: [{
-                        data: [{{ $pendingOrders->where('status', 'Menunggu Pembayaran')->count() }}, 
-                               {{ $pendingOrders->where('status', 'Diproses')->count() }}, 
-                               15, 3],
-                        backgroundColor: [
-                            'rgba(239, 68, 68, 0.8)',
-                            'rgba(245, 158, 11, 0.8)',
-                            'rgba(34, 197, 94, 0.8)',
-                            'rgba(107, 114, 128, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgb(239, 68, 68)',
-                            'rgb(245, 158, 11)',
-                            'rgb(34, 197, 94)',
-                            'rgb(107, 114, 128)'
-                        ],
+                        data: statusData,
+                        backgroundColor: computedBackground,
+                        borderColor: computedBorder,
                         borderWidth: 2
                     }]
                 },

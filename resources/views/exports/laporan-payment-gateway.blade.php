@@ -152,15 +152,17 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>LAPORAN PAYMENT GATEWAY</h1>
-        <p>PT. CHASTE GEMILANG MANDIRI</p>
-        <p>Jl. Raya Terpal No. 123, Jakarta</p>
-        <p>Telp: (021) 1234-5678 | Email: info@chaste.com</p>
-    </div>
+    @include('exports.partials.header')
+
+    <h1 style="text-align: center; color: #0f766e; font-size: 22px; margin-top: 0;">Laporan Payment Gateway</h1>
 
     <div class="periode">
-        <strong>Periode Laporan:</strong> {{ $periode }}
+        <strong>Periode Laporan:</strong> {{ $periodeLabel ?? $periode ?? '-' }}<br>
+        <span style="font-size: 11px; color: #475569;">
+            Rentang tanggal: {{ isset($periodeStart) ? \Carbon\Carbon::parse($periodeStart)->translatedFormat('d F Y') : '-' }}
+            &mdash;
+            {{ isset($periodeEnd) ? \Carbon\Carbon::parse($periodeEnd)->translatedFormat('d F Y') : '-' }}
+        </span>
     </div>
 
     {{-- Ringkasan Statistik --}}
@@ -206,9 +208,12 @@
             </thead>
             <tbody>
                 @forelse($transaksiBerhasil as $index => $transaksi)
+                @php
+                    $invoiceDate = $transaksi->receive_date ?? $transaksi->created_at;
+                @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $transaksi->created_at ? \Carbon\Carbon::parse($transaksi->created_at)->format('d/m/Y') : '-' }}</td>
+                    <td>{{ $invoiceDate ? \Carbon\Carbon::parse($invoiceDate)->format('d/m/Y') : '-' }}</td>
                     <td>{{ $transaksi->code }}</td>
                     <td>{{ $transaksi->customer->name ?? '-' }}</td>
                     <td>Rp {{ number_format($transaksi->grand_total, 0, ',', '.') }}</td>
@@ -246,9 +251,12 @@
             </thead>
             <tbody>
                 @foreach($transaksiPending as $index => $transaksi)
+                @php
+                    $invoiceDate = $transaksi->receive_date ?? $transaksi->created_at;
+                @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $transaksi->created_at ? \Carbon\Carbon::parse($transaksi->created_at)->format('d/m/Y') : '-' }}</td>
+                    <td>{{ $invoiceDate ? \Carbon\Carbon::parse($invoiceDate)->format('d/m/Y') : '-' }}</td>
                     <td>{{ $transaksi->code }}</td>
                     <td>{{ $transaksi->customer->name ?? '-' }}</td>
                     <td>Rp {{ number_format($transaksi->grand_total, 0, ',', '.') }}</td>
@@ -284,9 +292,12 @@
             </thead>
             <tbody>
                 @foreach($transaksiGagal as $index => $transaksi)
+                @php
+                    $invoiceDate = $transaksi->receive_date ?? $transaksi->created_at;
+                @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $transaksi->created_at ? \Carbon\Carbon::parse($transaksi->created_at)->format('d/m/Y') : '-' }}</td>
+                    <td>{{ $invoiceDate ? \Carbon\Carbon::parse($invoiceDate)->format('d/m/Y') : '-' }}</td>
                     <td>{{ $transaksi->code }}</td>
                     <td>{{ $transaksi->customer->name ?? '-' }}</td>
                     <td>Rp {{ number_format($transaksi->grand_total, 0, ',', '.') }}</td>

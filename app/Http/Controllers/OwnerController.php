@@ -13,6 +13,7 @@ use App\Models\Supplier;
 use App\Models\NegotiationTable;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\NotificationService;
+use App\Support\ReportDateRange;
 
 class OwnerController extends Controller
 {
@@ -173,52 +174,44 @@ class OwnerController extends Controller
     // Method untuk download PDF laporan transaksi
     public function downloadLaporanTransaksi(Request $request)
     {
-        $filter = $request->input('filter', 'bulan');
-        $now = Carbon::now();
-
-        // Filter waktu
-        switch ($filter) {
-            case 'hari':
-                $start = $now->copy()->startOfDay();
-                $end = $now->copy()->endOfDay();
-                $periode = 'Hari Ini (' . $start->format('d M Y') . ')';
-                break;
-            case 'minggu':
-                $start = $now->copy()->startOfWeek();
-                $end = $now->copy()->endOfWeek();
-                $periode = 'Minggu Ini (' . $start->format('d M Y') . ' - ' . $end->format('d M Y') . ')';
-                break;
-            case 'tahun':
-                $start = $now->copy()->startOfYear();
-                $end = $now->copy()->endOfYear();
-                $periode = 'Tahun ' . $now->year;
-                break;
-            case 'bulan':
-            default:
-                $start = $now->copy()->startOfMonth();
-                $end = $now->copy()->endOfMonth();
-                $periode = 'Bulan ' . $now->format('F Y');
-                break;
-        }
+        $periode = ReportDateRange::fromRequest($request, 'bulanan');
+        $start = $periode['start']->copy();
+        $end = $periode['end']->copy();
 
         // Data untuk PDF
-        $pendapatan = HInvoice::whereBetween('created_at', [$start, $end])
-            ->with(['customer', 'payments'])
+        $pendapatan = HInvoice::with(['customer', 'payments'])
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('receive_date', [$start, $end])
+                    ->orWhere(function ($sub) use ($start, $end) {
+                        $sub->whereNull('receive_date')
+                            ->whereBetween('created_at', [$start, $end]);
+                    });
+            })
+            ->orderByRaw('COALESCE(receive_date, created_at) ASC')
             ->get();
         
-        $pengeluaran = DebtPayment::whereBetween('payment_date', [$start, $end])
-            ->with(['purchaseOrder.supplier'])
+        $pengeluaran = DebtPayment::with(['purchaseOrder.supplier'])
+            ->whereBetween('payment_date', [$start, $end])
+            ->orderBy('payment_date')
             ->get();
         
-        $hutangPiutang = PurchaseOrder::whereBetween('order_date', [$start, $end])
-            ->with(['supplier', 'items'])
+        $hutangPiutang = PurchaseOrder::with(['supplier', 'items'])
+            ->whereBetween('order_date', [$start, $end])
+            ->orderBy('order_date')
             ->get();
         
-        $hutangCustomer = HInvoice::whereBetween('created_at', [$start, $end])
+        $hutangCustomer = HInvoice::with(['customer', 'payments'])
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('receive_date', [$start, $end])
+                    ->orWhere(function ($sub) use ($start, $end) {
+                        $sub->whereNull('receive_date')
+                            ->whereBetween('created_at', [$start, $end]);
+                    });
+            })
             ->whereHas('payments', function($q) {
                 $q->where('method', 'hutang')->where('is_paid', 0);
             })
-            ->with(['customer', 'payments'])
+            ->orderByRaw('COALESCE(receive_date, created_at) ASC')
             ->get();
 
         $totalPendapatan = $pendapatan->sum('grand_total');
@@ -227,138 +220,186 @@ class OwnerController extends Controller
         $totalHutangCustomer = $hutangCustomer->sum('grand_total');
         $laba = $totalPendapatan - $totalPengeluaran;
 
+        $periodeLabel = $periode['label'];
+        $periodeStart = $start;
+        $periodeEnd = $end;
+
         $pdf = Pdf::loadView('exports.laporan-transaksi-owner', compact(
             'pendapatan', 'pengeluaran', 'hutangPiutang', 'hutangCustomer',
             'totalPendapatan', 'totalPengeluaran', 'totalHutang', 'totalHutangCustomer',
-            'laba', 'periode'
+            'laba', 'periodeLabel', 'periodeStart', 'periodeEnd'
         ));
 
-        return $pdf->download('laporan-transaksi-' . $filter . '-' . $now->format('Y-m-d') . '.pdf');
+        return $pdf->download('laporan-transaksi-' . $periode['range'] . '-' . $end->format('Y-m-d') . '.pdf');
     }
 
     // Method untuk download laporan payment gateway
     public function downloadLaporanPaymentGateway(Request $request)
     {
-        $filter = $request->input('filter', 'bulan');
-        $now = Carbon::now();
-
-        // Filter waktu
-        switch ($filter) {
-            case 'hari':
-                $start = $now->copy()->startOfDay();
-                $end = $now->copy()->endOfDay();
-                $periode = 'Hari Ini (' . $start->format('d M Y') . ')';
-                break;
-            case 'minggu':
-                $start = $now->copy()->startOfWeek();
-                $end = $now->copy()->endOfWeek();
-                $periode = 'Minggu Ini (' . $start->format('d M Y') . ' - ' . $end->format('d M Y') . ')';
-                break;
-            case 'tahun':
-                $start = $now->copy()->startOfYear();
-                $end = $now->copy()->endOfYear();
-                $periode = 'Tahun ' . $now->year;
-                break;
-            case 'bulan':
-            default:
-                $start = $now->copy()->startOfMonth();
-                $end = $now->copy()->endOfMonth();
-                $periode = 'Bulan ' . $now->format('F Y');
-                break;
-        }
+        $periode = ReportDateRange::fromRequest($request, 'bulanan');
+        $start = $periode['start']->copy();
+        $end = $periode['end']->copy();
 
         // Data payment gateway
-        $transaksiBerhasil = HInvoice::whereBetween('created_at', [$start, $end])
+        $transaksiBerhasil = HInvoice::with(['customer', 'payments'])
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('receive_date', [$start, $end])
+                    ->orWhere(function ($sub) use ($start, $end) {
+                        $sub->whereNull('receive_date')
+                            ->whereBetween('created_at', [$start, $end]);
+                    });
+            })
             ->where('status', 'lunas')
             ->whereHas('payments', function($q) {
                 $q->whereIn('method', ['midtrans', 'transfer', 'cash']);
             })
-            ->with(['customer', 'payments'])
+            ->orderByRaw('COALESCE(receive_date, created_at) ASC')
             ->get();
 
-        $transaksiPending = HInvoice::whereBetween('created_at', [$start, $end])
+        $transaksiPending = HInvoice::with(['customer', 'payments'])
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('receive_date', [$start, $end])
+                    ->orWhere(function ($sub) use ($start, $end) {
+                        $sub->whereNull('receive_date')
+                            ->whereBetween('created_at', [$start, $end]);
+                    });
+            })
             ->where('status', 'Menunggu Pembayaran')
             ->whereHas('payments', function($q) {
                 $q->whereIn('method', ['midtrans', 'transfer', 'cash']);
             })
-            ->with(['customer', 'payments'])
+            ->orderByRaw('COALESCE(receive_date, created_at) ASC')
             ->get();
 
-        $transaksiGagal = HInvoice::whereBetween('created_at', [$start, $end])
+        $transaksiGagal = HInvoice::with(['customer', 'payments'])
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('receive_date', [$start, $end])
+                    ->orWhere(function ($sub) use ($start, $end) {
+                        $sub->whereNull('receive_date')
+                            ->whereBetween('created_at', [$start, $end]);
+                    });
+            })
             ->where('status', '!=', 'lunas')
             ->where('status', '!=', 'Menunggu Pembayaran')
             ->whereHas('payments', function($q) {
                 $q->whereIn('method', ['midtrans', 'transfer', 'cash']);
             })
-            ->with(['customer', 'payments'])
+            ->orderByRaw('COALESCE(receive_date, created_at) ASC')
             ->get();
 
         $totalPenjualan = $transaksiBerhasil->sum('grand_total');
         $totalTransaksi = $transaksiBerhasil->count() + $transaksiPending->count() + $transaksiGagal->count();
 
+        $periodeLabel = $periode['label'];
+        $periodeStart = $start;
+        $periodeEnd = $end;
+
         $pdf = Pdf::loadView('exports.laporan-payment-gateway', compact(
             'transaksiBerhasil', 'transaksiPending', 'transaksiGagal',
-            'totalPenjualan', 'totalTransaksi', 'periode'
+            'totalPenjualan', 'totalTransaksi', 'periodeLabel', 'periodeStart', 'periodeEnd'
         ));
 
-        return $pdf->download('laporan-payment-gateway-' . $filter . '-' . $now->format('Y-m-d') . '.pdf');
+        return $pdf->download('laporan-payment-gateway-' . $periode['range'] . '-' . $end->format('Y-m-d') . '.pdf');
     }
 
     // Method untuk download laporan negosiasi
     public function downloadLaporanNegosiasi(Request $request)
     {
-        $filter = $request->input('filter', 'bulan');
-        $now = Carbon::now();
-
-        // Filter waktu
-        switch ($filter) {
-            case 'hari':
-                $start = $now->copy()->startOfDay();
-                $end = $now->copy()->endOfDay();
-                $periode = 'Hari Ini (' . $start->format('d M Y') . ')';
-                break;
-            case 'minggu':
-                $start = $now->copy()->startOfWeek();
-                $end = $now->copy()->endOfWeek();
-                $periode = 'Minggu Ini (' . $start->format('d M Y') . ' - ' . $end->format('d M Y') . ')';
-                break;
-            case 'tahun':
-                $start = $now->copy()->startOfYear();
-                $end = $now->copy()->endOfYear();
-                $periode = 'Tahun ' . $now->year;
-                break;
-            case 'bulan':
-            default:
-                $start = $now->copy()->startOfMonth();
-                $end = $now->copy()->endOfMonth();
-                $periode = 'Bulan ' . $now->format('F Y');
-                break;
-        }
+        $periode = ReportDateRange::fromRequest($request, 'bulanan');
+        $start = $periode['start']->copy();
+        $end = $periode['end']->copy();
 
         // Data negosiasi
-        $negosiasiBerhasil = NegotiationTable::whereBetween('created_at', [$start, $end])
+        $negosiasiBerhasil = NegotiationTable::with(['customer', 'product'])
+            ->whereBetween('created_at', [$start, $end])
             ->where('status', 'disetujui')
-            ->with(['customer', 'product'])
+            ->orderBy('created_at')
             ->get();
 
-        $negosiasiGagal = NegotiationTable::whereBetween('created_at', [$start, $end])
+        $negosiasiGagal = NegotiationTable::with(['customer', 'product'])
+            ->whereBetween('created_at', [$start, $end])
             ->where('status', 'ditolak')
-            ->with(['customer', 'product'])
+            ->orderBy('created_at')
             ->get();
 
-        $negosiasiPending = NegotiationTable::whereBetween('created_at', [$start, $end])
+        $negosiasiPending = NegotiationTable::with(['customer', 'product'])
+            ->whereBetween('created_at', [$start, $end])
             ->where('status', 'pending')
-            ->with(['customer', 'product'])
+            ->orderBy('created_at')
             ->get();
 
         $totalNegosiasi = $negosiasiBerhasil->count() + $negosiasiGagal->count() + $negosiasiPending->count();
         $persentaseBerhasil = $totalNegosiasi > 0 ? ($negosiasiBerhasil->count() / $totalNegosiasi) * 100 : 0;
 
+        $periodeLabel = $periode['label'];
+        $periodeStart = $start;
+        $periodeEnd = $end;
+
         $pdf = Pdf::loadView('exports.laporan-negosiasi', compact(
             'negosiasiBerhasil', 'negosiasiGagal', 'negosiasiPending',
-            'totalNegosiasi', 'persentaseBerhasil', 'periode'
+            'totalNegosiasi', 'persentaseBerhasil', 'periodeLabel', 'periodeStart', 'periodeEnd'
         ));
 
-        return $pdf->download('laporan-negosiasi-' . $filter . '-' . $now->format('Y-m-d') . '.pdf');
+        return $pdf->download('laporan-negosiasi-' . $periode['range'] . '-' . $end->format('Y-m-d') . '.pdf');
+    }
+
+    public function downloadLaporanDriver(Request $request)
+    {
+        $periode = ReportDateRange::fromRequest($request, 'bulanan');
+        $start = $periode['start']->copy();
+        $end = $periode['end']->copy();
+
+        $deliveryStatuses = ['dikirim', 'sampai', 'completed'];
+        $returnStatuses = ['retur_diajukan', 'retur_diambil', 'retur_selesai'];
+
+        $tasks = HInvoice::with(['customer', 'driver'])
+            ->whereNotNull('driver_id')
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('receive_date', [$start, $end])
+                    ->orWhere(function ($sub) use ($start, $end) {
+                        $sub->whereNull('receive_date')
+                            ->whereBetween('created_at', [$start, $end]);
+                    });
+            })
+            ->orderByRaw('COALESCE(receive_date, created_at) ASC')
+            ->get();
+
+        $driverSummaries = $tasks->groupBy('driver_id')->map(function ($group) use ($deliveryStatuses, $returnStatuses) {
+            $driver = $group->first()->driver;
+            $deliveryTasks = $group->filter(fn($task) => in_array(strtolower($task->status), $deliveryStatuses));
+            $returnTasks = $group->filter(fn($task) => in_array(strtolower($task->status), $returnStatuses));
+
+            return [
+                'driver' => $driver,
+                'total_tasks' => $group->count(),
+                'delivery_total' => $deliveryTasks->count(),
+                'delivery_completed' => $deliveryTasks->filter(fn($task) => strtolower($task->status) === 'sampai' || strtolower($task->status) === 'completed')->count(),
+                'return_total' => $returnTasks->count(),
+                'return_completed' => $returnTasks->filter(fn($task) => strtolower($task->status) === 'retur_selesai')->count(),
+            ];
+        })->values();
+
+        $totalTasks = $tasks->count();
+        $totalDeliveryTasks = $tasks->filter(fn($task) => in_array(strtolower($task->status), $deliveryStatuses))->count();
+        $totalReturnTasks = $tasks->filter(fn($task) => in_array(strtolower($task->status), $returnStatuses))->count();
+        $totalCompletedTasks = $tasks->filter(fn($task) => in_array(strtolower($task->status), ['sampai', 'completed', 'retur_selesai']))->count();
+
+        $periodeLabel = $periode['label'];
+        $periodeStart = $start;
+        $periodeEnd = $end;
+
+        $pdf = Pdf::loadView('exports.laporan-driver-owner', [
+            'tasks' => $tasks,
+            'driverSummaries' => $driverSummaries,
+            'totalTasks' => $totalTasks,
+            'totalDeliveryTasks' => $totalDeliveryTasks,
+            'totalReturnTasks' => $totalReturnTasks,
+            'totalCompletedTasks' => $totalCompletedTasks,
+            'periodeLabel' => $periodeLabel,
+            'periodeStart' => $periodeStart,
+            'periodeEnd' => $periodeEnd,
+        ]);
+
+        return $pdf->download('laporan-driver-' . $periode['range'] . '-' . $end->format('Y-m-d') . '.pdf');
     }
 }

@@ -122,7 +122,16 @@
     </style>
 </head>
 <body>
+    @include('exports.partials.header')
+
     <h1>Laporan Stok {{ $judulPeriode }}</h1>
+
+    <p style="text-align: center; font-size: 12px; color: #475569; margin-top: -10px;">
+        Rentang tanggal:
+        {{ isset($periodeStart) ? \Carbon\Carbon::parse($periodeStart)->translatedFormat('d F Y') : \Carbon\Carbon::parse($startDate)->translatedFormat('d F Y') }}
+        &mdash;
+        {{ isset($periodeEnd) ? \Carbon\Carbon::parse($periodeEnd)->translatedFormat('d F Y') : \Carbon\Carbon::parse($endDate)->translatedFormat('d F Y') }}
+    </p>
 
     {{-- Ringkasan --}}
     <div class="summary-grid">
@@ -260,7 +269,7 @@
     @endif
 
     <div class="footer">
-        <p>Laporan dibuat pada {{ now()->format('d F Y H:i') }}</p>
+        <p>Laporan dibuat pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }}</p>
         <p>Sistem Informasi Mahasiswa iSTTS</p>
     </div>
 </body>

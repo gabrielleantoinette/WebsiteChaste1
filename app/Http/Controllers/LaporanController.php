@@ -11,12 +11,20 @@ use App\Models\Returns;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Models\DInvoice;
+use App\Support\ReportDateRange;
+use Illuminate\Support\Facades\DB;
 
 class LaporanController extends Controller
 {
-    public function penjualanPDF()
+    public function penjualanPDF(Request $request)
     {
-        $orderCarts = OrderModel::pluck('cart_ids'); 
+        $periode = ReportDateRange::fromRequest($request, 'bulanan');
+        $start = $periode['start']->copy();
+        $end = $periode['end']->copy();
+
+        $orderCarts = OrderModel::whereBetween('created_at', [$start, $end])
+            ->orderBy('created_at')
+            ->pluck('cart_ids');
 
         $cartIds = $orderCarts->flatMap(function ($json) {
             return json_decode($json, true) ?? [];
@@ -41,58 +49,106 @@ class LaporanController extends Controller
             ];
         })->sortByDesc('jumlah_terjual')->take(5);
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.laporan-penjualan', compact('topProducts', 'topColors'));
-        return $pdf->download('laporan-penjualan.pdf');
+        $periodeLabel = $periode['label'];
+        $periodeStart = $start;
+        $periodeEnd = $end;
+
+        $pdf = Pdf::loadView('exports.laporan-penjualan', compact('topProducts', 'topColors', 'periodeLabel', 'periodeStart', 'periodeEnd'));
+        return $pdf->download('laporan-penjualan-' . $periode['range'] . '-' . $end->format('Y-m-d') . '.pdf');
     }
 
-    public function customerPDF()
+    public function customerPDF(Request $request)
     {
-        $allCustomers = Customer::all();
-        $now = Carbon::now();
+        $periode = ReportDateRange::fromRequest($request, 'bulanan');
+        $start = $periode['start']->copy();
+        $end = $periode['end']->copy();
 
-        // Total pelanggan
-        $totalCustomers = $allCustomers->count();
-
-        // Pelanggan baru (dalam 30 hari terakhir)
-        $newCustomers = $allCustomers->filter(function ($c) use ($now) {
-            return $c->created_at >= $now->subDays(30);
-        });
-        $newCustomerCount = $newCustomers->count();
-        $newCustomerPercentage = $totalCustomers > 0 ? round(($newCustomerCount / $totalCustomers) * 100, 2) : 0;
-
-        // Hitung pelanggan yang pernah beli
-        $invoiceGroups = HInvoice::select('customer_id')
-            ->groupBy('customer_id')
-            ->selectRaw('count(*) as order_count, customer_id')
+        $customers = Customer::whereBetween('created_at', [$start, $end])
+            ->orderBy('created_at')
             ->get();
 
-        $repeatOrderCount = $invoiceGroups->where('order_count', '>', 1)->count();
-        $oneTimeCustomerCount = $invoiceGroups->where('order_count', 1)->count();
+        $totalCustomers = $customers->count();
+        $totalCustomersAll = Customer::count();
 
-        // Berdasarkan lokasi (city)
-        $locationStats = $allCustomers->groupBy('city')->map(function ($group) {
+        $newCustomerCount = $totalCustomers;
+        $newCustomerPercentage = $totalCustomersAll > 0 ? round(($newCustomerCount / $totalCustomersAll) * 100, 2) : 0;
+
+        $invoiceGroups = HInvoice::select('customer_id')
+            ->selectRaw('COUNT(*) as order_count')
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('receive_date', [$start, $end])
+                    ->orWhere(function ($sub) use ($start, $end) {
+                        $sub->whereNull('receive_date')
+                            ->whereBetween('created_at', [$start, $end]);
+                    });
+            })
+            ->groupBy('customer_id')
+            ->get();
+
+        $customerMap = Customer::whereIn('id', $invoiceGroups->pluck('customer_id'))
+            ->get()
+            ->keyBy('id');
+
+        $repeatCustomers = $invoiceGroups->filter(fn($row) => $row->order_count > 1)
+            ->map(function ($row) use ($customerMap) {
+                $customer = $customerMap->get($row->customer_id);
+                return [
+                    'name' => $customer->name ?? 'Customer Tidak Dikenal',
+                    'order_count' => $row->order_count,
+                ];
+            })
+            ->values();
+
+        $singlePurchaseCustomers = $invoiceGroups->filter(fn($row) => $row->order_count === 1)
+            ->map(function ($row) use ($customerMap) {
+                $customer = $customerMap->get($row->customer_id);
+                return [
+                    'name' => $customer->name ?? 'Customer Tidak Dikenal',
+                ];
+            })
+            ->values();
+
+        $repeatOrderCount = $repeatCustomers->count();
+        $oneTimeCustomerCount = $singlePurchaseCustomers->count();
+
+        $locationStats = $customers->groupBy('city')->map(function ($group) {
             return $group->count();
         });
 
-        // Umur rata-rata
-        $validCustomers = $allCustomers->filter(fn($c) => $c->birth_date);
+        $validCustomers = $customers->filter(fn($c) => $c->birth_date);
         $avgAge = $validCustomers->count() > 0
             ? round($validCustomers->avg(fn($c) => Carbon::parse($c->birth_date)->age), 1)
             : null;
 
+        $periodeLabel = $periode['label'];
+        $periodeStart = $start;
+        $periodeEnd = $end;
+
         $pdf = Pdf::loadView('exports.laporan-customer', compact(
             'totalCustomers', 'newCustomerCount', 'newCustomerPercentage',
-            'repeatOrderCount', 'oneTimeCustomerCount', 'locationStats', 'avgAge'
+            'repeatOrderCount', 'oneTimeCustomerCount', 'locationStats', 'avgAge',
+            'periodeLabel', 'periodeStart', 'periodeEnd', 'customers',
+            'repeatCustomers', 'singlePurchaseCustomers'
         ));
 
-        return $pdf->download('laporan-customer.pdf');
+        return $pdf->download('laporan-customer-' . $periode['range'] . '-' . $end->format('Y-m-d') . '.pdf');
     }
 
-    public function rataRataPDF()
+    public function rataRataPDF(Request $request)
     {
-        $totalCustomer = Customer::count();
-        $invoiceGroups = HInvoice::groupBy('customer_id')
-            ->selectRaw('customer_id, COUNT(*) as jumlah_transaksi, SUM(grand_total) as total_belanja')
+        $periode = ReportDateRange::fromRequest($request, 'bulanan');
+        $start = $periode['start']->copy();
+        $end = $periode['end']->copy();
+
+        $invoiceGroups = HInvoice::selectRaw('customer_id, COUNT(*) as jumlah_transaksi, SUM(grand_total) as total_belanja')
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('receive_date', [$start, $end])
+                    ->orWhere(function ($sub) use ($start, $end) {
+                        $sub->whereNull('receive_date')
+                            ->whereBetween('created_at', [$start, $end]);
+                    });
+            })
+            ->groupBy('customer_id')
             ->get();
 
         $rataRataPerCustomer = $invoiceGroups->map(function ($row) {
@@ -106,14 +162,24 @@ class LaporanController extends Controller
 
         $rataRataGlobal = $rataRataPerCustomer->avg('rata_rata_belanja');
 
-        $pdf = Pdf::loadView('exports.laporan-ratarata', compact('rataRataGlobal', 'rataRataPerCustomer'));
-        return $pdf->download('laporan-pesanan-rata-rata.pdf');
+        $periodeLabel = $periode['label'];
+        $periodeStart = $start;
+        $periodeEnd = $end;
+
+        $pdf = Pdf::loadView('exports.laporan-ratarata', compact('rataRataGlobal', 'rataRataPerCustomer', 'periodeLabel', 'periodeStart', 'periodeEnd'));
+        return $pdf->download('laporan-pesanan-rata-rata-' . $periode['range'] . '-' . $end->format('Y-m-d') . '.pdf');
     }
 
-    public function returPDF()
+    public function returPDF(Request $request)
     {
-        // Ambil semua data retur dengan relasi
-        $returns = Returns::with(['customer', 'invoice', 'driver'])->get();
+        $periode = ReportDateRange::fromRequest($request, 'bulanan');
+        $start = $periode['start']->copy();
+        $end = $periode['end']->copy();
+
+        $returns = Returns::with(['customer', 'invoice', 'driver'])
+            ->whereBetween('created_at', [$start, $end])
+            ->orderBy('created_at')
+            ->get();
         
         // Statistik umum
         $totalReturns = $returns->count();
@@ -124,12 +190,12 @@ class LaporanController extends Controller
             return $group->count();
         });
         
-        // Analisis berdasarkan bulan (6 bulan terakhir)
+        // Analisis berdasarkan bulan dalam rentang
         $monthlyStats = $returns->groupBy(function ($return) {
             return Carbon::parse($return->created_at)->format('Y-m');
         })->map(function ($group) {
             return $group->count();
-        })->sortKeys()->take(6);
+        })->sortKeys();
         
         // Analisis berdasarkan customer
         $customerStats = $returns->groupBy('customer_id')->map(function ($group, $customerId) {
@@ -225,16 +291,17 @@ class LaporanController extends Controller
         $topReturnedColor = $colorStats->first() ? $colorStats->first()['color'] : 'N/A';
         $topReturnedCustomer = $customerStats->first() ? $customerStats->first()['customer_name'] : 'N/A';
         
-        // Periode laporan
-        $startDate = $returns->min('created_at');
-        $endDate = $returns->max('created_at');
+        $periodeLabel = $periode['label'];
+        $periodeStart = $start;
+        $periodeEnd = $end;
         
         $pdf = Pdf::loadView('exports.laporan-retur', compact(
             'returns', 'totalReturns', 'totalCustomers', 'statusStats', 
-            'monthlyStats', 'customerStats', 'driverStats', 'startDate', 'endDate',
-            'productStats', 'colorStats', 'topReturnedProduct', 'topReturnedColor', 'topReturnedCustomer'
+            'monthlyStats', 'customerStats', 'driverStats', 'productStats', 'colorStats',
+            'topReturnedProduct', 'topReturnedColor', 'topReturnedCustomer',
+            'periodeLabel', 'periodeStart', 'periodeEnd'
         ));
         
-        return $pdf->download('laporan-barang-retur.pdf');
+        return $pdf->download('laporan-barang-retur-' . $periode['range'] . '-' . $end->format('Y-m-d') . '.pdf');
     }
 }

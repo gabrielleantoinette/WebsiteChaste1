@@ -54,8 +54,15 @@
     </style>
 </head>
 <body>
+    @include('exports.partials.header')
+
     <h1>Laporan Pesanan Rata-Rata</h1>
-    <p class="sub">Menampilkan jumlah rata-rata uang yang dibelanjakan oleh setiap customer</p>
+    <p class="sub">
+        Menampilkan jumlah rata-rata uang yang dibelanjakan oleh setiap customer<br>
+        Periode: {{ $periodeLabel ?? '-' }} &mdash;
+        {{ isset($periodeStart) ? \Carbon\Carbon::parse($periodeStart)->translatedFormat('d F Y') : '-' }}
+        sampai {{ isset($periodeEnd) ? \Carbon\Carbon::parse($periodeEnd)->translatedFormat('d F Y') : '-' }}
+    </p>
 
     <table>
         <thead>
@@ -85,6 +92,6 @@
     <h3>📊 Rata-Rata Global Semua Customer:</h3>
     <p class="highlight">Rp {{ number_format($rataRataGlobal, 0, ',', '.') }}</p>
 
-    <div class="footer">Laporan dibuat pada {{ now()->format('d F Y H:i') }}</div>
+    <div class="footer">Laporan dibuat pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }}</div>
 </body>
 </html>

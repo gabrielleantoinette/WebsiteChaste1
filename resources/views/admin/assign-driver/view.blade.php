@@ -1,8 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $reportRangeOptions = \App\Support\ReportDateRange::options();
+    @endphp
+
     {{-- Header dengan Gradient Background --}}
-    <div class="relative overflow-hidden bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl mb-8">
+    <div class="relative bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl mb-8 overflow-visible">
         <div class="absolute inset-0 bg-black opacity-10"></div>
         <div class="relative px-8 py-6">
             <div class="flex justify-between items-center">
@@ -10,10 +14,59 @@
                     <h1 class="text-3xl font-bold text-white mb-2">🚚 Atur Kurir</h1>
                     <p class="text-teal-100">Kelola pengiriman dan pengambilan barang retur</p>
                 </div>
-                <div class="flex gap-3">
+                <div class="flex gap-3 items-center">
                     <div class="text-right text-white">
                         <p class="text-sm opacity-90">Total Pengiriman</p>
                         <p class="text-lg font-semibold">{{ $pengirimanNormal->count() + $pengirimanRetur->count() }}</p>
+                    </div>
+                    <div class="relative">
+                        <button id="driverReportBtn"
+                                class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white font-medium rounded-lg hover:bg-white/30 transition-all duration-300 shadow-lg border border-white/20">
+                            📄 Laporan Driver
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div id="driverReportDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                            <div class="py-3 px-4 space-y-3">
+                                <h4 class="text-sm font-semibold text-gray-700">Unduh Laporan Aktivitas Driver</h4>
+                                <form method="GET" action="{{ route('owner.laporan.driver') }}" class="space-y-2">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Rentang Waktu</label>
+                                        <select name="range" data-report-range data-description-target="driver-desc" data-field-prefix="driver"
+                                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                            @foreach($reportRangeOptions as $option)
+                                                <option value="{{ $option['value'] }}" data-description="{{ $option['description'] }}">{{ $option['label'] }}</option>
+                                            @endforeach
+                                        </select>
+                                        <p id="driver-desc" class="text-[11px] text-gray-400 mt-1">{{ $reportRangeOptions[0]['description'] }}</p>
+                                    </div>
+                                    <div id="driver-date" class="hidden space-y-1">
+                                        <label class="block text-xs font-semibold text-gray-600">Tanggal</label>
+                                        <input type="date" name="date" disabled
+                                               value="{{ request('date', now()->toDateString()) }}"
+                                               class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                    </div>
+                                    <div id="driver-month" class="hidden space-y-1">
+                                        <label class="block text-xs font-semibold text-gray-600">Bulan</label>
+                                        <input type="month" name="month" disabled
+                                               value="{{ request('month', now()->format('Y-m')) }}"
+                                               class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                    </div>
+                                    <div id="driver-year" class="hidden space-y-1">
+                                        <label class="block text-xs font-semibold text-gray-600">Tahun</label>
+                                        <input type="number" name="year" min="2000" max="{{ now()->year }}" disabled
+                                               value="{{ request('year', now()->year) }}"
+                                               class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                               placeholder="Contoh: {{ now()->year }}">
+                                    </div>
+                                    <button type="submit"
+                                            class="w-full inline-flex justify-center items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-semibold rounded-lg hover:from-teal-600 hover:to-teal-700 transition">
+                                        Unduh PDF
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -227,4 +280,63 @@
             </div>
         @endif
     </div>
+
+    <script>
+        document.getElementById('driverReportBtn').addEventListener('click', function() {
+            const dropdown = document.getElementById('driverReportDropdown');
+            dropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('driverReportDropdown');
+            const button = document.getElementById('driverReportBtn');
+
+            if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        document.querySelectorAll('[data-report-range]').forEach(function(select) {
+            const descriptionId = select.getAttribute('data-description-target');
+            const descriptionElement = descriptionId ? document.getElementById(descriptionId) : null;
+            const prefix = select.getAttribute('data-field-prefix');
+
+            const toggleRangeFields = () => {
+                if (!prefix) return;
+                const fieldMap = {
+                    harian: document.getElementById(`${prefix}-date`),
+                    bulanan: document.getElementById(`${prefix}-month`),
+                    tahunan: document.getElementById(`${prefix}-year`),
+                };
+
+                Object.entries(fieldMap).forEach(([rangeKey, element]) => {
+                    if (!element) {
+                        return;
+                    }
+                    const inputs = element.querySelectorAll('input, select');
+                    if (select.value === rangeKey) {
+                        element.classList.remove('hidden');
+                        inputs.forEach(input => input.disabled = false);
+                    } else {
+                        element.classList.add('hidden');
+                        inputs.forEach(input => input.disabled = true);
+                    }
+                });
+            };
+
+            const updateDescription = () => {
+                if (!descriptionElement) return;
+                const selectedOption = select.options[select.selectedIndex];
+                descriptionElement.textContent = selectedOption?.getAttribute('data-description') || '';
+            };
+
+            select.addEventListener('change', () => {
+                toggleRangeFields();
+                updateDescription();
+            });
+
+            toggleRangeFields();
+            updateDescription();
+        });
+    </script>
 @endsection

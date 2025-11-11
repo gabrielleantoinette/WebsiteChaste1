@@ -48,7 +48,16 @@
     </style>
 </head>
 <body>
+    @include('exports.partials.header')
+
     <h1>Laporan Penjualan Terpal</h1>
+
+    <p style="text-align: center; font-size: 12px; color: #475569; margin-top: -10px;">
+        Periode: {{ $periodeLabel ?? 'Seluruh Data' }}<br>
+        Rentang tanggal: {{ isset($periodeStart) ? \Carbon\Carbon::parse($periodeStart)->translatedFormat('d F Y') : '-' }}
+        &mdash;
+        {{ isset($periodeEnd) ? \Carbon\Carbon::parse($periodeEnd)->translatedFormat('d F Y') : '-' }}
+    </p>
 
     <h3>Terpal Paling Laku</h3>
     <table>
@@ -90,6 +99,6 @@
         </tbody>
     </table>
 
-    <p style="margin-top: 50px; font-size: 10px; color: #888;">Laporan dibuat pada {{ now()->format('d F Y') }}</p>
+    <p style="margin-top: 50px; font-size: 10px; color: #888;">Laporan dibuat pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }}</p>
 </body>
 </html>

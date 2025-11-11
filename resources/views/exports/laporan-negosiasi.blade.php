@@ -152,15 +152,17 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>LAPORAN NEGOSIASI HARGA</h1>
-        <p>PT. CHASTE GEMILANG MANDIRI</p>
-        <p>Jl. Raya Terpal No. 123, Jakarta</p>
-        <p>Telp: (021) 1234-5678 | Email: info@chaste.com</p>
-    </div>
+    @include('exports.partials.header')
+
+    <h1 style="text-align: center; color: #0f766e; font-size: 22px; margin-top: 0;">Laporan Negosiasi Harga</h1>
 
     <div class="periode">
-        <strong>Periode Laporan:</strong> {{ $periode }}
+        <strong>Periode Laporan:</strong> {{ $periodeLabel ?? $periode ?? '-' }}<br>
+        <span style="font-size: 11px; color: #475569;">
+            Rentang tanggal: {{ isset($periodeStart) ? \Carbon\Carbon::parse($periodeStart)->translatedFormat('d F Y') : '-' }}
+            &mdash;
+            {{ isset($periodeEnd) ? \Carbon\Carbon::parse($periodeEnd)->translatedFormat('d F Y') : '-' }}
+        </span>
     </div>
 
     {{-- Ringkasan Statistik --}}

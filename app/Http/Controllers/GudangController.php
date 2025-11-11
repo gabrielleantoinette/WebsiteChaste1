@@ -215,6 +215,7 @@ class GudangController extends Controller
     {
         $periode = $request->get('periode', 'harian');
         $tanggal = $request->get('tanggal', now()->format('Y-m-d'));
+        $targetYear = $request->get('year');
         
         // Set tanggal berdasarkan periode
         switch ($periode) {
@@ -262,40 +263,31 @@ class GudangController extends Controller
     // Export PDF Laporan Stok
     public function exportLaporanStokPDF(Request $request)
     {
-        $periode = $request->get('periode', 'harian');
-        $tanggal = $request->get('tanggal', now()->format('Y-m-d'));
-        
-        // Set tanggal berdasarkan periode
-        switch ($periode) {
-            case 'harian':
-                $startDate = $tanggal;
-                $endDate = $tanggal;
-                $judulPeriode = 'Harian - ' . date('d/m/Y', strtotime($tanggal));
-                break;
-            case 'mingguan':
-                $startDate = now()->startOfWeek()->format('Y-m-d');
-                $endDate = now()->endOfWeek()->format('Y-m-d');
-                $judulPeriode = 'Mingguan - ' . date('d/m/Y', strtotime($startDate)) . ' s/d ' . date('d/m/Y', strtotime($endDate));
-                break;
-            case 'bulanan':
-                $startDate = now()->startOfMonth()->format('Y-m-d');
-                $endDate = now()->endOfMonth()->format('Y-m-d');
-                $judulPeriode = 'Bulanan - ' . date('F Y', strtotime($startDate));
-                break;
-            case 'tahunan':
-                $startDate = now()->startOfYear()->format('Y-m-d');
-                $endDate = now()->endOfYear()->format('Y-m-d');
-                $judulPeriode = 'Tahunan - ' . date('Y', strtotime($startDate));
-                break;
-            default:
-                $startDate = $tanggal;
-                $endDate = $tanggal;
-                $judulPeriode = 'Harian - ' . date('d/m/Y', strtotime($tanggal));
+        if ($request->has('periode') && !$request->has('range')) {
+            $request->merge(['range' => $request->input('periode')]);
         }
+        if ($request->has('tanggal') && !$request->has('date')) {
+            $request->merge(['date' => $request->input('tanggal')]);
+        }
+        if ($request->has('bulan') && !$request->has('month')) {
+            $request->merge(['month' => $request->input('bulan')]);
+        }
+        if ($request->has('tahun') && !$request->has('year')) {
+            $request->merge(['year' => $request->input('tahun')]);
+        }
+
+        $range = ReportDateRange::fromRequest($request, 'harian');
+        $startDate = $range['start']->toDateString();
+        $endDate = $range['end']->toDateString();
+        $judulPeriode = $range['label'];
 
         $stokSaatIni = $this->getStokSaatIni();
         $stokMasuk = $this->getStokMasuk($startDate, $endDate);
         $stokKeluar = $this->getStokKeluar($startDate, $endDate);
+
+        $periodeStart = $range['start'];
+        $periodeEnd = $range['end'];
+        $periodeLabel = $judulPeriode;
 
         $pdf = Pdf::loadView('exports.laporan_stok_pdf', compact(
             'stokSaatIni', 
@@ -303,10 +295,13 @@ class GudangController extends Controller
             'stokKeluar', 
             'judulPeriode', 
             'startDate', 
-            'endDate'
+            'endDate',
+            'periodeStart',
+            'periodeEnd',
+            'periodeLabel'
         ));
 
-        return $pdf->download('laporan-stok-' . $periode . '-' . date('Y-m-d') . '.pdf');
+        return $pdf->download('laporan-stok-' . $range['range'] . '-' . date('Y-m-d') . '.pdf');
     }
 
     // Helper method untuk mendapatkan stok saat ini
