@@ -7,6 +7,8 @@ use App\Models\ProductVariant;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -42,9 +44,7 @@ class ProductController extends Controller
 
         // 2) Upload image jika ada
         if ($request->hasFile('image')) {
-            $path = $request->file('image')
-                ->store('products', 'public'); // disimpan di storage/app/public/products
-            $data['image'] = $path;
+            $data['image'] = $this->storeProductImage($request->file('image'), $data['name']);
         }
 
         // 3) Simpan
@@ -87,13 +87,8 @@ class ProductController extends Controller
 
         // 2) Jika ada upload baru, hapus file lama dan simpan yang baru
         if ($request->hasFile('image')) {
-            // hapus lama
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
-            }
-            // simpan baru
-            $path = $request->file('image')->store('products', 'public');
-            $data['image'] = $path;
+            $this->deleteExistingImage($product->image);
+            $data['image'] = $this->storeProductImage($request->file('image'), $data['name']);
         }
 
         // 3) Update
@@ -111,6 +106,37 @@ class ProductController extends Controller
         return redirect()
             ->route('admin.products.view')
             ->with('success', 'Produk berhasil diupdate.');
+    }
+
+    private function storeProductImage($file, string $productName): string
+    {
+        $directory = public_path('images/products');
+        if (!File::exists($directory)) {
+            File::makeDirectory($directory, 0755, true);
+        }
+
+        $extension = $file->getClientOriginalExtension();
+        $filename = Str::slug($productName) . '-' . time() . '.' . $extension;
+        $file->move($directory, $filename);
+
+        return 'images/products/' . $filename;
+    }
+
+    private function deleteExistingImage(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        $publicPath = public_path($path);
+        if (File::exists($publicPath)) {
+            File::delete($publicPath);
+            return;
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
     }
 
     public function updateMinPriceAction(Request $request, $id)
