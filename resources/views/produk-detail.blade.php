@@ -25,7 +25,7 @@
             <!-- Gambar Produk (Kotak Persegi) -->
             <div class="md:w-1/2">
                 <div class="w-full aspect-square overflow-hidden rounded-l-2xl">
-                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                    <img src="{{ asset($product->image_url) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                 </div>
             </div>
 

@@ -25,7 +25,7 @@
       
       <!-- Gambar Produk -->
       <div class="relative w-full md:w-[300px]">
-        <img src="{{ $product->image_url }}" 
+        <img src="{{ asset($product->image_url) }}" 
              alt="{{ $product->name }}" 
              class="rounded-lg border shadow-md w-full h-auto">
         <button class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-1 rounded-full shadow">

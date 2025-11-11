@@ -37,7 +37,7 @@
                 <!-- Foto Produk -->
                 <div class="md:w-1/3">
                     <div class="bg-gray-100 rounded-lg p-4 flex items-center justify-center">
-                        <img src="{{ $product->image_url }}" 
+                        <img src="{{ asset($product->image_url) }}" 
                              alt="{{ $product->name }}" 
                              class="w-full h-48 object-cover rounded-lg">
                     </div>

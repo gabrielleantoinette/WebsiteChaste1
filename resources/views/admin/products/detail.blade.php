@@ -47,7 +47,7 @@
       {{-- Tampilkan gambar yang sudah ada --}}
       <div class="mb-3">
         <p class="text-sm text-gray-600 mb-2">Gambar saat ini:</p>
-        <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
+        <img src="{{ asset($product->image_url) }}" alt="{{ $product->name }}" 
              class="w-32 h-32 object-cover rounded-lg border border-gray-200">
       </div>
       

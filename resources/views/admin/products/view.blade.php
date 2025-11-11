@@ -122,7 +122,7 @@
             <div class="relative">
                 {{-- Gambar Produk --}}
                 <div class="aspect-square bg-gray-100 overflow-hidden">
-                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
+                    <img src="{{ asset($product->image_url) }}" alt="{{ $product->name }}"
                          class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
                 </div>
                 

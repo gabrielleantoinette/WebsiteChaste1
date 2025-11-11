@@ -38,7 +38,7 @@
                         
                         <!-- Gambar Produk -->
                         @if ($item->variant && $item->variant->product)
-                            <img src="{{ $item->variant->product->image_url }}" 
+                            <img src="{{ asset($item->variant->product->image_url) }}" 
                                  alt="{{ $item->variant->product->name ?? 'Produk' }}"
                                  class="w-20 h-20 object-cover rounded-md">
                         @else
