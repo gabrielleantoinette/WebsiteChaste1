@@ -95,12 +95,17 @@ class LoginController extends Controller
         $customer->gender = $request->gender;
         $customer->save();
 
-
-        Session::put('user', [
-            'id' => $customer->id,
-            'name' => $customer->name,
-            'email' => $customer->email,
-            'role' => 'customer',
+        // Set session sama seperti saat login customer
+        session([
+            'user' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'email' => $customer->email,
+                'role' => 'customer',
+            ],
+            'isLoggedIn' => true,
+            'customer_id' => $customer->id,
+            'customer_address' => $customer->address ?? '',
         ]);
 
         return redirect('/');

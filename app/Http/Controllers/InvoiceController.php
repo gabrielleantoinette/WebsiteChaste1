@@ -215,12 +215,29 @@ class InvoiceController extends Controller
 
     public function storeFromCheckout(Request $request)
     {
+        // Ambil customer_id dari session, jika tidak ada ambil dari user['id']
         $customerId = session()->get('customer_id');
+        if (!$customerId) {
+            $user = Session::get('user');
+            $customerId = $user['id'] ?? null;
+        }
+        
+        if (!$customerId) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        }
+        
         $paymentMethod = $request->input('payment_method');
+        $shippingMethod = $request->input('shipping_method');
         $shippingCost = $request->input('shipping_cost');
         $alamat = $request->input('address');
         $invoiceCode = 'INV-' . date('Ymd') . '-' . Str::random(5);
         $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
+        
+        // Validasi: Jika alamat pengiriman Surabaya, harus pilih kurir perusahaan (ekspedisi tidak tersedia)
+        $isAlamatSurabaya = str_contains(strtolower($alamat ?? ''), 'surabaya');
+        if ($isAlamatSurabaya && $shippingMethod === 'expedition') {
+            return redirect()->back()->with('error', 'Untuk alamat pengiriman di Surabaya, silakan pilih Kurir Perusahaan. Ekspedisi tidak tersedia untuk Surabaya.');
+        }
         
         // Validasi COD hanya untuk Surabaya
         if ($paymentMethod == 'cod') {
@@ -232,7 +249,8 @@ class InvoiceController extends Controller
                                   str_contains(strtolower($customer->city ?? ''), 'surabaya'));
             }
             
-            if (!$isFromSurabaya) {
+            // Juga cek dari alamat pengiriman
+            if (!$isFromSurabaya && !$isAlamatSurabaya) {
                 return redirect()->back()->with('error', 'COD hanya tersedia untuk pengiriman di Surabaya. Silakan pilih metode pembayaran lain.');
             }
         }

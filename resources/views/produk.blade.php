@@ -42,18 +42,31 @@
     @include('layouts.customer-nav')
     <div class="px-4 sm:px-6 lg:px-12 xl:px-20">
         <!-- Hero -->
-        <section class="bg-[#D9F2F2] py-12 sm:py-16 px-6 sm:px-10 lg:px-16 rounded-[24px] mt-6 md:mt-8">
-            <div class="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-12">
-                <div class="max-w-xl space-y-8">
-                    <h1 class="text-5xl font-extrabold text-gray-900 leading-snug tracking-tight">
+        <section class="relative bg-gradient-to-br from-teal-500 via-teal-600 to-teal-700 py-12 sm:py-16 px-6 sm:px-10 lg:px-16 rounded-[24px] mt-6 md:mt-8 overflow-hidden shadow-2xl">
+            <!-- Decorative elements -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
+            
+            <div class="relative flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-12">
+                <div class="max-w-xl space-y-8 z-10">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-white leading-snug tracking-tight drop-shadow-lg">
                         Butuh terpal tapi ukuran tidak sesuai keinginan?
                     </h1>
+                    <p class="text-lg sm:text-xl text-teal-50 font-medium">
+                        Kustom terpal sesuai kebutuhan Anda dengan mudah!
+                    </p>
                     <a href="{{ route('custom.terpal') }}"
-                        class="inline-block bg-white text-gray-800 font-semibold px-6 py-3 rounded-md border border-gray-300 hover:bg-gray-100 transition">
-                        Kustom Terpalmu Disini!
+                        class="group inline-flex items-center gap-3 bg-white text-teal-700 font-bold px-8 py-4 rounded-xl border-2 border-white hover:bg-teal-50 hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl transform">
+                        <svg class="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        <span class="text-lg">Kustom Terpalmu Disini!</span>
+                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg>
                     </a>
                 </div>
-                <div class="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl rounded-full overflow-hidden border-4 border-white shadow-md">
+                <div class="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl rounded-full overflow-hidden border-4 border-white/30 shadow-2xl z-10 transform hover:scale-105 transition-transform duration-300">
                     <img src="{{ asset('images/gulungan-terpal.png') }}" alt="Custom Terpal"
                         class="w-full h-full object-cover">
                 </div>

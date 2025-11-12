@@ -23,6 +23,10 @@
             class="transition duration-200 {{ request()->is('produk*') ? 'text-black font-semibold underline' : 'text-gray-600 hover:text-teal-500' }}">
             Produk
         </a>
+        <a href="{{ route('custom.terpal') }}"
+            class="transition duration-200 {{ request()->routeIs('custom.terpal') ? 'text-black font-semibold underline' : 'text-gray-600 hover:text-teal-500' }}">
+            Custom
+        </a>
     </nav>
 
     <!-- Icon Navigasi -->
@@ -90,6 +94,10 @@
             <a href="{{ route('produk') }}"
                 class="px-2 py-2 rounded-lg {{ request()->is('produk*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
                 Produk
+            </a>
+            <a href="{{ route('custom.terpal') }}"
+                class="px-2 py-2 rounded-lg {{ request()->routeIs('custom.terpal') ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
+                Custom
             </a>
         </div>
     </div>

@@ -88,11 +88,11 @@
                         </div>
 
                         <div class="text-right">
-                            <p class="font-semibold text-gray-700">
+                            <p class="font-semibold text-gray-700" id="item-subtotal-{{ $item->id }}">
                                 @if ($item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi'))
                                     <!-- Harga hasil negosiasi -->
                                     <span class="text-teal-600">Rp {{ number_format($item->harga_custom * $item->quantity, 0, ',', '.') }}</span>
-                                    <div class="text-xs text-gray-500">(Hasil Negosiasi - Rp {{ number_format($item->harga_custom, 0, ',', '.') }} × {{ $item->quantity }})</div>
+                                    <div class="text-xs text-gray-500">(Hasil Negosiasi - Rp {{ number_format($item->harga_custom, 0, ',', '.') }} × <span id="item-qty-display-{{ $item->id }}">{{ $item->quantity }}</span>)</div>
                                 @elseif ($item->variant)
                                     <!-- Harga normal produk berdasarkan ukuran yang dipilih -->
                                     @php
@@ -107,17 +107,39 @@
                                         $size = $sizeMap[$selectedSize] ?? $sizeMap['2x3'];
                                         $calculatedPrice = $pricePerM2 * $size['width'] * $size['height'];
                                     @endphp
-                                    Rp {{ number_format($calculatedPrice * $item->quantity, 0, ',', '.') }}
-                                    <div class="text-xs text-gray-500">(Rp {{ number_format($calculatedPrice, 0, ',', '.') }} × {{ $item->quantity }})</div>
+                                    <span class="text-teal-600">Rp {{ number_format($calculatedPrice * $item->quantity, 0, ',', '.') }}</span>
+                                    <div class="text-xs text-gray-500">(Rp {{ number_format($calculatedPrice, 0, ',', '.') }} × <span id="item-qty-display-{{ $item->id }}">{{ $item->quantity }}</span>)</div>
                                 @else
                                     <!-- Harga custom terpal -->
-                                    Rp {{ number_format($item->harga_custom ?? 0, 0, ',', '.') }}
+                                    <span class="text-teal-600">Rp {{ number_format(($item->harga_custom ?? 0) * $item->quantity, 0, ',', '.') }}</span>
+                                    <div class="text-xs text-gray-500">(Rp {{ number_format($item->harga_custom ?? 0, 0, ',', '.') }} × <span id="item-qty-display-{{ $item->id }}">{{ $item->quantity }}</span>)</div>
                                 @endif
                             </p>
-                            <p class="text-sm text-gray-500">Qty: {{ $item->quantity }}</p>
+                            
+                            {{-- Quantity Control dengan tombol + dan - --}}
+                            <div class="flex items-center justify-end gap-2 mt-2">
+                                <button type="button" 
+                                        onclick="decrementQuantity({{ $item->id }})"
+                                        class="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 font-semibold transition">
+                                    -
+                                </button>
+                                <input type="number" 
+                                       id="quantity-{{ $item->id }}"
+                                       value="{{ $item->quantity }}" 
+                                       min="1"
+                                       max="{{ $item->variant && $item->variant->stock ? $item->variant->stock : 999 }}"
+                                       class="w-16 text-center border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                       onchange="updateQuantity({{ $item->id }}, this.value)"
+                                       onblur="validateQuantity({{ $item->id }})">
+                                <button type="button" 
+                                        onclick="incrementQuantity({{ $item->id }})"
+                                        class="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 font-semibold transition">
+                                    +
+                                </button>
+                            </div>
 
                             <a href="{{ route('keranjang.delete', $item->id) }}"
-                                class="text-red-500 text-xs mt-2 hover:underline">Hapus
+                                class="text-red-500 text-xs mt-2 inline-block hover:underline">Hapus
                             </a>
                         </div>
                     </div>
@@ -179,10 +201,128 @@
                     name: "{{ $item->variant && $item->variant->product ? $item->variant->product->name : 'Custom Terpal' }}",
                     color: "{{ $item->variant ? ucfirst($item->variant->color) : ($item->warna_custom ?? '-') }}",
                     size: "{{ $item->selected_size ?? ($item->ukuran_custom ?? '-') }}",
-                    isNegotiated: {{ $item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi') ? 'true' : 'false' }}
+                    isNegotiated: {{ $item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi') ? 'true' : 'false' }},
+                    maxStock: {{ $item->variant && $item->variant->stock ? $item->variant->stock : 999 }}
                 },
             @endforeach
         };
+
+        // Function untuk increment quantity
+        function incrementQuantity(itemId) {
+            const input = document.getElementById('quantity-' + itemId);
+            const currentQty = parseInt(input.value) || 1;
+            const maxStock = itemPrices[itemId]?.maxStock || 999;
+            
+            if (currentQty < maxStock) {
+                const newQty = currentQty + 1;
+                input.value = newQty;
+                updateQuantity(itemId, newQty);
+            } else {
+                alert('Stok tidak mencukupi. Stok tersedia: ' + maxStock);
+            }
+        }
+
+        // Function untuk decrement quantity
+        function decrementQuantity(itemId) {
+            const input = document.getElementById('quantity-' + itemId);
+            const currentQty = parseInt(input.value) || 1;
+            
+            if (currentQty > 1) {
+                const newQty = currentQty - 1;
+                input.value = newQty;
+                updateQuantity(itemId, newQty);
+            }
+        }
+
+        // Function untuk validate quantity
+        function validateQuantity(itemId) {
+            const input = document.getElementById('quantity-' + itemId);
+            let qty = parseInt(input.value) || 1;
+            const maxStock = itemPrices[itemId]?.maxStock || 999;
+            
+            if (qty < 1) {
+                qty = 1;
+                input.value = qty;
+            } else if (qty > maxStock) {
+                qty = maxStock;
+                input.value = qty;
+                alert('Stok tidak mencukupi. Stok tersedia: ' + maxStock);
+            }
+            
+            if (qty !== itemPrices[itemId].quantity) {
+                updateQuantity(itemId, qty);
+            }
+        }
+
+        // Function untuk update quantity via AJAX
+        function updateQuantity(itemId, quantity) {
+            const input = document.getElementById('quantity-' + itemId);
+            const qty = parseInt(quantity) || 1;
+            
+            // Disable input saat update
+            input.disabled = true;
+            
+            fetch(`{{ route('keranjang.update', ':id') }}`.replace(':id', itemId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ quantity: qty })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'HTTP error! status: ' + response.status);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update quantity di itemPrices
+                    itemPrices[itemId].quantity = data.quantity;
+                    
+                    // Update display quantity
+                    const qtyDisplay = document.getElementById('item-qty-display-' + itemId);
+                    if (qtyDisplay) {
+                        qtyDisplay.textContent = data.quantity;
+                    }
+                    
+                    // Update subtotal display
+                    const subtotalEl = document.getElementById('item-subtotal-' + itemId);
+                    if (subtotalEl) {
+                        const item = itemPrices[itemId];
+                        const subtotal = item.price * data.quantity;
+                        const priceText = item.isNegotiated ? 
+                            `Rp ${item.price.toLocaleString('id-ID')} (Hasil Negosiasi)` : 
+                            `Rp ${item.price.toLocaleString('id-ID')}`;
+                        
+                        subtotalEl.innerHTML = `
+                            <span class="text-teal-600">Rp ${subtotal.toLocaleString('id-ID')}</span>
+                            <div class="text-xs text-gray-500">(${priceText} × ${data.quantity})</div>
+                        `;
+                    }
+                    
+                    // Update total jika item terpilih
+                    updateTotal();
+                } else {
+                    alert(data.message || 'Gagal mengupdate quantity');
+                    // Revert input value
+                    input.value = itemPrices[itemId].quantity;
+                }
+                
+                // Enable input kembali
+                input.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengupdate quantity: ' + error.message);
+                // Revert input value
+                input.value = itemPrices[itemId].quantity;
+                input.disabled = false;
+            });
+        }
 
         function updateTotal() {
             let total = 0;

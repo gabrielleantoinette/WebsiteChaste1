@@ -37,7 +37,8 @@
                     <textarea name="address" id="address" rows="3" 
                         class="w-full border-0 bg-transparent resize-none focus:outline-none focus:ring-0 text-gray-700" 
                         placeholder="Masukkan alamat pengiriman lengkap..." 
-                        required>{{ old('address', $alamat_default_user ?? '') }}</textarea>
+                        required
+                        oninput="checkShippingOptions()">{{ old('address', $alamat_default_user ?? '') }}</textarea>
                 </div>
             </section>
 
@@ -230,50 +231,41 @@
                     Pilihan Pengiriman
                 </h2>
 
-                <div class="space-y-3">
-                    @if($isFromSurabaya)
-                        <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
-                            <input type="radio" name="shipping_method" value="kurir" class="accent-teal-600 mr-3" checked
-                                onclick="updateShippingCost(0)">
-                            <div class="flex-1">
-                                <div class="font-semibold text-gray-800">Kurir Perusahaan</div>
-                                <div class="text-sm text-gray-600">Khusus Surabaya Gratis</div>
-                            </div>
-                            <div class="text-teal-600 font-semibold">Gratis</div>
-                        </label>
-
-                        <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
-                            <input type="radio" name="shipping_method" value="expedition" class="accent-teal-600 mr-3"
-                                onclick="updateShippingCost(19000)">
-                            <div class="flex-1">
-                                <div class="font-semibold text-gray-800">Ekspedisi</div>
-                                <div class="text-sm text-gray-600">Pengiriman ke seluruh Indonesia</div>
-                            </div>
-                            <div class="text-teal-600 font-semibold">Rp 19.000</div>
-                        </label>
-                    @else
-                        <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <div class="flex items-center text-red-600">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span class="font-semibold">Kurir Perusahaan Tidak Tersedia</span>
-                            </div>
-                            <div class="text-sm text-red-600 mt-1">
-                                Kurir perusahaan hanya melayani pengiriman di Surabaya. Silakan pilih ekspedisi untuk pengiriman ke luar Surabaya.
-                            </div>
+                <div class="space-y-3" id="shippingOptions">
+                    {{-- Opsi Kurir Perusahaan --}}
+                    <label id="kurirOption" class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer {{ $isFromSurabaya ? '' : 'hidden' }}">
+                        <input type="radio" name="shipping_method" value="kurir" class="accent-teal-600 mr-3" {{ $isFromSurabaya ? 'checked' : '' }}
+                            onclick="updateShippingCost(0)">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">Kurir Perusahaan</div>
+                            <div class="text-sm text-gray-600">Khusus Surabaya Gratis</div>
                         </div>
+                        <div class="text-teal-600 font-semibold">Gratis</div>
+                    </label>
 
-                        <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
-                            <input type="radio" name="shipping_method" value="expedition" class="accent-teal-600 mr-3" checked
-                                onclick="updateShippingCost(19000)">
-                            <div class="flex-1">
-                                <div class="font-semibold text-gray-800">Ekspedisi</div>
-                                <div class="text-sm text-gray-600">Pengiriman ke seluruh Indonesia</div>
-                            </div>
-                            <div class="text-teal-600 font-semibold">Rp 19.000</div>
-                        </label>
-                    @endif
+                    {{-- Pesan Kurir Tidak Tersedia --}}
+                    <div id="kurirNotAvailable" class="p-4 bg-red-50 border border-red-200 rounded-lg {{ $isFromSurabaya ? 'hidden' : '' }}">
+                        <div class="flex items-center text-red-600">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="font-semibold">Kurir Perusahaan Tidak Tersedia</span>
+                        </div>
+                        <div class="text-sm text-red-600 mt-1">
+                            Kurir perusahaan hanya melayani pengiriman di Surabaya. Silakan pilih ekspedisi untuk pengiriman ke luar Surabaya.
+                        </div>
+                    </div>
+
+                    {{-- Opsi Ekspedisi --}}
+                    <label id="expeditionOption" class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer {{ $isFromSurabaya ? 'hidden' : '' }}">
+                        <input type="radio" name="shipping_method" value="expedition" class="accent-teal-600 mr-3" {{ $isFromSurabaya ? '' : 'checked' }}
+                            onclick="updateShippingCost(19000)">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">Ekspedisi</div>
+                            <div class="text-sm text-gray-600">Pengiriman ke seluruh Indonesia</div>
+                        </div>
+                        <div class="text-teal-600 font-semibold">Rp 19.000</div>
+                    </label>
                 </div>
             </section>
 
@@ -472,6 +464,58 @@
     @include('layouts.footer')
 
     <script>
+        function checkShippingOptions() {
+            const addressText = document.getElementById('address').value.toLowerCase();
+            const isSurabaya = addressText.includes('surabaya');
+            
+            const kurirOption = document.getElementById('kurirOption');
+            const expeditionOption = document.getElementById('expeditionOption');
+            const kurirNotAvailable = document.getElementById('kurirNotAvailable');
+            
+            // Jika alamat mengandung "Surabaya"
+            if (isSurabaya) {
+                // Tampilkan Kurir Perusahaan, sembunyikan Ekspedisi dan pesan tidak tersedia
+                if (kurirOption) {
+                    kurirOption.classList.remove('hidden');
+                }
+                if (expeditionOption) {
+                    expeditionOption.classList.add('hidden');
+                    // Uncheck ekspedisi jika terpilih dan pindahkan ke kurir
+                    const expeditionRadio = expeditionOption.querySelector('input[value="expedition"]');
+                    if (expeditionRadio && expeditionRadio.checked) {
+                        const kurirRadio = kurirOption ? kurirOption.querySelector('input[value="kurir"]') : null;
+                        if (kurirRadio) {
+                            kurirRadio.checked = true;
+                            updateShippingCost(0);
+                        }
+                    }
+                }
+                if (kurirNotAvailable) {
+                    kurirNotAvailable.classList.add('hidden');
+                }
+            } else {
+                // Jika bukan Surabaya, sembunyikan Kurir Perusahaan, tampilkan Ekspedisi dan pesan tidak tersedia
+                if (kurirOption) {
+                    kurirOption.classList.add('hidden');
+                    // Uncheck kurir jika terpilih dan pindahkan ke ekspedisi
+                    const kurirRadio = kurirOption.querySelector('input[value="kurir"]');
+                    if (kurirRadio && kurirRadio.checked) {
+                        const expeditionRadio = expeditionOption ? expeditionOption.querySelector('input[value="expedition"]') : null;
+                        if (expeditionRadio) {
+                            expeditionRadio.checked = true;
+                            updateShippingCost(19000);
+                        }
+                    }
+                }
+                if (expeditionOption) {
+                    expeditionOption.classList.remove('hidden');
+                }
+                if (kurirNotAvailable) {
+                    kurirNotAvailable.classList.remove('hidden');
+                }
+            }
+        }
+
         function updateShippingCost(cost) {
             document.getElementById('shippingCost').innerText = formatRupiah(cost);
             document.getElementById('shippingCostValue').value = cost;
@@ -568,6 +612,22 @@
                     buktiInput.scrollIntoView({behavior: 'smooth', block: 'center'});
                 }
             }
+            
+            // Validasi shipping method: jika alamat Surabaya, harus pilih kurir
+            const addressText = document.getElementById('address').value.toLowerCase();
+            const isSurabaya = addressText.includes('surabaya');
+            const shippingMethod = document.querySelector('input[name="shipping_method"]:checked');
+            
+            if (isSurabaya && shippingMethod && shippingMethod.value === 'expedition') {
+                e.preventDefault();
+                alert('Untuk alamat pengiriman di Surabaya, silakan pilih Kurir Perusahaan. Ekspedisi tidak tersedia untuk Surabaya.');
+                return false;
+            }
+        });
+        
+        // Panggil checkShippingOptions saat halaman dimuat untuk inisialisasi
+        document.addEventListener('DOMContentLoaded', function() {
+            checkShippingOptions();
         });
     </script>
 </body>

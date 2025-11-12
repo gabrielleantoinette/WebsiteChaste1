@@ -59,45 +59,52 @@
 
     <div class="px-4 sm:px-6 lg:px-12 xl:px-20">
         <!-- Hero Section -->
-        <section class="bg-[#D9F2F2] py-12 sm:py-16 px-6 sm:px-10 lg:px-16 rounded-[24px] mt-6 sm:mt-10">
-            <div class="flex flex-col lg:flex-row items-center justify-between gap-10">
-
+        <section class="relative bg-gradient-to-br from-teal-500 via-teal-600 to-teal-700 py-12 sm:py-16 px-6 sm:px-10 lg:px-16 rounded-[24px] mt-6 sm:mt-10 overflow-hidden shadow-2xl">
+            <!-- Decorative elements -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
+            
+            <div class="relative flex flex-col lg:flex-row items-center justify-between gap-10 z-10">
                 <!-- Text -->
                 <div class="w-full lg:w-3/5 space-y-8">
-                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-snug">
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-snug tracking-tight drop-shadow-lg">
                         Beli terpal anda sekarang!<br>
-                        Cari terpal yang <span class="font-extrabold text-teal-600">kuat, tahan air, dan siap
-                            pakai?</span>
-                        Temukan berbagai tipe dan ukuran dengan harga terbaik di sini!
+                        Cari terpal yang <span class="text-teal-100">kuat, tahan air, dan siap pakai?</span><br>
+                        <span class="text-lg sm:text-xl lg:text-2xl font-semibold text-teal-50">Temukan berbagai tipe dan ukuran dengan harga terbaik di sini!</span>
                     </h1>
 
-                    <div class="flex flex-wrap items-center gap-6 sm:gap-12 text-gray-700">
+                    <div class="flex flex-wrap items-center gap-6 sm:gap-12 text-white">
                         <div class="text-center sm:text-left">
-                            <p class="text-3xl font-bold">20+</p>
-                            <p class="text-sm sm:text-base">Tipe Terpal</p>
+                            <p class="text-3xl sm:text-4xl font-bold drop-shadow-md">20+</p>
+                            <p class="text-sm sm:text-base text-teal-50">Tipe Terpal</p>
                         </div>
-                        <span class="hidden sm:inline">|</span>
+                        <span class="hidden sm:inline text-white/30">|</span>
                         <div class="text-center sm:text-left">
-                            <p class="text-3xl font-bold">100+</p>
-                            <p class="text-sm sm:text-base">Pelanggan</p>
+                            <p class="text-3xl sm:text-4xl font-bold drop-shadow-md">100+</p>
+                            <p class="text-sm sm:text-base text-teal-50">Pelanggan</p>
                         </div>
                     </div>
-                    <div class="relative">
-                        <input type="text" placeholder="Apa yang anda cari?"
-                            class="w-full py-4 sm:py-5 px-4 sm:px-5 pr-12 rounded-[16px] focus:outline-none placeholder:text-gray-500 bg-white">
-                        <button
-                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-lg bg-[#D9F2F2] rounded-[16px] p-2 w-11 h-11 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke-width="1.5" stroke="currentColor" class="size-6">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                            </svg>
-                        </button>
+                    
+                    <div class="relative group">
+                        <form action="{{ route('produk') }}" method="GET" class="flex">
+                            <input type="text" 
+                                   name="search"
+                                   placeholder="Apa yang anda cari?"
+                                   class="w-full py-4 sm:py-5 px-4 sm:px-5 pr-14 rounded-[16px] focus:outline-none placeholder:text-gray-500 bg-white shadow-xl border-2 border-white focus:border-teal-300 focus:ring-4 focus:ring-teal-200 transition-all duration-300">
+                            <button type="submit"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white rounded-[12px] p-2.5 w-12 h-12 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="2" stroke="currentColor" class="size-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                                </svg>
+                            </button>
+                        </form>
                     </div>
                 </div>
 
                 <!-- Image -->
-                <div class="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl rounded-full overflow-hidden border-4 border-white shadow-md">
+                <div class="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl rounded-full overflow-hidden border-4 border-white/30 shadow-2xl transform hover:scale-105 transition-transform duration-300 z-10">
                     <img src="{{ asset('images/gulungan-terpal.png') }}" alt="Custom Terpal"
                         class="w-full h-full object-cover">
                 </div>
