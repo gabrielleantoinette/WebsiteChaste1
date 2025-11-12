@@ -122,7 +122,7 @@ window.markAsRead = function(notificationId, event) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     console.log('CSRF Token:', csrfToken);
     
-    const url = `/notifications/${notificationId}/mark-read`;
+    const url = `{{ url('/notifications') }}/${notificationId}/mark-read`;
     console.log('Calling URL:', url);
     
     fetch(url, {
@@ -176,7 +176,7 @@ window.markAsRead = function(notificationId, event) {
 
 window.updateCustomerNotificationBadge = function() {
     console.log('=== UPDATING BADGE COUNT ===');
-    fetch('/notifications/unread-count')
+    fetch('{{ route("notifications.unread-count") }}')
         .then(response => {
             console.log('Badge response status:', response.status);
             return response.json();
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         console.log('CSRF Token:', csrfToken);
         
-        const url = `/notifications/${notificationId}/mark-read`;
+        const url = `{{ url('/notifications') }}/${notificationId}/mark-read`;
         console.log('Calling URL:', url);
         
         fetch(url, {
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 popoverOpen = false;
                 return;
             }
-            fetch('/notifications/latest')
+            fetch('{{ route("notifications.latest") }}')
                 .then(res => res.json())
                 .then(data => {
                     renderNotifList(data.notifications, data.unread_count);

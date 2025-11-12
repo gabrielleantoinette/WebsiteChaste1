@@ -241,15 +241,15 @@
                     <div class="flex-1">
                         <h3 class="text-lg font-semibold text-gray-900 mb-2">Pesanan Sudah Sampai!</h3>
                         <p class="text-gray-700 mb-4">Pesanan kamu sudah sampai di tujuan. Silakan klik tombol di bawah untuk menyelesaikan transaksi.</p>
-                        <form method="POST" action="{{ route('transaksi.diterima', $transaction->id) }}">
-                            @csrf
+                <form method="POST" action="{{ route('transaksi.diterima', $transaction->id) }}">
+                    @csrf
                             <button class="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transform transition duration-200 hover:scale-105">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Selesaikan Pesanan
-                            </button>
-                        </form>
+                        Selesaikan Pesanan
+                    </button>
+                </form>
                     </div>
                 </div>
             </div>
@@ -359,7 +359,7 @@
                         <h3 class="text-lg font-semibold text-gray-900 mb-1">Ingin Mengembalikan Barang?</h3>
                         <p class="text-sm text-gray-600">Kamu masih bisa mengajukan retur dalam 24 jam setelah pesanan sampai.</p>
                     </div>
-                    <a href="{{ url('/retur/' . $transaction->id) }}"
+                <a href="{{ url('/retur/' . $transaction->id) }}"
                        class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg shadow-lg transform transition duration-200 hover:scale-105 font-medium">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>

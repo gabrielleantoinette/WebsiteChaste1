@@ -351,9 +351,11 @@ Route::get('/gudang/laporan-retur/export-pdf', [LaporanController::class, 'retur
 Route::post('/gudang/upload-quality-proof/{id}', [App\Http\Controllers\GudangController::class, 'uploadQualityProof'])->name('gudang.upload-quality-proof');
 
 // Notification routes (AJAX only)
+// unread-count bisa diakses tanpa login (return 0 jika tidak ada user)
+Route::get('/notifications/unread-count', [App\Http\Controllers\NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+
 Route::prefix('notifications')->middleware([LoggedIn::class])->group(function () {
     Route::get('/latest', [\App\Http\Controllers\NotificationController::class, 'latest'])->name('notifications.latest');
     Route::post('/{id}/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-    Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
 });

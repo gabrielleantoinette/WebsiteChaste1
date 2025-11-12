@@ -18,9 +18,9 @@
     <section class="px-4 sm:px-6 lg:px-12 min-h-screen bg-gray-50 py-8">
         <div class="max-w-7xl mx-auto">
             <div class="mb-8">
-                <x-breadcrumb :items="[
-                    ['label' => 'Transaksi']
-                ]" />
+            <x-breadcrumb :items="[
+                ['label' => 'Transaksi']
+            ]" />
                 <div class="mt-4">
                     <h1 class="text-3xl font-bold text-gray-900">List Transaksi</h1>
                     <p class="text-gray-600 mt-1">Kelola dan lacak semua transaksi Anda</p>
@@ -62,11 +62,11 @@
                         <input type="hidden" name="status" value="{{ request('status') }}">
                     @endif
                 </form>
-            </div>
+        </div>
 
-            {{-- Filter Tab Status --}}
-            @php
-            $statusOptions = [
+        {{-- Filter Tab Status --}}
+        @php
+        $statusOptions = [
                 '' => ['label' => 'Semua', 'icon' => 'M4 6h16M4 12h16M4 18h16'],
                 'menunggukonfirmasi' => ['label' => 'Menunggu Konfirmasi Pembayaran', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
                 'dikemas' => ['label' => 'Sedang Dikemas', 'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'],
@@ -74,36 +74,36 @@
                 'diterima' => ['label' => 'Selesai', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
                 'pengembalian' => ['label' => 'Pengembalian', 'icon' => 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'],
                 'beripenilaian' => ['label' => 'Beri Penilaian', 'icon' => 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z']
-            ];
+        ];
 
-            $currentStatus = request('status');
-            @endphp
+        $currentStatus = request('status');
+        @endphp
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
                 <div class="flex gap-1 text-sm font-medium overflow-x-auto scrollbar-hide px-4 py-2">
                 @foreach ($statusOptions as $key => $option)
-                    @php
+            @php
                         $label = $option['label'];
                         $icon = $option['icon'];
                         
                         // Count total transaksi per status (tanpa filter search untuk menunjukkan total)
-                        $count = \App\Models\HInvoice::where('customer_id', Session::get('user')['id'])
-                                    ->when($key !== '', function ($q) use ($key) {
-                                        if ($key === 'dikirim') {
-                                            $q->whereIn('status', ['dikirim', 'sampai']);
-                                        } else if ($key === 'menunggukonfirmasi') {
-                                            $q->where('status', 'Menunggu Konfirmasi Pembayaran');
-                                        } else if ($key === 'dikemas') {
+                $count = \App\Models\HInvoice::where('customer_id', Session::get('user')['id'])
+                            ->when($key !== '', function ($q) use ($key) {
+                                if ($key === 'dikirim') {
+                                    $q->whereIn('status', ['dikirim', 'sampai']);
+                                } else if ($key === 'menunggukonfirmasi') {
+                                    $q->where('status', 'Menunggu Konfirmasi Pembayaran');
+                                } else if ($key === 'dikemas') {
                                             $q->whereIn('status', ['dibayar', 'Dikemas', 'dikemas']);
-                                        } else if ($key === 'beripenilaian') {
-                                            $q->where('status', 'diterima');
-                                        } else if ($key === 'pengembalian') {
+                                } else if ($key === 'beripenilaian') {
+                                    $q->where('status', 'diterima');
+                                } else if ($key === 'pengembalian') {
                                             $q->where('status', 'retur_diajukan');
-                                        } else {
-                                            $q->where('status', $key);
-                                        }
-                                    })
-                                    ->count();
+                                } else {
+                                    $q->where('status', $key);
+                                }
+                            })
+                            ->count();
                         
                         // Build URL dengan mempertahankan search jika ada
                         $urlParams = [];
@@ -114,7 +114,7 @@
                             $urlParams['search'] = request('search');
                         }
                         $url = route('transaksi', $urlParams);
-                    @endphp
+            @endphp
 
                     <a href="{{ $url }}"
                     class="flex items-center gap-2 px-4 py-2.5 rounded-lg whitespace-nowrap transition-all duration-200 {{ $currentStatus === $key ? 'bg-teal-50 text-teal-700 font-semibold border border-teal-200' : 'text-gray-700 hover:bg-gray-50' }}">
@@ -123,9 +123,9 @@
                         </svg>
                         <span>{{ $label }}</span>
                         <span class="px-2 py-0.5 rounded-full text-xs {{ $currentStatus === $key ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600' }}">{{ $count }}</span>
-                    </a>
-                @endforeach
-                </div>
+            </a>
+        @endforeach
+        </div>
             </div>
 
             {{-- Transaction List --}}
@@ -266,7 +266,7 @@
                                             <p class="text-xs text-gray-500 mt-1">{{ $totalItems }} barang</p>
                                         @endif
                                     </div>
-                                    <a href="{{ route('transaksi.detail', $transaction->id) }}"
+                                <a href="{{ route('transaksi.detail', $transaction->id) }}"
                                        class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium text-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>

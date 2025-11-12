@@ -560,8 +560,8 @@
             errorEl.classList.add('hidden');
             shippingOptionsList.innerHTML = '';
 
-            // Call API - use relative URL to avoid domain mismatch
-            const shippingUrl = '/shipping/check-cost';
+            // Call API - use route helper or base URL
+            const shippingUrl = '{{ route("shipping.check-cost") }}';
             console.log('Shipping URL:', shippingUrl);
             fetch(shippingUrl, {
                 method: 'POST',
