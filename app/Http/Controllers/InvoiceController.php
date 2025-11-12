@@ -228,7 +228,9 @@ class InvoiceController extends Controller
         
         $paymentMethod = $request->input('payment_method');
         $shippingMethod = $request->input('shipping_method');
-        $shippingCost = $request->input('shipping_cost');
+        $shippingCost = $request->input('shipping_cost') ?? 0;
+        $shippingCourier = $request->input('shipping_courier') ?? '';
+        $shippingService = $request->input('shipping_service') ?? '';
         $alamat = $request->input('address');
         $invoiceCode = 'INV-' . date('Ymd') . '-' . Str::random(5);
         $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
@@ -345,6 +347,8 @@ class InvoiceController extends Controller
             'dp_amount' => $isFirstOrder ? $grandTotal / 2 : 0,
             'grand_total' => $grandTotal,
             'shipping_cost' => $shippingCost ?? 0,
+            'shipping_courier' => $shippingCourier,
+            'shipping_service' => $shippingService,
             'due_date' => now()->addDays(30), // <-- otomatis 30 hari dari sekarang
             'created_at' => now(),
             'updated_at' => now(),
@@ -355,6 +359,69 @@ class InvoiceController extends Controller
         // Hanya buat midtrans kalau payment_method adalah ewallet.
         if ($paymentMethod == 'midtrans') {
             $customer = Customer::find($customerId);
+            
+            // Build item_details dengan breakdown produk + ongkir
+            $itemDetails = [];
+            
+            // Tambahkan item produk
+            if (!empty($cartIds)) {
+                $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+                foreach ($carts as $cart) {
+                    if ($cart->variant_id) {
+                        $productModel = \App\Models\Product::join('product_variants', 'products.id', '=', 'product_variants.product_id')
+                            ->where('product_variants.id', $cart->variant_id)
+                            ->select('products.*')
+                            ->first();
+                        
+                        if ($productModel) {
+                            $selectedSize = $cart->selected_size ?? '2x3';
+                            $price = $cart->harga_custom ?? $productModel->getPriceForSize($selectedSize);
+                            $itemDetails[] = [
+                                'id'       => 'product-' . $productModel->id . '-' . $cart->variant_id,
+                                'price'    => $price * $cart->quantity,
+                                'quantity' => 1,
+                                'name'     => $productModel->name . ' (x' . $cart->quantity . ')'
+                            ];
+                        }
+                    } elseif ($cart->kebutuhan_custom) {
+                        $itemDetails[] = [
+                            'id'       => 'custom-' . $cart->id,
+                            'price'    => ($cart->harga_custom ?? 0) * $cart->quantity,
+                            'quantity' => 1,
+                            'name'     => 'Produk Custom (x' . $cart->quantity . ')'
+                        ];
+                    }
+                }
+            }
+            
+            // Tambahkan ongkir sebagai item terpisah jika ada
+            if ($shippingCost > 0) {
+                $shippingName = 'Ongkos Kirim';
+                if ($shippingCourier) {
+                    $shippingName .= ' - ' . ucfirst($shippingCourier);
+                }
+                if ($shippingService) {
+                    $shippingName .= ' (' . $shippingService . ')';
+                }
+                
+                $itemDetails[] = [
+                    'id'       => 'shipping-' . $newInvoiceId,
+                    'price'    => $shippingCost,
+                    'quantity' => 1,
+                    'name'     => $shippingName
+                ];
+            }
+            
+            // Pastikan total item_details sama dengan grandTotal
+            $itemsTotal = array_sum(array_column($itemDetails, 'price'));
+            if (abs($itemsTotal - $grandTotal) > 1) { // Allow 1 rupiah difference for rounding
+                // Jika tidak sama, adjust item terakhir
+                if (!empty($itemDetails)) {
+                    $diff = $grandTotal - $itemsTotal;
+                    $itemDetails[count($itemDetails) - 1]['price'] += $diff;
+                }
+            }
+            
             $payload = [
                 'transaction_details' => [
                     'order_id'      => now() . '-' . $newInvoiceId,
@@ -364,14 +431,7 @@ class InvoiceController extends Controller
                     'first_name'    => $customer->name,
                     'email'         => $customer->email,
                 ],
-                'item_details' => [
-                    [
-                        'id'       => $newInvoiceId,
-                        'price'    => $grandTotal,
-                        'quantity' => 1,
-                        'name'     => 'Invoice ' . $invoiceCode
-                    ]
-                ]
+                'item_details' => $itemDetails
             ];
             $snapToken = Snap::getSnapToken($payload);
 
@@ -410,6 +470,7 @@ class InvoiceController extends Controller
                                 'hinvoice_id' => $newInvoiceId,
                                 'product_id' => $productModel->id,
                                 'variant_id' => $cart->variant_id,
+                                'selected_size' => $selectedSize,
                                 'price' => $price,
                                 'quantity' => $cart->quantity,
                                 'subtotal' => $price * $cart->quantity,
@@ -463,6 +524,7 @@ class InvoiceController extends Controller
                             'hinvoice_id' => $newInvoiceId,
                             'product_id' => $productModel->id,
                             'variant_id' => $cart->variant_id,
+                            'selected_size' => $selectedSize,
                             'price' => $price,
                             'quantity' => $cart->quantity,
                             'subtotal' => $price * $cart->quantity,

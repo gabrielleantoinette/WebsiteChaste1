@@ -150,18 +150,40 @@
             </tbody>
         </table>
     
-        <!-- Total -->
-        <div class="total">
-            <h3 style="
-                background-color: #00BFA5;
-                color: white;
-                padding: 10px 25px;
-                display: inline-block;
-                border-radius: 8px;
-                margin-top: 20px;
-            ">
-                Total: Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}
-            </h3>
+        <!-- Rincian Total -->
+        <div class="total" style="margin-top: 20px;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                <tr>
+                    <td style="text-align: right; padding: 5px 10px; border: none;"><strong>Subtotal Produk:</strong></td>
+                    <td style="text-align: right; padding: 5px 10px; border: none; width: 150px;">
+                        Rp {{ number_format($invoice->grand_total - ($invoice->shipping_cost ?? 0), 0, ',', '.') }}
+                    </td>
+                </tr>
+                @if($invoice->shipping_cost > 0)
+                <tr>
+                    <td style="text-align: right; padding: 5px 10px; border: none;">
+                        <strong>Ongkos Kirim:</strong>
+                        @if($invoice->shipping_courier || $invoice->shipping_service)
+                            <br><span style="font-size: 11px; color: #666;">
+                                ({{ $invoice->shipping_courier ? ucfirst($invoice->shipping_courier) : 'Kurir Perusahaan' }}
+                                @if($invoice->shipping_service)
+                                    - {{ $invoice->shipping_service }}
+                                @endif)
+                            </span>
+                        @endif
+                    </td>
+                    <td style="text-align: right; padding: 5px 10px; border: none;">
+                        Rp {{ number_format($invoice->shipping_cost, 0, ',', '.') }}
+                    </td>
+                </tr>
+                @endif
+                <tr style="border-top: 2px solid #ddd;">
+                    <td style="text-align: right; padding: 10px; border: none;"><strong>Total:</strong></td>
+                    <td style="text-align: right; padding: 10px; border: none;">
+                        <strong>Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</strong>
+                    </td>
+                </tr>
+            </table>
         </div>
     
         <!-- Penutup -->

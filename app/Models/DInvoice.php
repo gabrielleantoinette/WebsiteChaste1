@@ -8,7 +8,7 @@ class DInvoice extends Model
 {
     //
     protected $table = 'dinvoice';
-    protected $fillable = ['hinvoice_id', 'product_id', 'variant_id', 'price', 'quantity', 'subtotal', 'kebutuhan_custom', 'warna_custom'];
+    protected $fillable = ['hinvoice_id', 'product_id', 'variant_id', 'selected_size', 'price', 'quantity', 'subtotal', 'kebutuhan_custom', 'warna_custom'];
 
     public function invoice()
     {

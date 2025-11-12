@@ -36,9 +36,11 @@
                 <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
                     <textarea name="address" id="address" rows="3" 
                         class="w-full border-0 bg-transparent resize-none focus:outline-none focus:ring-0 text-gray-700" 
-                        placeholder="Masukkan alamat pengiriman lengkap..." 
+                        placeholder="Masukkan alamat pengiriman lengkap (contoh: Jl. Contoh No. 123, Surabaya, Jawa Timur 60264)..." 
                         required
-                        oninput="checkShippingOptions()">{{ old('address', $alamat_default_user ?? '') }}</textarea>
+                        oninput="checkShippingOptions()"
+                        onblur="checkShippingOptions()">{{ old('address', $alamat_default_user ?? '') }}</textarea>
+                    <p class="text-xs text-gray-500 mt-2">Pastikan mencantumkan nama kota/kabupaten untuk perhitungan ongkir otomatis</p>
                 </div>
             </section>
 
@@ -239,37 +241,51 @@
                     {{-- Opsi Kurir Perusahaan --}}
                     <label id="kurirOption" class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer {{ $isFromSurabaya ? '' : 'hidden' }}">
                         <input type="radio" name="shipping_method" value="kurir" class="accent-teal-600 mr-3" {{ $isFromSurabaya ? 'checked' : '' }}
-                            onclick="updateShippingCost(0)">
-                        <div class="flex-1">
-                            <div class="font-semibold text-gray-800">Kurir Perusahaan</div>
-                            <div class="text-sm text-gray-600">Khusus Surabaya Gratis</div>
-                        </div>
-                        <div class="text-teal-600 font-semibold">Gratis</div>
-                    </label>
+                            data-cost="0" data-courier="kurir" data-service="Kurir Perusahaan"
+                            onclick="updateShippingCost(0, 'kurir', 'Kurir Perusahaan')">
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-800">Kurir Perusahaan</div>
+                                <div class="text-sm text-gray-600">Khusus Surabaya Gratis</div>
+                            </div>
+                            <div class="text-teal-600 font-semibold">Gratis</div>
+                        </label>
 
                     {{-- Pesan Kurir Tidak Tersedia --}}
                     <div id="kurirNotAvailable" class="p-4 bg-red-50 border border-red-200 rounded-lg {{ $isFromSurabaya ? 'hidden' : '' }}">
+                            <div class="flex items-center text-red-600">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="font-semibold">Kurir Perusahaan Tidak Tersedia</span>
+                            </div>
+                            <div class="text-sm text-red-600 mt-1">
+                                Kurir perusahaan hanya melayani pengiriman di Surabaya. Silakan pilih ekspedisi untuk pengiriman ke luar Surabaya.
+                            </div>
+                        </div>
+
+                    {{-- Loading State --}}
+                    <div id="shippingLoading" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center text-blue-600">
+                            <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Menghitung ongkir...</span>
+                        </div>
+                    </div>
+
+                    {{-- Error Message --}}
+                    <div id="shippingError" class="hidden p-4 bg-red-50 border border-red-200 rounded-lg">
                         <div class="flex items-center text-red-600">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span class="font-semibold">Kurir Perusahaan Tidak Tersedia</span>
+                            <span id="shippingErrorMessage"></span>
                         </div>
-                        <div class="text-sm text-red-600 mt-1">
-                            Kurir perusahaan hanya melayani pengiriman di Surabaya. Silakan pilih ekspedisi untuk pengiriman ke luar Surabaya.
-                        </div>
-                    </div>
+                            </div>
 
-                    {{-- Opsi Ekspedisi --}}
-                    <label id="expeditionOption" class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer {{ $isFromSurabaya ? 'hidden' : '' }}">
-                        <input type="radio" name="shipping_method" value="expedition" class="accent-teal-600 mr-3" {{ $isFromSurabaya ? '' : 'checked' }}
-                            onclick="updateShippingCost(19000)">
-                        <div class="flex-1">
-                            <div class="font-semibold text-gray-800">Ekspedisi</div>
-                            <div class="text-sm text-gray-600">Pengiriman ke seluruh Indonesia</div>
-                        </div>
-                        <div class="text-teal-600 font-semibold">Rp 19.000</div>
-                    </label>
+                    {{-- Container untuk opsi ekspedisi dari Biteship --}}
+                    <div id="shippingOptionsList"></div>
                 </div>
             </section>
 
@@ -302,6 +318,10 @@
                 </div>
 
                 <input type="hidden" id="productSubtotalHidden" value="{{ $subtotalProduk }}">
+                <input type="hidden" id="shippingCostValue" name="shipping_cost" value="0">
+                <input type="hidden" id="shippingMethodValue" name="shipping_method_value" value="">
+                <input type="hidden" id="shippingCourierValue" name="shipping_courier" value="">
+                <input type="hidden" id="shippingServiceValue" name="shipping_service" value="">
             </section>
 
 
@@ -433,9 +453,6 @@
                     <input type="hidden" name="cart_ids[]" value="{{ $item->id }}">
                 @endforeach
 
-                {{-- shipping cost --}}
-                <input type="hidden" id="shippingCostValue" name="shipping_cost">
-
                 @if (!empty($disableCheckout) && $disableCheckout)
                     <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                         <div class="flex items-center text-red-600">
@@ -468,61 +485,245 @@
     @include('layouts.footer')
 
     <script>
+        // Hitung berat total (estimasi: minimal 1000 gram untuk menghindari error)
+        function calculateTotalWeight() {
+            const totalItems = {{ count($produkItems) + count($customItems) }};
+            // Estimasi berat: 1000 gram per item (minimal 1 kg untuk menghindari error API)
+            const weight = totalItems * 1000;
+            // Pastikan minimal 1000 gram
+            return Math.max(weight, 1000);
+        }
+
+        // Extract city name from address
+        function extractCityFromAddress(address) {
+            // Coba ekstrak kota dari alamat
+            // Format umum: "Alamat, Kecamatan, Kota/Kabupaten, Provinsi"
+            const parts = address.split(',');
+            
+            // Cari bagian yang mengandung "Kabupaten" atau "Kota"
+            for (let i = parts.length - 1; i >= 0; i--) {
+                const part = parts[i].trim();
+                const partLower = part.toLowerCase();
+                
+                // Jika mengandung "Kabupaten" atau "Kota", ekstrak nama kotanya
+                if (partLower.includes('kabupaten') || partLower.includes('kota')) {
+                    // Hapus kata "Kabupaten" atau "Kota" dan ambil nama kotanya
+                    let cityName = part.replace(/kabupaten\s*/i, '').replace(/kota\s*/i, '').trim();
+                    if (cityName) {
+                        return cityName;
+                    }
+                }
+            }
+            
+            // Jika tidak ada "Kabupaten" atau "Kota", ambil bagian kedua dari belakang
+            if (parts.length >= 2) {
+                const cityPart = parts[parts.length - 2].trim();
+                // Hapus "Kec." jika ada
+                return cityPart.replace(/kec\.?\s*/i, '').trim();
+            }
+            
+            // Jika tidak ada koma, coba cari kata kota umum
+            const cityKeywords = ['jakarta', 'bandung', 'surabaya', 'yogyakarta', 'semarang', 'medan', 'makassar', 'palembang', 'denpasar', 'malang', 'sidoarjo', 'gresik', 'banyuwangi', 'jember', 'kediri', 'pasuruan', 'mojokerto'];
+            const addressLower = address.toLowerCase();
+            for (const keyword of cityKeywords) {
+                if (addressLower.includes(keyword)) {
+                    return keyword.charAt(0).toUpperCase() + keyword.slice(1);
+                }
+            }
+            return null;
+        }
+
+        // Check shipping cost via Biteship
+        function checkBiteshipCost() {
+            const addressText = document.getElementById('address').value.trim();
+            
+            if (!addressText || addressText.length < 5) {
+                return;
+            }
+
+            const cityName = extractCityFromAddress(addressText);
+            if (!cityName) {
+                showShippingError('Mohon cantumkan nama kota/kabupaten di alamat pengiriman (contoh: Jl. Contoh, Kabupaten Banyuwangi, Jawa Timur)');
+                return;
+            }
+            
+            // Debug log
+            console.log('Extracted city name:', cityName);
+
+            const weight = calculateTotalWeight();
+            const loadingEl = document.getElementById('shippingLoading');
+            const errorEl = document.getElementById('shippingError');
+            const shippingOptionsList = document.getElementById('shippingOptionsList');
+
+            // Show loading
+            loadingEl.classList.remove('hidden');
+            errorEl.classList.add('hidden');
+            shippingOptionsList.innerHTML = '';
+
+            // Call API - use relative URL to avoid domain mismatch
+            const shippingUrl = '/shipping/check-cost';
+            console.log('Shipping URL:', shippingUrl);
+            fetch(shippingUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    destination_city: cityName,
+                    weight: weight
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Jika response bukan 200-299, coba parse sebagai JSON dulu
+                    return response.json().then(data => {
+                        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+                    }).catch(() => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                loadingEl.classList.add('hidden');
+                
+                if (data.success) {
+                    displayShippingOptions(data.couriers, data.destination_city);
+                } else {
+                    console.error('Biteship API Error:', data);
+                    showShippingError(data.message || 'Gagal mendapatkan data ongkir');
+                }
+            })
+            .catch(error => {
+                loadingEl.classList.add('hidden');
+                console.error('Error:', error);
+                showShippingError('Terjadi kesalahan saat menghitung ongkir: ' + error.message);
+            });
+        }
+
+        // Display Biteship shipping options
+        function displayShippingOptions(couriers, destinationCity) {
+            const container = document.getElementById('shippingOptionsList');
+            container.innerHTML = '';
+
+            if (couriers.length === 0) {
+                showShippingError('Tidak ada layanan pengiriman tersedia untuk tujuan ini.');
+                return;
+            }
+
+            // Info destination
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'mb-3 p-3 bg-teal-50 border border-teal-200 rounded-lg';
+            infoDiv.innerHTML = `
+                <div class="text-sm text-teal-700">
+                    <strong>Tujuan:</strong> ${destinationCity}
+                </div>
+            `;
+            container.appendChild(infoDiv);
+
+            // Display each courier
+            couriers.forEach(courier => {
+                const courierDiv = document.createElement('div');
+                courierDiv.className = 'mb-3';
+                
+                const courierName = document.createElement('div');
+                courierName.className = 'text-sm font-semibold text-gray-700 mb-2';
+                courierName.textContent = `Kurir ${courier.courier_name}`;
+                courierDiv.appendChild(courierName);
+
+                // Display each service
+                courier.services.forEach(service => {
+                    const serviceCost = service.cost[0].value;
+                    const serviceEtd = service.cost[0].etd || '-';
+                    const serviceName = service.service;
+                    const serviceDescription = service.description || '';
+
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer mb-2';
+                    
+                    label.innerHTML = `
+                        <input type="radio" name="shipping_method" value="biteship" 
+                               class="accent-teal-600 mr-3" 
+                               data-cost="${serviceCost}"
+                               data-courier="${courier.courier}"
+                               data-service="${serviceName}"
+                               onclick="updateShippingCost(${serviceCost}, '${courier.courier}', '${serviceName}')">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">${courier.courier_name} - ${serviceName}</div>
+                            <div class="text-xs text-gray-600">${serviceDescription || 'Estimasi: ' + serviceEtd}</div>
+                        </div>
+                        <div class="text-teal-600 font-semibold">${formatRupiah(serviceCost)}</div>
+                    `;
+                    
+                    courierDiv.appendChild(label);
+                });
+
+                container.appendChild(courierDiv);
+            });
+        }
+
+        // Show shipping error
+        function showShippingError(message) {
+            const errorEl = document.getElementById('shippingError');
+            const errorMessageEl = document.getElementById('shippingErrorMessage');
+            errorMessageEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
         function checkShippingOptions() {
             const addressText = document.getElementById('address').value.toLowerCase();
             const isSurabaya = addressText.includes('surabaya');
             
             const kurirOption = document.getElementById('kurirOption');
-            const expeditionOption = document.getElementById('expeditionOption');
             const kurirNotAvailable = document.getElementById('kurirNotAvailable');
+            const shippingOptionsList = document.getElementById('shippingOptionsList');
+            const shippingLoading = document.getElementById('shippingLoading');
+            const shippingError = document.getElementById('shippingError');
             
             // Jika alamat mengandung "Surabaya"
             if (isSurabaya) {
-                // Tampilkan Kurir Perusahaan, sembunyikan Ekspedisi dan pesan tidak tersedia
+                // Tampilkan Kurir Perusahaan, sembunyikan opsi Biteship
                 if (kurirOption) {
                     kurirOption.classList.remove('hidden');
-                }
-                if (expeditionOption) {
-                    expeditionOption.classList.add('hidden');
-                    // Uncheck ekspedisi jika terpilih dan pindahkan ke kurir
-                    const expeditionRadio = expeditionOption.querySelector('input[value="expedition"]');
-                    if (expeditionRadio && expeditionRadio.checked) {
-                        const kurirRadio = kurirOption ? kurirOption.querySelector('input[value="kurir"]') : null;
-                        if (kurirRadio) {
-                            kurirRadio.checked = true;
-                            updateShippingCost(0);
-                        }
-                    }
                 }
                 if (kurirNotAvailable) {
                     kurirNotAvailable.classList.add('hidden');
                 }
+                shippingOptionsList.innerHTML = '';
+                shippingLoading.classList.add('hidden');
+                shippingError.classList.add('hidden');
+                
+                // Set default ke kurir jika belum ada yang dipilih
+                const kurirRadio = kurirOption ? kurirOption.querySelector('input[value="kurir"]') : null;
+                if (kurirRadio && !document.querySelector('input[name="shipping_method"]:checked')) {
+                    kurirRadio.checked = true;
+                    updateShippingCost(0, 'kurir', 'Kurir Perusahaan');
+                }
             } else {
-                // Jika bukan Surabaya, sembunyikan Kurir Perusahaan, tampilkan Ekspedisi dan pesan tidak tersedia
+                // Jika bukan Surabaya, sembunyikan Kurir Perusahaan
                 if (kurirOption) {
                     kurirOption.classList.add('hidden');
-                    // Uncheck kurir jika terpilih dan pindahkan ke ekspedisi
                     const kurirRadio = kurirOption.querySelector('input[value="kurir"]');
                     if (kurirRadio && kurirRadio.checked) {
-                        const expeditionRadio = expeditionOption ? expeditionOption.querySelector('input[value="expedition"]') : null;
-                        if (expeditionRadio) {
-                            expeditionRadio.checked = true;
-                            updateShippingCost(19000);
-                        }
+                        kurirRadio.checked = false;
                     }
-                }
-                if (expeditionOption) {
-                    expeditionOption.classList.remove('hidden');
                 }
                 if (kurirNotAvailable) {
                     kurirNotAvailable.classList.remove('hidden');
                 }
+                
+                // Cek ongkir via Biteship
+                checkBiteshipCost();
             }
         }
 
-        function updateShippingCost(cost) {
+        function updateShippingCost(cost, courier = '', service = '') {
             document.getElementById('shippingCost').innerText = formatRupiah(cost);
             document.getElementById('shippingCostValue').value = cost;
+            document.getElementById('shippingCourierValue').value = courier;
+            document.getElementById('shippingServiceValue').value = service;
             updateTotal(cost);
         }
 
@@ -632,6 +833,22 @@
         // Panggil checkShippingOptions saat halaman dimuat untuk inisialisasi
         document.addEventListener('DOMContentLoaded', function() {
             checkShippingOptions();
+            
+            // Pastikan shipping cost ter-update jika sudah ada yang terpilih
+            const selectedShipping = document.querySelector('input[name="shipping_method"]:checked');
+            if (selectedShipping) {
+                const cost = selectedShipping.getAttribute('data-cost') || 0;
+                const courier = selectedShipping.getAttribute('data-courier') || '';
+                const service = selectedShipping.getAttribute('data-service') || '';
+                
+                // Update hidden fields
+                document.getElementById('shippingCostValue').value = cost;
+                document.getElementById('shippingCourierValue').value = courier;
+                document.getElementById('shippingServiceValue').value = service;
+                
+                // Update display
+                updateShippingCost(parseInt(cost), courier, service);
+            }
         });
     </script>
 </body>

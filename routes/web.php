@@ -20,6 +20,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\WorkOrderController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ShippingController;
 use App\Http\Middleware\LoggedIn;
 use App\Http\Middleware\GudangRole;
 use Illuminate\Http\Request;
@@ -59,6 +60,15 @@ Route::post('login', [LoginController::class, 'loginadmin']);
 Route::get('register', [LoginController::class, 'showRegisterForm'])->name('register');
 Route::post('register', [LoginController::class, 'register']);
 Route::get('/api/custom-materials/{id}/colors', [CustomMaterialController::class, 'getColors']);
+
+// Shipping routes - accessible without login (needed for checkout)
+// Note: These routes must be outside middleware group to be accessible
+Route::match(['get', 'post'], '/shipping/test', function() {
+    return response()->json(['status' => 'ok', 'message' => 'Route is working']);
+})->name('shipping.test');
+
+Route::post('/shipping/check-cost', [ShippingController::class, 'getShippingCost'])->name('shipping.check-cost');
+Route::post('/shipping/search-city', [ShippingController::class, 'searchCity'])->name('shipping.search-city');
 
 Route::middleware([LoggedIn::class])->group(function () {
     Route::get('/produk', [CustomerController::class, 'produk'])->name('produk');

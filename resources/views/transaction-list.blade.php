@@ -258,7 +258,13 @@
                                     <div class="text-right">
                                         <p class="text-xs text-gray-500 mb-1">Total Pembayaran</p>
                                         <p class="text-lg font-bold text-teal-600">Rp {{ number_format($transaction->grand_total, 0, ',', '.') }}</p>
-                                        <p class="text-xs text-gray-500 mt-1">{{ $totalItems }} barang</p>
+                                        @if($transaction->shipping_cost > 0)
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                {{ $totalItems }} barang + ongkir Rp {{ number_format($transaction->shipping_cost, 0, ',', '.') }}
+                                            </p>
+                                        @else
+                                            <p class="text-xs text-gray-500 mt-1">{{ $totalItems }} barang</p>
+                                        @endif
                                     </div>
                                     <a href="{{ route('transaksi.detail', $transaction->id) }}"
                                        class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium text-sm">

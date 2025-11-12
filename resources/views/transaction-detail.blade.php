@@ -22,63 +22,206 @@
             <h1 class="text-2xl font-bold text-gray-800">Detail Transaksi</h1>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6 mb-6 text-black">
-            <p><strong>Kode Invoice:</strong> {{ $transaction->code }}</p>
-            <p><strong>Status:</strong> {{ $transaction->status }}</p>
-            <p><strong>Alamat Pengiriman:</strong> {{ $transaction->address }}</p>
-            <p><strong>Total Pembayaran:</strong> Rp {{ number_format($transaction->grand_total, 0, ',', '.') }}</p>
+        {{-- Informasi Transaksi --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Informasi Transaksi
+                </h2>
         </div>
 
-        @if($product)
-        <!-- Detail Produk yang Dibeli -->
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Detail Produk yang Dibeli</h2>
-            <div class="flex flex-col md:flex-row gap-6">
-                <!-- Foto Produk -->
-                <div class="md:w-1/3">
-                    <div class="bg-gray-100 rounded-lg p-4 flex items-center justify-center">
-                        <img src="{{ asset($product->image_url) }}" 
-                             alt="{{ $product->name }}" 
-                             class="w-full h-48 object-cover rounded-lg">
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{-- Kolom Kiri --}}
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-500 mb-1">Kode Invoice</p>
+                                <p class="text-base font-mono font-semibold text-gray-900">{{ $transaction->code }}</p>
                     </div>
                 </div>
                 
-                <!-- Informasi Produk -->
-                <div class="md:w-2/3">
-                    <div class="space-y-3">
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-800">{{ $product->name }}</h3>
-                            <p class="text-sm text-gray-600">Ukuran: {{ $product->size }}</p>
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-500 mb-1">Status</p>
+                                @php
+                                    $statusLower = strtolower($transaction->status);
+                                    $statusColors = [
+                                        'dikemas' => 'bg-teal-100 text-teal-700 border-teal-200',
+                                        'dibayar' => 'bg-teal-100 text-teal-700 border-teal-200',
+                                        'menunggu konfirmasi pembayaran' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                                        'dikirim' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                        'sampai' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                        'diterima' => 'bg-green-100 text-green-700 border-green-200',
+                                        'selesai' => 'bg-green-100 text-green-700 border-green-200',
+                                    ];
+                                    $statusColor = $statusColors[$statusLower] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+                                @endphp
+                                <span class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium border {{ $statusColor }}">
+                                    {{ ucwords(str_replace('_', ' ', $transaction->status)) }}
+                                </span>
+                            </div>
                         </div>
                         
-                        <div>
-                            <p class="text-lg font-bold text-teal-600">
-                                Rp {{ number_format($dinvoice->price ?? $product->price, 0, ',', '.') }} / unit
-                            </p>
-                            @if($dinvoice && $dinvoice->price != $product->price)
-                                <p class="text-sm text-gray-500 line-through">
-                                    Harga normal: Rp {{ number_format($product->price, 0, ',', '.') }} / unit
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-500 mb-1">Alamat Pengiriman</p>
+                                <p class="text-base text-gray-900 leading-relaxed">{{ $transaction->address }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {{-- Kolom Kanan --}}
+                    <div class="space-y-4">
+                        @if($transaction->shipping_cost > 0)
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-500 mb-1">Pengiriman</p>
+                                <p class="text-base font-semibold text-gray-900">
+                                    {{ $transaction->shipping_courier ? ucfirst($transaction->shipping_courier) : 'Kurir Perusahaan' }}
+                                    @if($transaction->shipping_service)
+                                        <span class="text-gray-600 font-normal">- {{ $transaction->shipping_service }}</span>
+                                    @endif
                                 </p>
-                                <p class="text-sm text-green-600 font-medium">
-                                    ✓ Harga hasil tawar
-                                </p>
-                            @endif
+                            </div>
                         </div>
                         
-                        <div>
-                            <p class="text-gray-700">{{ $product->description }}</p>
-                        </div>
-                        
-                        @if($dinvoice)
-                        <div class="bg-gray-50 p-3 rounded-lg">
-                            <p class="text-sm text-gray-600">
-                                <strong>Jumlah yang dibeli:</strong> {{ $dinvoice->quantity }} unit
-                            </p>
-                            <p class="text-sm text-gray-600">
-                                <strong>Subtotal:</strong> Rp {{ number_format($dinvoice->subtotal ?? ($dinvoice->quantity * ($dinvoice->price ?? $product->price)), 0, ',', '.') }}
-                            </p>
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-500 mb-1">Ongkos Kirim</p>
+                                <p class="text-lg font-bold text-indigo-600">Rp {{ number_format($transaction->shipping_cost, 0, ',', '.') }}</p>
+                            </div>
                         </div>
                         @endif
+                        
+                        <div class="flex items-start gap-3 pt-4 border-t border-gray-200">
+                            <div class="flex-shrink-0 w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-500 mb-1">Total Pembayaran</p>
+                                <p class="text-2xl font-bold text-emerald-600">Rp {{ number_format($transaction->grand_total, 0, ',', '.') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if($product)
+        {{-- Detail Produk yang Dibeli --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                    Detail Produk yang Dibeli
+                </h2>
+            </div>
+            
+            <div class="p-6">
+                <div class="flex flex-col md:flex-row gap-6">
+                    {{-- Foto Produk --}}
+                    <div class="md:w-1/3 flex-shrink-0">
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 flex items-center justify-center shadow-inner">
+                            <img src="{{ asset($product->image_url) }}" 
+                                 alt="{{ $product->name }}" 
+                                 class="w-full h-64 object-cover rounded-lg shadow-md">
+                        </div>
+                    </div>
+                    
+                    {{-- Informasi Produk --}}
+                    <div class="md:w-2/3 flex-1">
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ $product->name }}</h3>
+                                <div class="flex items-center gap-2 text-sm text-gray-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+                                    </svg>
+                                    <span>Ukuran: 
+                                        @if($dinvoice && $dinvoice->selected_size)
+                                            <span class="font-semibold text-teal-600">{{ $dinvoice->selected_size }}</span>
+                                        @else
+                                            {{ $product->size }}
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-4 border-t border-gray-200">
+                                <div class="flex items-baseline gap-3">
+                                    <p class="text-3xl font-bold text-teal-600">
+                                        Rp {{ number_format($dinvoice->price ?? $product->price, 0, ',', '.') }}
+                                    </p>
+                                    <span class="text-gray-500">/ unit</span>
+                                </div>
+                                @if($dinvoice && $dinvoice->price != $product->price)
+                                    <div class="mt-2 flex items-center gap-2">
+                                        <p class="text-sm text-gray-500 line-through">
+                                            Rp {{ number_format($product->price, 0, ',', '.') }} / unit
+                                        </p>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            Harga hasil tawar
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            <div class="pt-4 border-t border-gray-200">
+                                <p class="text-gray-700 leading-relaxed">{{ $product->description }}</p>
+                            </div>
+                            
+                            @if($dinvoice)
+                            <div class="bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-200 rounded-xl p-4 mt-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-600 mb-1">Jumlah yang dibeli</p>
+                                        <p class="text-lg font-semibold text-gray-900">{{ $dinvoice->quantity }} unit</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600 mb-1">Subtotal</p>
+                                        <p class="text-lg font-bold text-teal-600">Rp {{ number_format($dinvoice->subtotal ?? ($dinvoice->quantity * ($dinvoice->price ?? $product->price)), 0, ',', '.') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -86,21 +229,49 @@
         @endif
 
         @if ($transaction->status == 'sampai')
-            <div class="mt-5 space-y-2 text-sm">
-                <div>Pesanan kamu sudah sampai, silahkan klik tombol dibawah untuk menyelesaikan transaksi.</div>
-                <form method="POST" action="{{ route('transaksi.diterima', $transaction->id) }}">
-                    @csrf
-                    <button class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-6 rounded">
-                        Selesaikan Pesanan
-                    </button>
-                </form>
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Pesanan Sudah Sampai!</h3>
+                        <p class="text-gray-700 mb-4">Pesanan kamu sudah sampai di tujuan. Silakan klik tombol di bawah untuk menyelesaikan transaksi.</p>
+                        <form method="POST" action="{{ route('transaksi.diterima', $transaction->id) }}">
+                            @csrf
+                            <button class="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transform transition duration-200 hover:scale-105">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Selesaikan Pesanan
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         @endif
 
         @if ($transaction->status == 'diterima')
-            <div class="mt-5 space-y-2 text-sm bg-white p-4 rounded-lg shadow">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                        </svg>
+                        Beri Review
+                    </h2>
+                </div>
+                
+                <div class="p-6">
                 @if (!$hasReviewed)
-                    <div class="font-medium text-gray-800 mb-3">Beri review untuk pesanan kamu yuk</div>
+                    <div class="mb-6">
+                        <p class="text-gray-700 mb-1">Bagaimana pengalaman kamu dengan produk ini?</p>
+                        <p class="text-sm text-gray-500">Review kamu sangat membantu untuk meningkatkan kualitas layanan kami.</p>
+                    </div>
                     
                     <!-- Review Form -->
                     <div id="reviewForm" class="space-y-4">
@@ -143,23 +314,36 @@
                     </div>
 
                     <!-- Review Success Message -->
-                    <div id="reviewSuccess" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                        <i class="fas fa-check-circle mr-2"></i>
-                        Review berhasil dikirim! Terima kasih atas feedback kamu.
+                    <div id="reviewSuccess" class="hidden bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-800 px-4 py-4 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="font-medium">Review berhasil dikirim! Terima kasih atas feedback kamu.</span>
+                        </div>
                     </div>
 
                     <!-- Review Error Message -->
-                    <div id="reviewError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                        <i class="fas fa-exclamation-circle mr-2"></i>
-                        <span id="errorMessage"></span>
+                    <div id="reviewError" class="hidden bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 text-red-800 px-4 py-4 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span id="errorMessage" class="font-medium"></span>
+                        </div>
                     </div>
                 @else
                     <!-- Sudah Review Message -->
-                    <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">
-                        <i class="fas fa-check-circle mr-2"></i>
-                        <strong>Terima kasih!</strong> Kamu sudah memberikan review untuk pesanan ini.
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 text-blue-800 px-4 py-4 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="font-medium">Terima kasih! Kamu sudah memberikan review untuk pesanan ini.</span>
+                        </div>
                     </div>
                 @endif
+                </div>
             </div>
         @endif
 
@@ -169,11 +353,20 @@
         @endphp
 
         @if ($sampaiKurangDari24Jam)
-            <div class="mt-4">
-                <a href="{{ url('/retur/' . $transaction->id) }}"
-                class="inline-block bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md shadow text-sm">
-                    🔁 Retur Barang
-                </a>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Ingin Mengembalikan Barang?</h3>
+                        <p class="text-sm text-gray-600">Kamu masih bisa mengajukan retur dalam 24 jam setelah pesanan sampai.</p>
+                    </div>
+                    <a href="{{ url('/retur/' . $transaction->id) }}"
+                       class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg shadow-lg transform transition duration-200 hover:scale-105 font-medium">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Retur Barang
+                    </a>
+                </div>
             </div>
         @endif
     </div>

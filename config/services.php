@@ -43,4 +43,8 @@ return [
         'is3ds'         => true,
     ],
 
+    'biteship' => [
+        'api_key' => env('BITESHIP_API_KEY', 'biteship_test.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhc3RldGVzdGluZyIsInVzZXJJZCI6IjY5MTRiZTQ4YTU0YmRmNzdjYTJhMTE3OSIsImlhdCI6MTc2Mjk2ODU1Mn0.CIFCKrBBgaMmy5A4ahc1zunuleTJRE_TfZ9bH6TSirg'),
+    ],
+
 ];
