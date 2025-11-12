@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Cart;
 use App\Models\Customer;
@@ -62,8 +63,11 @@ class CheckoutController extends Controller
                 'cart.quantity',
                 'cart.harga_custom',
                 'cart.kebutuhan_custom',
+                'cart.selected_size',
+                'products.id as product_id',
                 'products.name as product_name',
                 'products.price as product_price',
+                'products.size_prices',
                 'products.size as product_size',
                 'product_variants.color as variant_color'
             )
@@ -71,6 +75,19 @@ class CheckoutController extends Controller
             ->whereNotNull('cart.variant_id') // Ada variant = produk normal
             ->whereIn('cart.id', $selectedItems)
             ->get();
+        
+        // Convert to collection dan hitung harga berdasarkan ukuran
+        $produkItems = $produkItems->map(function ($item) {
+            $product = Product::find($item->product_id);
+            if ($product) {
+                $selectedSize = $item->selected_size ?? '2x3';
+                // Jika ada harga custom (hasil negosiasi), gunakan itu, jika tidak gunakan harga berdasarkan ukuran
+                $item->calculated_price = $item->harga_custom ?? $product->getPriceForSize($selectedSize);
+            } else {
+                $item->calculated_price = $item->product_price ?? 0;
+            }
+            return $item;
+        });
 
         // Ambil barang custom terpal (yang tidak punya variant)
         $customItems = DB::table('cart')
@@ -106,8 +123,8 @@ class CheckoutController extends Controller
         $subtotalProduk = 0;
 
         foreach ($produkItems as $item) {
-            // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga produk normal
-            $price = $item->harga_custom ?? $item->product_price;
+            // Gunakan calculated_price yang sudah dihitung berdasarkan ukuran
+            $price = $item->calculated_price ?? $item->product_price ?? 0;
             $subtotalProduk += $price * $item->quantity;
             $cartIds[] = $item->id;
         }

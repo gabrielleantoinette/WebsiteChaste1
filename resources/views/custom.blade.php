@@ -92,7 +92,7 @@
         </div>
 
         <div>
-          <label class="text-sm font-medium text-gray-700">Jumlah Barang <span class="text-red-500">*</span></label>
+          <label class="text-sm font-medium text-gray-700">Jumlah Custom <span class="text-red-500">*</span></label>
           <div class="flex items-center border border-gray-300 w-max rounded-md overflow-hidden">
             <button type="button" onclick="changeBarangQty(-1)" class="px-3 py-2 text-lg hover:bg-gray-100">-</button>
             <input type="number" id="barangQtyInput" name="quantity" value="1" min="1" class="w-12 text-center border-l border-r border-gray-300 outline-none text-sm py-2">

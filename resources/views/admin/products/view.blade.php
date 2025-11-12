@@ -162,20 +162,13 @@
                 </div>
                 
                 {{-- Action Buttons --}}
-                <div class="mt-6 flex gap-2">
+                <div class="mt-6">
                     <a href="{{ url('/admin/products/detail/' . $product->id) }}" 
-                       class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                       class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 shadow-md hover:shadow-lg">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         Detail
-                    </a>
-                    <a href="{{ url('/admin/products/create-variant/' . $product->id) }}" 
-                       class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 border border-teal-600 text-teal-600 text-sm font-medium rounded-lg hover:bg-teal-50 transition-all duration-200">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Variant
                     </a>
                 </div>
             </div>

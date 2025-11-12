@@ -226,16 +226,8 @@ class CartController extends Controller
             if ($cart->harga_custom && $cart->kebutuhan_custom && str_contains($cart->kebutuhan_custom, 'Hasil negosiasi')) {
                 $subtotal = $cart->harga_custom * $quantity;
             } elseif ($cart->variant_id && $cart->variant && $cart->variant->product) {
-                $pricePerM2 = $cart->variant->product->price / (2 * 3);
-                $sizeMap = [
-                    '2x3' => ['width' => 2, 'height' => 3],
-                    '3x4' => ['width' => 3, 'height' => 4],
-                    '4x6' => ['width' => 4, 'height' => 6],
-                    '6x8' => ['width' => 6, 'height' => 8]
-                ];
                 $selectedSize = $cart->selected_size ?? '2x3';
-                $size = $sizeMap[$selectedSize] ?? $sizeMap['2x3'];
-                $calculatedPrice = $pricePerM2 * $size['width'] * $size['height'];
+                $calculatedPrice = $cart->variant->product->getPriceForSize($selectedSize);
                 $subtotal = $calculatedPrice * $quantity;
             } else {
                 $subtotal = ($cart->harga_custom ?? 0) * $quantity;

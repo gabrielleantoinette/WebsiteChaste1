@@ -24,9 +24,20 @@ class NegotiationController extends Controller
         // Untuk saat ini, biarkan semua bisa akses halaman negosiasi
         // Validasi quantity akan dilakukan di frontend dan saat checkout
 
+        // Build size options with prices
+        $sizes = ['2x3', '3x4', '4x6', '6x8'];
+        $sizeOptions = collect($sizes)->map(function ($size) use ($product) {
+            return [
+                'size' => $size,
+                'price' => $product->getPriceForSize($size),
+                'min_price' => $product->getMinPriceForSize($size),
+            ];
+        });
+
         return view('negosiasi', [
             'product' => $product,
             'neg'     => $neg,
+            'sizeOptions' => $sizeOptions,
         ]);
     }
 
@@ -34,7 +45,8 @@ class NegotiationController extends Controller
     {
         $request->validate([
             'harga' => 'required|integer|min:1',
-            'quantity' => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1',
+            'selected_size' => 'nullable|in:2x3,3x4,4x6,6x8'
         ]);
 
         $user  = Session::get('user');
@@ -44,6 +56,7 @@ class NegotiationController extends Controller
 
         $offer = (int) $request->input('harga');
         $quantity = (int) $request->input('quantity');
+        $selectedSize = $request->input('selected_size', '2x3');
         
         // Validasi minimum quantity untuk tawar menawar
         $minBuyingStock = $product->min_buying_stock ?? 1;
@@ -51,8 +64,8 @@ class NegotiationController extends Controller
             return back()->with('error', "Minimal {$minBuyingStock} pcs untuk tawar menawar.");
         }
         
-        // Simpan quantity ke session untuk konsistensi
-        session(['quantity' => $quantity]);
+        // Simpan quantity dan selected_size ke session untuk konsistensi
+        session(['quantity' => $quantity, 'selected_size' => $selectedSize]);
 
         $neg = NegotiationTable::firstOrCreate(
             ['user_id'    => $userId,          // ← pakai $user->id
@@ -72,9 +85,10 @@ class NegotiationController extends Controller
             return back()->with('error', 'Sudah mencapai maksimal 3 kali tawar.');
         }
 
-        // Logika sistem merespons yang lebih fleksibel
-        $min = $product->min_price ?? ($product->price * 0.65); // Default 65% dari harga normal (lebih rendah)
-        $max = $product->price;
+        // Logika sistem merespons yang lebih fleksibel - gunakan harga dan min_price per ukuran
+        $priceForSize = $product->getPriceForSize($selectedSize);
+        $min = $product->getMinPriceForSize($selectedSize); // Min price per ukuran
+        $max = $priceForSize;
         
         // Validasi tawaran customer (tidak reveal harga minimal)
         if ($offer < ($max * 0.5)) {

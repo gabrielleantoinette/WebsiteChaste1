@@ -300,14 +300,21 @@ class InvoiceController extends Controller
 
             foreach ($carts as $cart) {
                 if ($cart->variant_id) {
-                    $product = DB::table('product_variants')
-                        ->join('products', 'product_variants.product_id', '=', 'products.id')
+                    $productModel = \App\Models\Product::join('product_variants', 'products.id', '=', 'product_variants.product_id')
                         ->where('product_variants.id', $cart->variant_id)
-                        ->select('products.price')
+                        ->select('products.*')
                         ->first();
-                    // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga produk normal
-                    $price = $cart->harga_custom ?? $product->price;
-                    $subtotalProduk += ($price ?? 0) * $cart->quantity;
+                    
+                    if ($productModel) {
+                        // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga berdasarkan ukuran
+                        $selectedSize = $cart->selected_size ?? '2x3';
+                        $price = $cart->harga_custom ?? $productModel->getPriceForSize($selectedSize);
+                        $subtotalProduk += ($price ?? 0) * $cart->quantity;
+                    } else {
+                        // Fallback jika product tidak ditemukan
+                        $price = $cart->harga_custom ?? 0;
+                        $subtotalProduk += $price * $cart->quantity;
+                    }
                 } elseif ($cart->kebutuhan_custom) {
                     $subtotalProduk += ($cart->harga_custom ?? 0) * $cart->quantity;
                 }
@@ -382,23 +389,26 @@ class InvoiceController extends Controller
                 // Hapus dinvoice records yang sudah ada untuk invoice ini (jika ada)
                 DB::table('dinvoice')->where('hinvoice_id', $newInvoiceId)->delete();
                 
-                $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
+                $carts = DB::table('cart')
+                    ->whereIn('id', $cartIds)
+                    ->select('*')
+                    ->get();
                 
                 foreach ($carts as $cart) {
                     if ($cart->variant_id) {
                         // Produk biasa
-                        $product = DB::table('product_variants')
-                            ->join('products', 'product_variants.product_id', '=', 'products.id')
+                        $productModel = \App\Models\Product::join('product_variants', 'products.id', '=', 'product_variants.product_id')
                             ->where('product_variants.id', $cart->variant_id)
-                            ->select('products.id as product_id', 'products.price')
+                            ->select('products.*')
                             ->first();
                         
-                        if ($product) {
-                            // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga produk normal
-                            $price = $cart->harga_custom ?? $product->price;
+                        if ($productModel) {
+                            // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga berdasarkan ukuran
+                            $selectedSize = $cart->selected_size ?? '2x3';
+                            $price = $cart->harga_custom ?? $productModel->getPriceForSize($selectedSize);
                             DB::table('dinvoice')->insert([
                                 'hinvoice_id' => $newInvoiceId,
-                                'product_id' => $product->product_id,
+                                'product_id' => $productModel->id,
                                 'variant_id' => $cart->variant_id,
                                 'price' => $price,
                                 'quantity' => $cart->quantity,
@@ -440,18 +450,18 @@ class InvoiceController extends Controller
             foreach ($carts as $cart) {
                 if ($cart->variant_id) {
                     // Produk biasa
-                    $product = DB::table('product_variants')
-                        ->join('products', 'product_variants.product_id', '=', 'products.id')
+                    $productModel = \App\Models\Product::join('product_variants', 'products.id', '=', 'product_variants.product_id')
                         ->where('product_variants.id', $cart->variant_id)
-                        ->select('products.id as product_id', 'products.price')
+                        ->select('products.*')
                         ->first();
                     
-                    if ($product) {
-                        // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga produk normal
-                        $price = $cart->harga_custom ?? $product->price;
+                    if ($productModel) {
+                        // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga berdasarkan ukuran
+                        $selectedSize = $cart->selected_size ?? '2x3';
+                        $price = $cart->harga_custom ?? $productModel->getPriceForSize($selectedSize);
                         DB::table('dinvoice')->insert([
                             'hinvoice_id' => $newInvoiceId,
-                            'product_id' => $product->product_id,
+                            'product_id' => $productModel->id,
                             'variant_id' => $cart->variant_id,
                             'price' => $price,
                             'quantity' => $cart->quantity,

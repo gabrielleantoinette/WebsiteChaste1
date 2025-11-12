@@ -17,6 +17,7 @@
     <div class="mb-6">
         <x-breadcrumb :items="[
             ['label' => 'Produk', 'url' => route('produk')],
+            ['label' => $product->name, 'url' => route('produk.detail', $product->id)],
             ['label' => 'Negosiasi']
         ]" />
         <h1 class="text-2xl font-bold text-gray-800">Negosiasi Harga</h1>
@@ -38,18 +39,48 @@
 
       <!-- Detail & Negosiasi -->
       <div class="flex-1 space-y-4">
-        <h2 class="text-2xl font-bold text-gray-900">{{ $product->name }} - {{ $product->size }}</h2>
-        <p class="text-gray-600">Rp {{ number_format($product->price,0,',','.') }} <span class="text-sm">(Harga Normal)</span></p>
+        <h2 class="text-2xl font-bold text-gray-900">{{ $product->name }}</h2>
+        <p class="text-gray-600" id="priceDisplay">
+          @if(isset($sizeOptions) && count($sizeOptions) > 0)
+            @php
+              $defaultSize = $sizeOptions->firstWhere('size', session('selected_size', '2x3')) ?? $sizeOptions->first();
+            @endphp
+            Rp {{ number_format($defaultSize['price'] ?? 0, 0, ',', '.') }}
+          @else
+            Rp {{ number_format($product->price, 0, ',', '.') }}
+          @endif
+          <span class="text-sm">(Harga Normal)</span>
+        </p>
         
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p class="text-sm text-blue-800">
+            <p class="text-sm text-blue-800 mb-2">
                 💡 <strong>Tips Negosiasi:</strong> Tawar 60-80% dari harga normal untuk hasil terbaik
+            </p>
+            <p class="text-xs text-blue-700 font-medium">
+                ⚠️ <strong>Penting:</strong> Tawar menawar adalah harga per pcs (per unit), bukan subtotal. Total harga akan dihitung berdasarkan harga tawar × quantity.
             </p>
         </div>
 
         <!-- Form Tawar -->
         <form action="{{ route('produk.negosiasi.tawar', $product) }}" method="POST" class="mt-4 space-y-4">
           @csrf
+          
+          <!-- Size Selection -->
+          @if(isset($sizeOptions) && count($sizeOptions) > 0)
+          <div>
+            <label for="selected_size" class="text-sm text-gray-600">Ukuran</label>
+            <select id="selected_size" name="selected_size" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-teal-400 mt-1" onchange="updatePriceAndMinPrice()">
+              @foreach($sizeOptions as $opt)
+                <option value="{{ $opt['size'] }}" 
+                        data-price="{{ $opt['price'] }}" 
+                        data-min-price="{{ $opt['min_price'] }}"
+                        {{ (session('selected_size', '2x3') == $opt['size']) ? 'selected' : '' }}>
+                  {{ $opt['size'] }} (Rp {{ number_format($opt['price'], 0, ',', '.') }})
+                </option>
+              @endforeach
+            </select>
+          </div>
+          @endif
           
           <!-- Quantity Input -->
           <div>
@@ -70,9 +101,43 @@
             @endif
           </div>
           
+          <!-- Subtotal Display -->
+          <div class="bg-teal-50 border border-teal-200 rounded-lg p-3">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-sm font-medium text-gray-700">Subtotal (Harga Normal):</span>
+              <span id="subtotalDisplay" class="text-lg font-bold text-teal-600">
+                @if(isset($sizeOptions) && count($sizeOptions) > 0)
+                  @php
+                    $defaultSize = $sizeOptions->firstWhere('size', session('selected_size', '2x3')) ?? $sizeOptions->first();
+                    $defaultQty = session('quantity', request('quantity', $product->min_buying_stock ?? 1));
+                  @endphp
+                  Rp {{ number_format(($defaultSize['price'] ?? 0) * $defaultQty, 0, ',', '.') }}
+                @else
+                  Rp {{ number_format($product->price * (session('quantity', request('quantity', 1))), 0, ',', '.') }}
+                @endif
+              </span>
+            </div>
+            <p class="text-xs text-gray-500" id="subtotalDetail">
+              @if(isset($sizeOptions) && count($sizeOptions) > 0)
+                @php
+                  $defaultSize = $sizeOptions->firstWhere('size', session('selected_size', '2x3')) ?? $sizeOptions->first();
+                  $defaultQty = session('quantity', request('quantity', $product->min_buying_stock ?? 1));
+                @endphp
+                Rp {{ number_format($defaultSize['price'] ?? 0, 0, ',', '.') }} × {{ $defaultQty }} pcs
+              @else
+                Rp {{ number_format($product->price, 0, ',', '.') }} × {{ session('quantity', request('quantity', 1)) }} pcs
+              @endif
+            </p>
+          </div>
+
           <!-- Harga Input -->
           <div>
-            <label for="harga" class="text-sm text-gray-600">Penawaran Anda</label>
+            <label for="harga" class="text-sm text-gray-600">Penawaran Anda (Harga per pcs)</label>
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
+              <p class="text-xs text-amber-800">
+                <strong>Catatan:</strong> Masukkan harga tawar per pcs (per unit), bukan subtotal. Total akan otomatis dihitung: harga tawar × quantity.
+              </p>
+            </div>
             <div class="flex items-center gap-2">
               <input 
                 type="number" 
@@ -80,7 +145,7 @@
                 name="harga" 
                 min="1" 
                 required
-                placeholder="Contoh: Rp {{ number_format($product->price * 0.8, 0, ',', '.') }}"
+                placeholder="Masukkan harga per pcs"
                 class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
                 value="{{ old('harga') }}"
               />
@@ -89,6 +154,9 @@
                 Tawar
               </button>
             </div>
+            <p class="text-xs text-gray-500 mt-1">
+              Harga per pcs: <span id="pricePerPcsDisplay">-</span> | Total penawaran: <span id="totalOfferDisplay">-</span>
+            </p>
           </div>
         </form>
 
@@ -131,46 +199,68 @@
         </div>
 
         <!-- Tombol Actions -->
-        <div class="mt-6 flex items-center gap-4">
+        <div class="mt-6 space-y-4">
           <!-- Deal (bisa diklik jika ada tawaran) -->
           @php
             $hasAnyOffer = collect([$neg->cust_nego_1, $neg->cust_nego_2, $neg->cust_nego_3])->filter()->isNotEmpty();
             $finalPrice = $neg->status === 'final' ? $neg->final_price : $neg->seller_nego_3 ?? $neg->seller_nego_2 ?? $neg->seller_nego_1;
+            $defaultQty = session('quantity', request('quantity', $product->min_buying_stock ?? 1));
           @endphp
           
           @if($hasAnyOffer)
-            <form action="{{ route('produk.add', $product) }}" method="POST" class="inline">
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span class="text-sm font-semibold text-gray-800">Subtotal Deal</span>
+                </div>
+                <span id="dealSubtotalDisplay" class="text-xl font-bold text-green-700">
+                  Rp {{ number_format($finalPrice * $defaultQty, 0, ',', '.') }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between text-xs text-gray-600">
+                <span id="dealSubtotalDetail">
+                  Rp {{ number_format($finalPrice, 0, ',', '.') }} × {{ $defaultQty }} pcs
+                </span>
+                <span class="px-2 py-0.5 bg-green-200 text-green-800 rounded-full font-medium">Harga Deal</span>
+              </div>
+            </div>
+            <form action="{{ route('produk.add', $product) }}" method="POST" class="w-full">
               @csrf
-              <input type="hidden" name="quantity" id="dealQuantity" value="1">
-              <input type="hidden" name="negotiated_price" value="{{ $finalPrice }}">
+              <input type="hidden" name="quantity" id="dealQuantity" value="{{ $defaultQty }}">
+              <input type="hidden" name="negotiated_price" id="dealFinalPrice" value="{{ $finalPrice }}">
+              <input type="hidden" name="selected_size" id="dealSelectedSize" value="{{ session('selected_size', '2x3') }}">
               <button type="submit"
-                      class="px-5 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition">
-                Deal - Rp {{ number_format($finalPrice,0,',','.') }}
+                      class="w-full px-5 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition shadow-md hover:shadow-lg">
+                ✓ Terima Deal - Rp {{ number_format($finalPrice,0,',','.') }}/unit
               </button>
             </form>
           @else
             <button type="button"
-                    class="px-5 py-2 bg-gray-200 text-gray-500 rounded-lg font-semibold cursor-not-allowed">
+                    class="w-full px-5 py-3 bg-gray-200 text-gray-500 rounded-lg font-semibold cursor-not-allowed">
               Deal
             </button>
           @endif
 
           <!-- Tambah ke Keranjang (harga normal) -->
-          <form action="{{ route('produk.add', $product) }}" method="POST" class="inline">
+          <form action="{{ route('produk.add', $product) }}" method="POST" class="w-full">
             @csrf
-            <input type="hidden" name="quantity" id="normalQuantity" value="1">
+            <input type="hidden" name="quantity" id="normalQuantity" value="{{ $defaultQty }}">
+            <input type="hidden" name="selected_size" id="normalSelectedSize" value="{{ session('selected_size', '2x3') }}">
             <button type="submit"
-                    class="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition text-gray-700">
+                    class="w-full px-5 py-2.5 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition text-gray-700 font-medium">
               Tambah ke Keranjang (Harga Normal)
             </button>
           </form>
 
           <!-- Reset Negosiasi -->
-          <form action="{{ route('produk.negosiasi.reset', $product) }}" method="POST" class="inline">
+          <form action="{{ route('produk.negosiasi.reset', $product) }}" method="POST" class="w-full">
             @csrf
             <button type="submit"
                     onclick="return confirm('Yakin ingin memulai negosiasi ulang?')"
-                    class="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
+                    class="w-full px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 border border-red-200 transition font-medium">
               Reset Negosiasi
             </button>
           </form>
@@ -183,6 +273,7 @@
 
   <script>
     const minBuyingStock = {{ $product->min_buying_stock ?? 1 }};
+    const defaultQuantity = {{ session('quantity', request('quantity', $product->min_buying_stock ?? 1)) }};
     
     function changeQty(amount) {
       const input = document.getElementById('quantity');
@@ -193,6 +284,9 @@
       // Update quantity di tombol Deal dan Normal
       updateButtonQuantities(val);
       
+      // Update subtotal
+      updateSubtotalNegosiasi();
+      
       // Check dan disable/enable aktivitas tawar
       checkNegotiationActivity(val);
     }
@@ -200,9 +294,20 @@
     function updateButtonQuantities(qty) {
       const dealQuantity = document.getElementById('dealQuantity');
       const normalQuantity = document.getElementById('normalQuantity');
+      const dealFinalPrice = document.getElementById('dealFinalPrice');
+      const dealSubtotalDisplay = document.getElementById('dealSubtotalDisplay');
+      const dealSubtotalDetail = document.getElementById('dealSubtotalDetail');
       
       if (dealQuantity) dealQuantity.value = qty;
       if (normalQuantity) normalQuantity.value = qty;
+      
+      // Update deal subtotal
+      if (dealFinalPrice && dealSubtotalDisplay && dealSubtotalDetail) {
+        const finalPrice = parseFloat(dealFinalPrice.value) || 0;
+        const subtotal = finalPrice * qty;
+        dealSubtotalDisplay.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+        dealSubtotalDetail.textContent = `Rp ${finalPrice.toLocaleString('id-ID')} × ${qty} pcs`;
+      }
     }
     
     function checkNegotiationActivity(qty) {
@@ -245,19 +350,125 @@
       }
     }
     
+    // Update price and min price based on selected size
+    function updatePriceAndMinPrice() {
+      const sizeSelect = document.getElementById('selected_size');
+      const priceDisplay = document.getElementById('priceDisplay');
+      const hargaInput = document.getElementById('harga');
+      const dealSelectedSize = document.getElementById('dealSelectedSize');
+      const normalSelectedSize = document.getElementById('normalSelectedSize');
+      const quantityInput = document.getElementById('quantity');
+      
+      if (!sizeSelect || !priceDisplay) return;
+      
+      const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+      const price = selectedOption ? parseFloat(selectedOption.dataset.price) : 0;
+      const minPrice = selectedOption ? parseFloat(selectedOption.dataset.minPrice) : 0;
+      const selectedSizeValue = sizeSelect.value;
+      const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
+      
+      // Update price display
+      priceDisplay.innerHTML = `Rp ${price.toLocaleString('id-ID')} <span class="text-sm">(Harga Normal)</span>`;
+      
+      // Update placeholder
+      if (hargaInput) {
+        const suggestedPrice = Math.round(price * 0.8);
+        hargaInput.placeholder = `Contoh: Rp ${suggestedPrice.toLocaleString('id-ID')}`;
+      }
+      
+      // Update hidden inputs for selected_size
+      if (dealSelectedSize) {
+        dealSelectedSize.value = selectedSizeValue;
+      }
+      if (normalSelectedSize) {
+        normalSelectedSize.value = selectedSizeValue;
+      }
+      
+      // Update subtotal
+      updateSubtotalNegosiasi();
+    }
+    
+    // Update subtotal in negotiation page
+    function updateSubtotalNegosiasi() {
+      const sizeSelect = document.getElementById('selected_size');
+      const quantityInput = document.getElementById('quantity');
+      const subtotalDisplay = document.getElementById('subtotalDisplay');
+      const subtotalDetail = document.getElementById('subtotalDetail');
+      const hargaInput = document.getElementById('harga');
+      const totalOfferDisplay = document.getElementById('totalOfferDisplay');
+      
+      if (!sizeSelect || !quantityInput) return;
+      
+      const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+      const price = selectedOption ? parseFloat(selectedOption.dataset.price) : 0;
+      const quantity = parseInt(quantityInput.value) || 1;
+      const subtotal = price * quantity;
+      
+      if (subtotalDisplay) {
+        subtotalDisplay.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+      }
+      
+      if (subtotalDetail) {
+        subtotalDetail.textContent = `Rp ${price.toLocaleString('id-ID')} × ${quantity} pcs`;
+      }
+      
+    }
+    
+    // Update total offer display when harga input changes
+    function updateTotalOffer() {
+      const hargaInput = document.getElementById('harga');
+      const totalOfferDisplay = document.getElementById('totalOfferDisplay');
+      const pricePerPcsDisplay = document.getElementById('pricePerPcsDisplay');
+      const quantityInput = document.getElementById('quantity');
+      
+      if (hargaInput && totalOfferDisplay && quantityInput) {
+        const offerPrice = parseFloat(hargaInput.value) || 0;
+        const currentQty = parseInt(quantityInput.value) || 1;
+        const totalOffer = offerPrice * currentQty;
+        
+        // Update harga per pcs display
+        if (pricePerPcsDisplay) {
+          pricePerPcsDisplay.textContent = offerPrice > 0 ? `Rp ${offerPrice.toLocaleString('id-ID')}` : '-';
+        }
+        
+        // Update total penawaran display
+        totalOfferDisplay.textContent = offerPrice > 0 ? `Rp ${totalOffer.toLocaleString('id-ID')}` : '-';
+      }
+    }
+    
     // Update quantity saat halaman load
     document.addEventListener('DOMContentLoaded', function() {
+      updatePriceAndMinPrice();
+      updateSubtotalNegosiasi();
       const quantityInput = document.getElementById('quantity');
+      const hargaInput = document.getElementById('harga');
+      
       if (quantityInput) {
         const initialQty = parseInt(quantityInput.value) || 1;
         updateButtonQuantities(initialQty);
         checkNegotiationActivity(initialQty);
         
-        // Update quantity saat input berubah
+        // Add event listener for quantity change
         quantityInput.addEventListener('input', function() {
+          updateSubtotalNegosiasi();
+          updateTotalOffer();
           const qty = parseInt(this.value) || 1;
           updateButtonQuantities(qty);
           checkNegotiationActivity(qty);
+        });
+      }
+      
+      // Update deal subtotal on page load
+      const dealFinalPrice = document.getElementById('dealFinalPrice');
+      if (dealFinalPrice) {
+        const initialQty = quantityInput ? parseInt(quantityInput.value) || 1 : defaultQuantity;
+        updateButtonQuantities(initialQty);
+      }
+      
+      // Add event listener for harga input
+      if (hargaInput) {
+        hargaInput.addEventListener('input', function() {
+          updateTotalOffer();
         });
       }
     });

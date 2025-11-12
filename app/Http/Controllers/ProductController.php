@@ -8,6 +8,7 @@ use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -67,8 +68,10 @@ class ProductController extends Controller
     public function detail($id)
     {
         $product = Product::findOrFail($id);
+        $user = Session::get('user');
+        $isOwner = isset($user['role']) && $user['role'] === 'owner';
 
-        return view('admin.products.detail', compact('product'));
+        return view('admin.products.detail', compact('product', 'isOwner'));
     }
 
     public function updateProductAction(Request $request, $id)
@@ -139,42 +142,114 @@ class ProductController extends Controller
         }
     }
 
-    public function updateMinPriceAction(Request $request, $id)
+    public function updateMinPricePerSizeAction(Request $request, $id)
     {
-        // Hanya owner yang boleh update min_price
-        if (Session::get('user')->role !== 'owner') {
+        $user = Session::get('user');
+        // Hanya owner yang boleh update min_price_per_size
+        if (!isset($user['role']) || $user['role'] !== 'owner') {
             return redirect()
-                ->route('admin.products.view')
-                ->with('error', 'Anda tidak memiliki akses untuk mengubah harga minimal.');
+                ->to('/admin/products/detail/' . $id)
+                ->with('error', 'Anda tidak memiliki akses untuk mengubah batas tawar per ukuran.');
         }
 
-        $request->validate(['min_price' => 'required|numeric|min:0']);
         $product = Product::findOrFail($id);
-        $product->min_price = $request->input('min_price');
+        $minPricePerSize = $request->input('min_price_per_size', []);
+        
+        // Filter out empty values dan convert to integer
+        $filteredPrices = [];
+        foreach ($minPricePerSize as $size => $price) {
+            if (!empty($price) && is_numeric($price)) {
+                $filteredPrices[$size] = (int) $price;
+            }
+        }
+        
+        // Jika semua kosong, set null untuk auto-calculate
+        if (empty($filteredPrices)) {
+            $product->min_price_per_size = null;
+        } else {
+            $product->min_price_per_size = $filteredPrices;
+        }
+        
         $product->save();
 
         return redirect()
-            ->route('admin.products.view')
-            ->with('success', 'Minimal price berhasil diupdate.');
+            ->to('/admin/products/detail/' . $id)
+            ->with('success', 'Batas tawar per ukuran berhasil diupdate.');
     }
 
     public function updateMinBuyingStockAction(Request $request, $id)
     {
+        $user = Session::get('user');
         // Hanya owner yang boleh update min_buying_stock
-        if (Session::get('user')->role !== 'owner') {
+        if (!isset($user['role']) || $user['role'] !== 'owner') {
             return redirect()
-                ->route('admin.products.view')
+                ->to('/admin/products/detail/' . $id)
                 ->with('error', 'Anda tidak memiliki akses untuk mengubah minimal quantity.');
         }
 
-        $request->validate(['min_buying_stock' => 'required|integer|min:1']);
+        $request->validate(['min_buying_stock' => 'required|integer|min:0']);
         $product = Product::findOrFail($id);
-        $product->min_buying_stock = $request->input('min_buying_stock');
+        $minBuyingStock = (int) $request->input('min_buying_stock');
+        $product->min_buying_stock = $minBuyingStock;
+        $product->save();
+
+        $message = $minBuyingStock === 0 
+            ? 'Fitur tawar menawar untuk produk ini telah dinonaktifkan.'
+            : 'Minimum quantity untuk tawar menawar berhasil diupdate.';
+
+        return redirect()
+            ->to('/admin/products/detail/' . $id)
+            ->with('success', $message);
+    }
+
+    public function updateSizePricesAction(Request $request, $id)
+    {
+        $user = Session::get('user');
+        // Hanya owner yang boleh update size_prices
+        if (!isset($user['role']) || $user['role'] !== 'owner') {
+            return redirect()
+                ->to('/admin/products/detail/' . $id)
+                ->with('error', 'Anda tidak memiliki akses untuk mengubah harga per ukuran.');
+        }
+
+        $product = Product::findOrFail($id);
+        $sizePrices = $request->input('size_prices', []);
+        
+        // Validasi: harga 2x3 wajib diisi
+        if (empty($sizePrices['2x3']) || !is_numeric($sizePrices['2x3'])) {
+            return redirect()
+                ->to('/admin/products/detail/' . $id)
+                ->with('error', 'Harga untuk ukuran 2x3 wajib diisi karena merupakan harga dasar.');
+        }
+        
+        // Filter out empty values dan convert to integer
+        $filteredPrices = [];
+        foreach ($sizePrices as $size => $price) {
+            if (!empty($price) && is_numeric($price)) {
+                $filteredPrices[$size] = (int) $price;
+            }
+        }
+        
+        // Pastikan 2x3 selalu ada
+        if (!isset($filteredPrices['2x3'])) {
+            $filteredPrices['2x3'] = (int) $sizePrices['2x3'];
+        }
+        
+        // Update harga dasar (price) dengan harga 2x3
+        $product->price = $filteredPrices['2x3'];
+        
+        // Jika hanya 2x3 yang diisi, set null untuk auto-calculate ukuran lain
+        if (count($filteredPrices) === 1 && isset($filteredPrices['2x3'])) {
+            $product->size_prices = null;
+        } else {
+            $product->size_prices = $filteredPrices;
+        }
+        
         $product->save();
 
         return redirect()
-            ->route('admin.products.view')
-            ->with('success', 'Minimal quantity untuk tawar menawar berhasil diupdate.');
+            ->to('/admin/products/detail/' . $id)
+            ->with('success', 'Harga per ukuran berhasil diupdate.');
     }
 
     /**

@@ -153,8 +153,9 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         });
         Route::match(['post', 'delete'], '/detail/{productId}/variants/{variantId}/delete', [ProductController::class, 'deleteVariantAction']);
 
-        Route::post('/detail/{id}/min-price', [ProductController::class, 'updateMinPriceAction']);
+        Route::post('/detail/{id}/min-price-per-size', [ProductController::class, 'updateMinPricePerSizeAction']);
         Route::post('/detail/{id}/min-buying-stock', [ProductController::class, 'updateMinBuyingStockAction']);
+        Route::post('/detail/{id}/size-prices', [ProductController::class, 'updateSizePricesAction']);
     });
 
     Route::prefix('settings')->group(function () {

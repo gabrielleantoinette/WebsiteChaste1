@@ -39,8 +39,15 @@
                 <h1 class="text-3xl font-bold text-gray-800">
                     {{ $product->name }}
                 </h1>
-                <p class="text-xl text-teal-600 font-semibold">
-                    Rp {{ $priceRange }}
+                <p class="text-xl text-teal-600 font-semibold" id="priceDisplay">
+                    @if(isset($sizeOptions) && count($sizeOptions) > 0)
+                        @php
+                            $defaultSize = $sizeOptions->firstWhere('size', '2x3') ?? $sizeOptions->first();
+                        @endphp
+                        Rp {{ number_format($defaultSize['price'] ?? 0, 0, ',', '.') }}
+                    @else
+                        Rp {{ $priceRange }}
+                    @endif
                     <span class="text-sm text-gray-500">/ unit</span>
                 </p>
                 <p class="text-sm text-yellow-600 bg-yellow-50 px-3 py-2 rounded-lg border border-pink-200">
@@ -96,6 +103,33 @@
                         </div>
                     </div>
 
+                    <!-- Subtotal Display -->
+                    <div class="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-700">Subtotal:</span>
+                            <span id="subtotalDisplay" class="text-lg font-bold text-teal-600">
+                                @if(isset($sizeOptions) && count($sizeOptions) > 0)
+                                    @php
+                                        $defaultSize = $sizeOptions->firstWhere('size', '2x3') ?? $sizeOptions->first();
+                                    @endphp
+                                    Rp {{ number_format($defaultSize['price'] ?? 0, 0, ',', '.') }}
+                                @else
+                                    Rp {{ number_format($product->price, 0, ',', '.') }}
+                                @endif
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1" id="subtotalDetail">
+                            @if(isset($sizeOptions) && count($sizeOptions) > 0)
+                                @php
+                                    $defaultSize = $sizeOptions->firstWhere('size', '2x3') ?? $sizeOptions->first();
+                                @endphp
+                                Rp {{ number_format($defaultSize['price'] ?? 0, 0, ',', '.') }} × 1 pcs
+                            @else
+                                Rp {{ number_format($product->price, 0, ',', '.') }} × 1 pcs
+                            @endif
+                        </p>
+                    </div>
+
                     <!-- Buttons -->
                     <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-3 sm:space-y-0">
                         <!-- Form Tambah ke Keranjang -->
@@ -111,10 +145,11 @@
                         </form>
                         
                         <!-- Form Tawar Harga -->
-                        @if($product->min_buying_stock && $product->min_buying_stock > 1)
-                            <div class="flex-1 text-center">
-                                <form action="{{ route('produk.negosiasi', $product) }}" method="GET" class="inline">
+                        <div class="flex-1">
+                            @if($product->min_buying_stock && $product->min_buying_stock > 0)
+                                <form action="{{ route('produk.negosiasi', $product) }}" method="GET" class="inline w-full">
                                     <input type="hidden" name="quantity" id="negosiasiQuantity" value="1">
+                                    <input type="hidden" name="selected_size" id="negosiasiSelectedSize" value="2x3">
                                     <button type="submit"
                                             id="tawarButton"
                                             class="w-full bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition">
@@ -124,16 +159,18 @@
                                 <p class="text-xs text-gray-500 mt-1" id="tawarInfo">
                                     Minimal {{ $product->min_buying_stock }} pcs untuk tawar menawar
                                 </p>
-                            </div>
-                        @else
-                            <form action="{{ route('produk.negosiasi', $product) }}" method="GET" class="flex-1">
-                                <input type="hidden" name="quantity" id="negosiasiQuantity2" value="1">
-                                <button type="submit"
-                                        class="w-full bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition">
+                            @else
+                                <button type="button"
+                                        id="tawarButton"
+                                        disabled
+                                        class="w-full bg-gray-200 text-gray-400 px-6 py-3 rounded-lg cursor-not-allowed">
                                     Tawar Harga
                                 </button>
-                            </form>
-                        @endif
+                                <p class="text-xs text-red-500 mt-1" id="tawarInfo">
+                                    Barang tidak dapat ditawar
+                                </p>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -217,12 +254,13 @@
     @include('layouts.footer')
 
     <script>
-        const minBuyingStock = {{ $product->min_buying_stock ?? 1 }};
+        const minBuyingStock = {{ $product->min_buying_stock ?? 0 }};
         
         // Initialize stock display on page load
         document.addEventListener('DOMContentLoaded', function() {
             updateStockDisplay();
             updatePriceDisplay();
+            updateSubtotal();
             
             // Add event listener for size selection change
             const sizeSelect = document.getElementById('sizeSelect');
@@ -230,6 +268,15 @@
                 sizeSelect.addEventListener('change', function() {
                     updatePriceDisplay();
                     updateCartForm();
+                    updateSubtotal();
+                });
+            }
+            
+            // Add event listener for quantity input
+            const qtyInput = document.getElementById('qtyInput');
+            if (qtyInput) {
+                qtyInput.addEventListener('input', function() {
+                    updateSubtotal();
                 });
             }
             
@@ -291,13 +338,37 @@
         function updatePriceDisplay() {
             const sizeSelect = document.getElementById('sizeSelect');
             const priceDisplay = document.getElementById('priceDisplay');
+            const qtyInput = document.getElementById('qtyInput');
             
             if (!sizeSelect || !priceDisplay) return;
             
             const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
-            const price = selectedOption ? parseInt(selectedOption.dataset.price) : 0;
+            const price = selectedOption ? parseFloat(selectedOption.dataset.price) : 0;
+            const quantity = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
             
             priceDisplay.innerHTML = `Rp ${price.toLocaleString('id-ID')} <span class="text-sm text-gray-500">/ unit</span>`;
+            
+            // Update subtotal
+            updateSubtotal();
+        }
+        
+        function updateSubtotal() {
+            const sizeSelect = document.getElementById('sizeSelect');
+            const qtyInput = document.getElementById('qtyInput');
+            const subtotalDisplay = document.getElementById('subtotalDisplay');
+            const subtotalDetail = document.getElementById('subtotalDetail');
+            
+            if (!sizeSelect || !qtyInput || !subtotalDisplay) return;
+            
+            const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+            const price = selectedOption ? parseFloat(selectedOption.dataset.price) : 0;
+            const quantity = parseInt(qtyInput.value) || 1;
+            const subtotal = price * quantity;
+            
+            subtotalDisplay.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+            if (subtotalDetail) {
+                subtotalDetail.textContent = `Rp ${price.toLocaleString('id-ID')} × ${quantity} pcs`;
+            }
         }
         
         function updateCartForm() {
@@ -333,6 +404,7 @@
                 alert(`Maksimal quantity: ${currentStock} unit (sesuai stok tersedia)`);
             }
             
+            updateSubtotal();
             checkTawarButton();
         }
         
@@ -353,6 +425,7 @@
             }
             
             input.value = val;
+            updateSubtotal();
             checkTawarButton();
         }
         
@@ -362,12 +435,14 @@
             const tawarButton = document.getElementById('tawarButton');
             const tawarInfo = document.getElementById('tawarInfo');
             const negosiasiQuantity = document.getElementById('negosiasiQuantity');
-            const negosiasiQuantity2 = document.getElementById('negosiasiQuantity2');
+            const negosiasiSelectedSize = document.getElementById('negosiasiSelectedSize');
             const cartQuantity = document.getElementById('cartQuantity');
             const cartVariantId = document.getElementById('cartVariantId');
+            const sizeSelect = document.getElementById('sizeSelect');
             
             const currentQty = parseInt(qtyInput.value) || 1;
             const currentVariant = variantSelect ? variantSelect.value : '';
+            const currentSize = sizeSelect ? sizeSelect.value : '2x3';
             
             // Get current stock for selected variant
             const selectedOption = variantSelect ? variantSelect.options[variantSelect.selectedIndex] : null;
@@ -377,26 +452,38 @@
             if (cartQuantity) cartQuantity.value = currentQty;
             if (cartVariantId) cartVariantId.value = currentVariant;
             
-            // Update quantity di form negosiasi
+            // Update quantity dan size di form negosiasi
             if (negosiasiQuantity) negosiasiQuantity.value = currentQty;
-            if (negosiasiQuantity2) negosiasiQuantity2.value = currentQty;
+            if (negosiasiSelectedSize) negosiasiSelectedSize.value = currentSize;
             
+            // Jika tidak ada min_buying_stock atau min_buying_stock = 0, disable button
             if (!tawarButton || !tawarInfo) return;
+            
+            if (minBuyingStock === 0 || !minBuyingStock) {
+                // Barang tidak dapat ditawar
+                tawarButton.disabled = true;
+                tawarButton.classList.remove('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
+                tawarButton.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+                tawarInfo.classList.remove('text-gray-500');
+                tawarInfo.classList.add('text-red-500');
+                tawarInfo.textContent = 'Barang tidak dapat ditawar';
+                return;
+            }
             
             // Check if quantity meets minimum requirement and stock is available
             if (currentQty >= minBuyingStock && currentStock >= currentQty) {
                 // Quantity dan stok cukup, enable tombol
+                tawarButton.disabled = false;
                 tawarButton.classList.remove('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
                 tawarButton.classList.add('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
-                tawarButton.style.pointerEvents = 'auto';
                 tawarInfo.classList.remove('text-red-500');
                 tawarInfo.classList.add('text-gray-500');
                 tawarInfo.textContent = `Minimal ${minBuyingStock} pcs untuk tawar menawar`;
             } else {
                 // Quantity atau stok tidak cukup, disable tombol
+                tawarButton.disabled = true;
                 tawarButton.classList.remove('bg-gray-300', 'text-gray-800', 'hover:bg-gray-400');
                 tawarButton.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
-                tawarButton.style.pointerEvents = 'none';
                 tawarInfo.classList.remove('text-gray-500');
                 tawarInfo.classList.add('text-red-500');
                 

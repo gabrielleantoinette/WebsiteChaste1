@@ -165,16 +165,10 @@ class CustomerController extends Controller
 
         // Add price range to each product
         $products->getCollection()->transform(function ($product) {
-            $pricePerM2 = $product->price / (2 * 3); // Assuming current price is for 2x3
-            $sizes = [
-                ['width' => 2, 'height' => 3],
-                ['width' => 3, 'height' => 4],
-                ['width' => 4, 'height' => 6],
-                ['width' => 6, 'height' => 8]
-            ];
+            $sizes = ['2x3', '3x4', '4x6', '6x8'];
             
-            $prices = collect($sizes)->map(function ($size) use ($pricePerM2) {
-                return $pricePerM2 * $size['width'] * $size['height'];
+            $prices = collect($sizes)->map(function ($size) use ($product) {
+                return $product->getPriceForSize($size);
             });
             
             $minPrice = $prices->min();
@@ -193,21 +187,13 @@ class CustomerController extends Controller
         $product = Product::find($id);
         $variants = ProductVariant::where('product_id', $id)->get();
 
-        // Calculate price per m2 from current product price (assuming it's for 2x3)
-        $pricePerM2 = $product ? $product->price / (2 * 3) : 0;
-        
-        // Build size options with calculated prices
-        $sizes = [
-            ['name' => '2x3', 'width' => 2, 'height' => 3],
-            ['name' => '3x4', 'width' => 3, 'height' => 4],
-            ['name' => '4x6', 'width' => 4, 'height' => 6],
-            ['name' => '6x8', 'width' => 6, 'height' => 8]
-        ];
+        // Build size options with prices (using getPriceForSize method)
+        $sizes = ['2x3', '3x4', '4x6', '6x8'];
 
-        $sizeOptions = collect($sizes)->map(function ($size) use ($pricePerM2) {
+        $sizeOptions = collect($sizes)->map(function ($size) use ($product) {
             return [
-                'size' => $size['name'],
-                'price' => $pricePerM2 * $size['width'] * $size['height'],
+                'size' => $size,
+                'price' => $product ? $product->getPriceForSize($size) : 0,
             ];
         });
 

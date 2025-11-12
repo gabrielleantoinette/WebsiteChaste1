@@ -96,16 +96,8 @@
                                 @elseif ($item->variant)
                                     <!-- Harga normal produk berdasarkan ukuran yang dipilih -->
                                     @php
-                                        $pricePerM2 = $item->variant->product->price / (2 * 3); // Assuming current price is for 2x3
-                                        $sizeMap = [
-                                            '2x3' => ['width' => 2, 'height' => 3],
-                                            '3x4' => ['width' => 3, 'height' => 4],
-                                            '4x6' => ['width' => 4, 'height' => 6],
-                                            '6x8' => ['width' => 6, 'height' => 8]
-                                        ];
                                         $selectedSize = $item->selected_size ?? '2x3';
-                                        $size = $sizeMap[$selectedSize] ?? $sizeMap['2x3'];
-                                        $calculatedPrice = $pricePerM2 * $size['width'] * $size['height'];
+                                        $calculatedPrice = $item->variant->product->getPriceForSize($selectedSize);
                                     @endphp
                                     <span class="text-teal-600">Rp {{ number_format($calculatedPrice * $item->quantity, 0, ',', '.') }}</span>
                                     <div class="text-xs text-gray-500">(Rp {{ number_format($calculatedPrice, 0, ',', '.') }} × <span id="item-qty-display-{{ $item->id }}">{{ $item->quantity }}</span>)</div>
@@ -182,16 +174,8 @@
                         {{ $item->harga_custom }}
                     @elseif ($item->variant)
                         @php
-                            $pricePerM2 = $item->variant->product->price / (2 * 3); // Assuming current price is for 2x3
-                            $sizeMap = [
-                                '2x3' => ['width' => 2, 'height' => 3],
-                                '3x4' => ['width' => 3, 'height' => 4],
-                                '4x6' => ['width' => 4, 'height' => 6],
-                                '6x8' => ['width' => 6, 'height' => 8]
-                            ];
                             $selectedSize = $item->selected_size ?? '2x3';
-                            $size = $sizeMap[$selectedSize] ?? $sizeMap['2x3'];
-                            $calculatedPrice = $pricePerM2 * $size['width'] * $size['height'];
+                            $calculatedPrice = $item->variant->product->getPriceForSize($selectedSize);
                         @endphp
                         {{ $calculatedPrice }}
                     @else

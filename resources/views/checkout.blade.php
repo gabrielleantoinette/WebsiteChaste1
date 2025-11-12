@@ -120,7 +120,7 @@
                                 
                                 <div class="text-right ml-4">
                                     @php
-                                        $itemPrice = $item->harga_custom ?? $item->product_price ?? 0;
+                                        $itemPrice = $item->calculated_price ?? $item->harga_custom ?? $item->product_price ?? 0;
                                         $itemTotal = $itemPrice * ($item->quantity ?? 1);
                                     @endphp
                                     <div class="text-lg font-bold text-teal-600">
@@ -129,6 +129,10 @@
                                     @if($item->harga_custom && str_contains($item->kebutuhan_custom ?? '', 'Hasil negosiasi'))
                                         <div class="text-xs text-gray-500">
                                             @ {{ number_format($item->harga_custom, 0, ',', '.') }}/pcs
+                                        </div>
+                                    @elseif(!$item->harga_custom)
+                                        <div class="text-xs text-gray-500">
+                                            @ {{ number_format($itemPrice, 0, ',', '.') }}/pcs
                                         </div>
                                     @endif
                                 </div>
