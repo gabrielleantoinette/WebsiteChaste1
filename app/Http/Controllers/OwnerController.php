@@ -32,9 +32,32 @@ class OwnerController extends Controller
         return view('admin.assign-driver.view', compact('pengirimanNormal', 'pengirimanRetur', 'drivers'));
     }
 
+    public function createAssignDriver($id)
+    {
+        $invoice = HInvoice::with('customer')->findOrFail($id);
+        $drivers = Employee::where('role', 'driver')->where('active', true)->get();
+        
+        return view('admin.assign-driver.create', compact('invoice', 'drivers'));
+    }
+
     public function assignDriver($id, Request $request)
     {
-        $invoice = HInvoice::with('customer')->find($id);
+        $request->validate([
+            'driver_id' => 'required|exists:employees,id'
+        ]);
+
+        $invoice = HInvoice::with('customer')->findOrFail($id);
+        
+        // Verify driver exists and is active
+        $driver = Employee::where('id', $request->driver_id)
+                          ->where('role', 'driver')
+                          ->where('active', true)
+                          ->first();
+        
+        if (!$driver) {
+            return redirect()->back()->with('error', 'Driver tidak ditemukan atau tidak aktif.');
+        }
+        
         $invoice->driver_id = $request->driver_id;
         
         // Beda status untuk pengiriman normal vs retur
@@ -73,7 +96,7 @@ class OwnerController extends Controller
         
         $invoice->save();
 
-        return redirect()->back()->with('success', 'Berhasil memilih driver');
+        return redirect()->route('admin.assign-driver.index')->with('success', 'Driver berhasil di-assign untuk pengiriman ini.');
     }
 
     public function transactionsIndex(Request $request)

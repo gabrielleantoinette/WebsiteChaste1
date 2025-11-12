@@ -228,6 +228,13 @@ class CustomerController extends Controller
             'beripenilaian' => 'diterima',
         ];
         $transactions = HInvoice::where('customer_id', $user['id'])
+            ->with([
+                'details' => function($query) {
+                    $query->orderBy('id', 'asc');
+                },
+                'details.product',
+                'details.variant'
+            ])
             ->when($request->filled('status'), function ($query) use ($request, $statusMap) {
                 $key = $request->status;
                 if (isset($statusMap[$key])) {
@@ -239,6 +246,18 @@ class CustomerController extends Controller
                     }
                 }
             })
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    // Search by invoice code
+                    $q->where('code', 'like', '%' . $search . '%')
+                      // Search by product name in invoice details
+                      ->orWhereHas('details.product', function ($productQuery) use ($search) {
+                          $productQuery->where('name', 'like', '%' . $search . '%');
+                      });
+                });
+            })
+            ->orderBy('created_at', 'desc')
             ->get();
         return view('transaction-list', compact('transactions'));
     }

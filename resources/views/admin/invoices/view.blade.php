@@ -39,7 +39,7 @@
                             <div class="py-3 px-4 space-y-4">
                                 <div class="space-y-2 border-b border-gray-200 pb-3">
                                     <h4 class="text-sm font-semibold text-gray-700">📄 Export PDF Transaksi</h4>
-                                    <a href="{{ route('invoices.export.pdf') }}"
+            <a href="{{ route('invoices.export.pdf') }}"
                                        class="block px-4 py-2 text-sm text-teal-700 bg-teal-50 border border-teal-100 rounded-lg hover:bg-teal-100 transition">
                                         Unduh Semua Transaksi
                                     </a>

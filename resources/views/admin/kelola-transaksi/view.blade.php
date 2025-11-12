@@ -374,11 +374,11 @@
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('downloadDropdown');
             const button = document.getElementById('downloadBtn');
-
+            
             if (!button.contains(event.target) && !dropdown.contains(event.target)) {
                 dropdown.classList.add('hidden');
             }
-        });
+});
 
         document.querySelectorAll('[data-report-range]').forEach(function(select) {
             const descriptionId = select.getAttribute('data-description-target');

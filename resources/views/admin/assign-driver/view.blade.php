@@ -178,7 +178,7 @@
                                     {{ $invoice->driver ? $invoice->driver->name : 'Belum ditugaskan' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ url('/admin/assign-driver/create/' . $invoice->id) }}" 
+                                    <a href="{{ route('admin.assign-driver.create', $invoice->id) }}" 
                                        class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 shadow-md hover:shadow-lg">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15" />
@@ -253,7 +253,7 @@
                                     {{ $invoice->driver ? $invoice->driver->name : 'Belum ditugaskan' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ url('/admin/assign-driver/create/' . $invoice->id) }}" 
+                                    <a href="{{ route('admin.assign-driver.create', $invoice->id) }}" 
                                        class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-medium rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15" />

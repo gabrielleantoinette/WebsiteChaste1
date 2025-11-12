@@ -242,8 +242,9 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
 
 
     Route::prefix('assign-driver')->group(function () {
-        Route::get('/', [OwnerController::class, 'viewAssignDriver']);
-        Route::post('/assign/{id}', [OwnerController::class, 'assignDriver']);
+        Route::get('/', [OwnerController::class, 'viewAssignDriver'])->name('admin.assign-driver.index');
+        Route::get('/create/{id}', [OwnerController::class, 'createAssignDriver'])->name('admin.assign-driver.create');
+        Route::post('/assign/{id}', [OwnerController::class, 'assignDriver'])->name('admin.assign-driver.assign');
     });
 
     Route::get('/transactions', [OwnerController::class, 'transactionsIndex'])->name('owner.transactions.index');
