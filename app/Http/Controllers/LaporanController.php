@@ -13,9 +13,28 @@ use Carbon\Carbon;
 use App\Models\DInvoice;
 use App\Support\ReportDateRange;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class LaporanController extends Controller
 {
+    public function index()
+    {
+        $user = Session::get('user');
+        $role = is_array($user) ? $user['role'] ?? '' : $user->role ?? '';
+        
+        $reportRangeOptions = ReportDateRange::options();
+        
+        // Redirect ke halaman export sesuai role
+        if ($role == 'owner') {
+            return view('admin.laporan.export-owner', compact('reportRangeOptions'));
+        } elseif ($role == 'admin') {
+            return view('admin.laporan.export-admin', compact('reportRangeOptions'));
+        } elseif ($role == 'gudang') {
+            return view('admin.laporan.export-gudang', compact('reportRangeOptions'));
+        }
+        
+        abort(403, 'Unauthorized');
+    }
     public function penjualanPDF(Request $request)
     {
         $periode = ReportDateRange::fromRequest($request, 'bulanan');

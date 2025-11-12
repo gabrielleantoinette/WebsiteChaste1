@@ -43,10 +43,6 @@
                     </a>
                 @endif
     
-                <a href="{{ route('keuangan.export.pdf', request()->only('filter', 'search')) }}"
-                   class="px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition shrink-0">
-                    📄 Export PDF
-                </a>
             </div>
         </form>
     </div>    

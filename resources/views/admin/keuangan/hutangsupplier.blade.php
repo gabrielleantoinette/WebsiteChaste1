@@ -45,10 +45,6 @@
                     + Tambah PO Manual
                 </a>
 
-                <a href="{{ route('keuangan.hutang.export.pdf', request()->only('search')) }}"
-                   class="px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition shrink-0">
-                    📄 Export PDF
-                </a>
             </div>
         </form>
     </div>

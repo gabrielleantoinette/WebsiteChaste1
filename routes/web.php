@@ -297,6 +297,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/export-pdf', [KeuanganController::class, 'exportPDF'])->name('keuangan.export.pdf');
         Route::get('/hutang/export-pdf', [HutangController::class, 'exportPDF'])->name('keuangan.hutang.export.pdf');
     });
+    Route::get('/laporan/export', [LaporanController::class, 'index'])->name('laporan.export');
     Route::prefix('laporan')->group(function () {
         Route::get('/penjualan/export-pdf', [LaporanController::class, 'penjualanPDF'])->name('laporan.penjualan.pdf');
         Route::get('/customer/export-pdf', [LaporanController::class, 'customerPDF'])->name('laporan.customer.pdf');

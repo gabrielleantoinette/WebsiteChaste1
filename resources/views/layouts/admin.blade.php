@@ -120,6 +120,7 @@
                 <a href="{{ url('/admin/invoices') }}" class="{{ request()->is('admin/invoices*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Penjualan</a>
                 <a href="{{ url('/admin/transactions') }}" class="{{ request()->is('admin/transactions*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Transaksi</a>
                 <a href="{{ url('/admin/assign-driver') }}" class="{{ request()->is('admin/assign-driver') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Atur Kurir</a>
+                <a href="{{ route('laporan.export') }}" class="{{ request()->is('admin/laporan/export*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Export Laporan</a>
 
                 <a href="{{ url('/admin/settings') }}" class="{{ request()->is('admin/settings*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Pengaturan Website</a>
             @endif
@@ -133,6 +134,7 @@
                 <a href="{{ url('/admin/invoices') }}" class="{{ request()->is('admin/invoices*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Penjualan</a>
                 <a href="{{ route('admin.retur.index') }}" class="{{ request()->routeIs('admin.retur.index') || request()->routeIs('admin.retur.detail') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Kelola Retur</a>
                 <a href="{{ route('admin.work-orders.index') }}" class="{{ request()->routeIs('admin.work-orders*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Surat Perintah Kerja</a>
+                <a href="{{ route('laporan.export') }}" class="{{ request()->is('admin/laporan/export*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Export Laporan</a>
             @endif
 
             @if ($role == 'keuangan')
@@ -142,6 +144,10 @@
                     Hutang Supplier
                 </a>
                 <a href="{{ route('keuangan.hutang.create') }}" class="{{ request()->is('admin/keuangan/hutang/create*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Buat Purchase Order</a>
+            @endif
+
+            @if ($role == 'gudang')
+                <a href="{{ route('laporan.export') }}" class="{{ request()->is('admin/laporan/export*') ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-100' }} px-4 py-2 rounded">Export Laporan</a>
             @endif
         </nav>
 

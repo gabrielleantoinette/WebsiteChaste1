@@ -20,10 +20,6 @@
                         Tambah Pembeli
             </a>
 
-            <a href="{{ route('laporan.customer.pdf') }}"
-                       class="inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-medium rounded-lg hover:bg-white/30 transition-all duration-300 shadow-lg border border-white/20">
-                        📄 Export Laporan
-                    </a>
                 </div>
             </div>
         </div>
