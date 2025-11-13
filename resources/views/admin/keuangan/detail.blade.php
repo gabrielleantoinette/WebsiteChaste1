@@ -20,15 +20,14 @@
         <div class="mb-6">
             <strong>Bukti Transfer:</strong><br>
             @php
-                use Illuminate\Support\Facades\Storage;
                 // Cek apakah path sudah mengandung 'storage/' atau belum
                 $proofPath = $invoice->transfer_proof;
                 if (!str_starts_with($proofPath, 'storage/')) {
                     $proofPath = 'storage/' . $proofPath;
                 }
                 // Gunakan Storage::url() sebagai fallback jika asset() tidak bekerja
-                $imageUrl = Storage::disk('public')->exists($invoice->transfer_proof) 
-                    ? Storage::disk('public')->url($invoice->transfer_proof)
+                $imageUrl = \Illuminate\Support\Facades\Storage::disk('public')->exists($invoice->transfer_proof) 
+                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($invoice->transfer_proof)
                     : asset($proofPath);
             @endphp
             <a href="{{ $imageUrl }}" target="_blank" class="inline-block mt-2">

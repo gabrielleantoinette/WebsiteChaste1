@@ -70,15 +70,14 @@
                         <h3 class="text-md font-semibold text-green-800 mb-2">✅ Foto Bukti Kualitas Sudah Diupload</h3>
                         <div class="mb-3">
                             @php
-                                use Illuminate\Support\Facades\Storage;
                                 // Cek apakah path sudah mengandung 'storage/' atau belum
                                 $proofPath = $invoice->quality_proof_photo;
                                 if (!str_starts_with($proofPath, 'storage/')) {
                                     $proofPath = 'storage/' . $proofPath;
                                 }
                                 // Gunakan Storage::url() sebagai fallback jika asset() tidak bekerja
-                                $imageUrl = Storage::disk('public')->exists($invoice->quality_proof_photo) 
-                                    ? Storage::disk('public')->url($invoice->quality_proof_photo)
+                                $imageUrl = \Illuminate\Support\Facades\Storage::disk('public')->exists($invoice->quality_proof_photo) 
+                                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($invoice->quality_proof_photo)
                                     : asset($proofPath);
                             @endphp
                             <a href="{{ $imageUrl }}" target="_blank" class="inline-block">
