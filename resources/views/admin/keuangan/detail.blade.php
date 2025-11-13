@@ -20,20 +20,54 @@
         <div class="mb-6">
             <strong>Bukti Transfer:</strong><br>
             @php
-                // Cek apakah path sudah mengandung 'storage/' atau belum
                 $proofPath = $invoice->transfer_proof;
-                if (!str_starts_with($proofPath, 'storage/')) {
-                    $proofPath = 'storage/' . $proofPath;
+                $imageUrl = null;
+                
+                // Method 1: Coba Storage::url() dulu (paling reliable)
+                if ($proofPath) {
+                    try {
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($proofPath)) {
+                            $imageUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($proofPath);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning('Storage::url() failed', ['path' => $proofPath, 'error' => $e->getMessage()]);
+                    }
                 }
-                // Gunakan Storage::url() sebagai fallback jika asset() tidak bekerja
-                $imageUrl = \Illuminate\Support\Facades\Storage::disk('public')->exists($invoice->transfer_proof) 
-                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($invoice->transfer_proof)
-                    : asset($proofPath);
+                
+                // Method 2: Jika Storage::url() gagal, coba dengan asset()
+                if (!$imageUrl && $proofPath) {
+                    // Pastikan path dimulai dengan 'storage/'
+                    $assetPath = $proofPath;
+                    if (!str_starts_with($assetPath, 'storage/')) {
+                        $assetPath = 'storage/' . ltrim($assetPath, '/');
+                    }
+                    $imageUrl = asset($assetPath);
+                }
+                
+                // Method 3: Fallback ke path langsung jika masih gagal
+                if (!$imageUrl && $proofPath) {
+                    // Coba dengan path relatif dari public
+                    $directPath = 'storage/' . ltrim($proofPath, '/');
+                    if (file_exists(public_path($directPath))) {
+                        $imageUrl = url($directPath);
+                    }
+                }
+                
+                // Method 4: Jika semua gagal, gunakan path asli dari database
+                if (!$imageUrl) {
+                    $imageUrl = $proofPath ? url('storage/' . ltrim($proofPath, '/')) : '#';
+                }
             @endphp
             <a href="{{ $imageUrl }}" target="_blank" class="inline-block mt-2">
-                <img src="{{ $imageUrl }}" alt="Bukti Transfer" class="w-64 border rounded hover:opacity-80 transition cursor-pointer">
+                <img src="{{ $imageUrl }}" 
+                     alt="Bukti Transfer" 
+                     class="w-64 border rounded hover:opacity-80 transition cursor-pointer"
+                     onerror="this.onerror=null; this.src='{{ asset('images/gulungan-terpal.png') }}'; this.alt='Gambar tidak dapat dimuat'; this.style.border='2px dashed #ccc'; this.style.padding='20px';">
             </a>
             <p class="text-xs text-gray-500 mt-1">Klik gambar untuk melihat ukuran penuh</p>
+            @if($proofPath)
+            <p class="text-xs text-gray-400 mt-1">Path: {{ $proofPath }}</p>
+            @endif
         </div>
     @endif
     @if($invoice->status === 'Menunggu Konfirmasi Pembayaran')
