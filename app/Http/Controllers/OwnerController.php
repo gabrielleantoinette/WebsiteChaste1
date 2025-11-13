@@ -91,6 +91,14 @@ class OwnerController extends Controller
             // Cek apakah menggunakan ekspedisi atau kurir perusahaan
             if ($invoice->shipping_courier && $invoice->shipping_courier !== 'kurir') {
                 // Jika ekspedisi, buat order di Biteship untuk mendapatkan waybill ID
+                \Log::info('Creating Biteship order for expedition', [
+                    'invoice_id' => $invoice->id,
+                    'invoice_code' => $invoice->code,
+                    'shipping_courier' => $invoice->shipping_courier,
+                    'shipping_service' => $invoice->shipping_service,
+                    'address' => $invoice->address
+                ]);
+                
                 try {
                     $biteshipService = app(\App\Services\BiteshipService::class);
                     
@@ -98,6 +106,12 @@ class OwnerController extends Controller
                     $originArea = $biteshipService->searchArea('Surabaya');
                     $destinationCity = $this->extractCityFromAddress($invoice->address);
                     $destinationArea = $biteshipService->searchArea($destinationCity);
+                    
+                    \Log::info('Biteship area search results', [
+                        'origin_area' => $originArea ? ['id' => $originArea['id'], 'name' => $originArea['name'] ?? null] : null,
+                        'destination_city' => $destinationCity,
+                        'destination_area' => $destinationArea ? ['id' => $destinationArea['id'], 'name' => $destinationArea['name'] ?? null] : null
+                    ]);
                     
                     if ($originArea && $destinationArea) {
                         // Hitung total berat (estimasi 1kg per item atau minimal 1kg)
@@ -130,6 +144,44 @@ class OwnerController extends Controller
                             ];
                         }
                         
+                        // Coba ambil service_code dari getRates untuk mendapatkan format yang benar
+                        $courierType = null;
+                        $rates = $biteshipService->getRates(
+                            $originArea['id'],
+                            $destinationArea['id'],
+                            $totalWeight,
+                            [strtolower($invoice->shipping_courier)]
+                        );
+                        
+                        // Cari service_code yang sesuai dengan shipping_service
+                        foreach ($rates as $rate) {
+                            $serviceName = $rate['courier_service_name'] ?? '';
+                            if (strcasecmp($serviceName, $invoice->shipping_service) === 0 || 
+                                str_contains(strtolower($serviceName), strtolower($invoice->shipping_service))) {
+                                $courierType = $rate['courier_service_code'] ?? $rate['type'] ?? null;
+                                \Log::info('Found matching service code from getRates', [
+                                    'service_name' => $serviceName,
+                                    'service_code' => $courierType,
+                                    'rate_keys' => array_keys($rate ?? [])
+                                ]);
+                                break;
+                            }
+                        }
+                        
+                        // Jika tidak ditemukan, gunakan mapping
+                        if (!$courierType) {
+                            $courierType = $this->mapShippingServiceToBiteship(
+                                $invoice->shipping_service, 
+                                strtolower($invoice->shipping_courier)
+                            );
+                            
+                            \Log::info('Using mapped shipping service to Biteship format', [
+                                'original_service' => $invoice->shipping_service,
+                                'courier' => $invoice->shipping_courier,
+                                'mapped_courier_type' => $courierType
+                            ]);
+                        }
+                        
                         // Buat order di Biteship
                         $orderData = [
                             'origin_contact_name' => 'Chaste Gemilang Mandiri',
@@ -141,8 +193,8 @@ class OwnerController extends Controller
                             'destination_address' => $invoice->address,
                             'destination_area_id' => $destinationArea['id'],
                             'courier_company' => strtolower($invoice->shipping_courier), // jne, pos, tiki, dll
-                            'courier_type' => $invoice->shipping_service ?? 'REG',
-                            'delivery_type' => 'later',
+                            'courier_type' => $courierType,
+                            'delivery_type' => 'now', // Gunakan 'now' untuk pengiriman langsung
                             'items' => $items
                         ];
                         
@@ -161,12 +213,14 @@ class OwnerController extends Controller
                                 $invoice->tracking_number = $waybillId;
                                 \Log::info('Biteship waybill ID saved to invoice', [
                                     'invoice_id' => $invoice->id,
-                                    'waybill_id' => $waybillId
+                                    'waybill_id' => $waybillId,
+                                    'before_save' => $invoice->getOriginal('tracking_number')
                                 ]);
                             } else {
                                 \Log::warning('Biteship order created but waybill ID not available yet', [
                                     'invoice_id' => $invoice->id,
-                                    'biteship_order_id' => $biteshipOrder['id'] ?? null
+                                    'biteship_order_id' => $biteshipOrder['id'] ?? null,
+                                    'full_response' => $biteshipOrder
                                 ]);
                             }
                         } else {
@@ -216,8 +270,105 @@ class OwnerController extends Controller
         }
         
         $invoice->save();
+        
+        // Log setelah save untuk memastikan tracking_number tersimpan
+        $invoice->refresh();
+        \Log::info('Invoice saved after assign driver', [
+            'invoice_id' => $invoice->id,
+            'tracking_number' => $invoice->tracking_number,
+            'status' => $invoice->status,
+            'shipping_courier' => $invoice->shipping_courier
+        ]);
 
         return redirect()->route('admin.assign-driver.index')->with('success', 'Driver berhasil di-assign untuk pengiriman ini.');
+    }
+
+    /**
+     * Map shipping service name to Biteship courier type format
+     * 
+     * @param string $serviceName Service name from database (e.g., "Reguler", "REG", "OKE", etc.)
+     * @param string $courier Courier code (jne, pos, tiki, etc.)
+     * @return string Biteship courier type format
+     */
+    private function mapShippingServiceToBiteship($serviceName, $courier)
+    {
+        if (!$serviceName) {
+            return 'reg'; // Default (lowercase)
+        }
+
+        $serviceNameUpper = strtoupper(trim($serviceName));
+        
+        // Mapping untuk JNE (gunakan lowercase karena Biteship menggunakan lowercase)
+        if ($courier === 'jne') {
+            $jneMapping = [
+                'REGULER' => 'reg',
+                'REG' => 'reg',
+                'OKE' => 'oke',
+                'YES' => 'yes',
+                'JTR' => 'jtr',
+                'JTR250' => 'jtr250',
+                'JTR150' => 'jtr150',
+                'JTR18' => 'jtr18',
+                'JTR250Y' => 'jtr250y',
+                'JTR150Y' => 'jtr150y',
+                'JTR74' => 'jtr74',
+                'JTR74Y' => 'jtr74y',
+                'JTRLITE' => 'jtrlite',
+                'JTRLITEY' => 'jtrlitey',
+            ];
+            
+            if (isset($jneMapping[$serviceNameUpper])) {
+                return $jneMapping[$serviceNameUpper];
+            }
+            
+            // Jika mengandung kata "reguler" atau "regular"
+            if (str_contains($serviceNameUpper, 'REGULER') || str_contains($serviceNameUpper, 'REGULAR')) {
+                return 'reg';
+            }
+        }
+        
+        // Mapping untuk POS (gunakan lowercase)
+        if ($courier === 'pos') {
+            $posMapping = [
+                'REGULER' => 'reg',
+                'REG' => 'reg',
+                'KILAT' => 'kilat',
+                'EXPRESS' => 'express',
+                'SURAT KILAT KHUSUS' => 'surat kilat khusus',
+            ];
+            
+            if (isset($posMapping[$serviceNameUpper])) {
+                return $posMapping[$serviceNameUpper];
+            }
+        }
+        
+        // Mapping untuk TIKI (gunakan lowercase)
+        if ($courier === 'tiki') {
+            $tikiMapping = [
+                'REGULER' => 'reg',
+                'REG' => 'reg',
+                'ECO' => 'eco',
+                'ONS' => 'ons',
+                'HDS' => 'hds',
+            ];
+            
+            if (isset($tikiMapping[$serviceNameUpper])) {
+                return $tikiMapping[$serviceNameUpper];
+            }
+        }
+        
+        // Jika sudah dalam format lowercase, return as is
+        if (preg_match('/^[a-z0-9]+$/', strtolower($serviceName))) {
+            return strtolower($serviceName);
+        }
+        
+        // Default ke reg jika tidak ditemukan mapping
+        \Log::warning('Unknown shipping service format, using reg as default', [
+            'service_name' => $serviceName,
+            'courier' => $courier
+        ]);
+        
+        return 'reg';
     }
 
     /**

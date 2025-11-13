@@ -168,13 +168,29 @@ class BiteshipService
 
             if ($response->successful()) {
                 $data = $response->json();
+                
+                // Log detail response untuk debugging
                 Log::info('Biteship getRates response', [
                     'has_pricing' => isset($data['pricing']),
                     'pricing_count' => isset($data['pricing']) ? count($data['pricing']) : 0,
-                    'response_keys' => array_keys($data ?? [])
+                    'response_keys' => array_keys($data ?? []),
+                    'pricing_sample' => isset($data['pricing']) && !empty($data['pricing']) ? $data['pricing'][0] : null
                 ]);
                 
                 if (isset($data['pricing']) && !empty($data['pricing'])) {
+                    // Log detail setiap pricing untuk debugging
+                    foreach ($data['pricing'] as $index => $pricing) {
+                        Log::info("Biteship pricing #{$index}", [
+                            'courier_code' => $pricing['courier_code'] ?? null,
+                            'courier_name' => $pricing['courier_name'] ?? null,
+                            'courier_service_name' => $pricing['courier_service_name'] ?? null,
+                            'courier_service_type' => $pricing['courier_service_type'] ?? null,
+                            'price' => $pricing['price'] ?? null,
+                            'duration' => $pricing['duration'] ?? null,
+                            'available_keys' => array_keys($pricing ?? [])
+                        ]);
+                    }
+                    
                     return $data['pricing'];
                 }
                 
@@ -233,6 +249,15 @@ class BiteshipService
             $courierCode = strtolower($rate['courier_code'] ?? 'unknown');
             $courierName = $rate['courier_name'] ?? strtoupper($courierCode);
             
+            // Log untuk debugging
+            Log::info('Processing rate', [
+                'courier_code' => $courierCode,
+                'courier_name' => $courierName,
+                'service_name' => $rate['courier_service_name'] ?? null,
+                'price' => $rate['price'] ?? null,
+                'rate_keys' => array_keys($rate ?? [])
+            ]);
+            
             if (!isset($groupedRates[$courierCode])) {
                 $groupedRates[$courierCode] = [
                     'courier' => $courierCode,
@@ -241,17 +266,34 @@ class BiteshipService
                 ];
             }
             
+            // Pastikan service name unik (jika ada duplikat, tambahkan identifier)
+            $serviceName = $rate['courier_service_name'] ?? $rate['courier_service_type'] ?? 'Standard';
+            $serviceType = $rate['courier_service_type'] ?? '';
+            $serviceCode = $rate['courier_service_code'] ?? strtolower($serviceName); // Gunakan courier_service_code jika ada
+            $price = $rate['price'] ?? 0;
+            $duration = $rate['duration'] ?? '-';
+            
             $groupedRates[$courierCode]['services'][] = [
-                'service' => $rate['courier_service_name'] ?? 'Standard',
-                'description' => $rate['courier_service_type'] ?? '',
+                'service' => $serviceName,
+                'service_code' => $serviceCode, // Tambahkan service_code untuk createOrder
+                'description' => $serviceType,
                 'cost' => [
                     [
-                        'value' => $rate['price'] ?? 0,
-                        'etd' => $rate['duration'] ?? '-'
+                        'value' => $price,
+                        'etd' => $duration
                     ]
                 ]
             ];
         }
+        
+        // Log hasil grouping
+        Log::info('Grouped rates result', [
+            'total_couriers' => count($groupedRates),
+            'couriers' => array_keys($groupedRates),
+            'services_per_courier' => array_map(function($courier) {
+                return count($courier['services']);
+            }, $groupedRates)
+        ]);
         
         return array_values($groupedRates);
     }
@@ -328,24 +370,30 @@ class BiteshipService
                 ]);
 
                 // Cek berbagai kemungkinan field untuk waybill ID
-                $waybillId = $data['waybill_id'] ?? 
+                // Struktur response: courier.waybill_id atau courier.tracking_id
+                $waybillId = $data['courier']['waybill_id'] ?? 
+                            $data['courier']['tracking_id'] ?? 
+                            $data['waybill_id'] ?? 
                             $data['waybill_number'] ?? 
                             $data['tracking_id'] ?? 
                             $data['tracking_number'] ?? 
-                            ($data['order'] && isset($data['order']['waybill_id']) ? $data['order']['waybill_id'] : null) ??
                             null;
 
                 if ($waybillId) {
+                    $sourceField = isset($data['courier']['waybill_id']) ? 'courier.waybill_id' : 
+                                  (isset($data['courier']['tracking_id']) ? 'courier.tracking_id' : 
+                                  (isset($data['waybill_id']) ? 'waybill_id' : 
+                                  (isset($data['waybill_number']) ? 'waybill_number' : 
+                                  (isset($data['tracking_id']) ? 'tracking_id' : 'tracking_number'))));
+                    
                     Log::info('Biteship waybill ID found', [
                         'waybill_id' => $waybillId,
-                        'source_field' => isset($data['waybill_id']) ? 'waybill_id' : 
-                                         (isset($data['waybill_number']) ? 'waybill_number' : 
-                                         (isset($data['tracking_id']) ? 'tracking_id' : 
-                                         (isset($data['tracking_number']) ? 'tracking_number' : 'order.waybill_id')))
+                        'source_field' => $sourceField
                     ]);
                 } else {
                     Log::warning('Biteship waybill ID not found in response', [
                         'available_fields' => array_keys($data ?? []),
+                        'courier_fields' => isset($data['courier']) ? array_keys($data['courier']) : null,
                         'note' => 'Waybill ID mungkin akan tersedia setelah order diproses atau status berubah'
                     ]);
                 }
@@ -382,11 +430,13 @@ class BiteshipService
         }
 
         // Cek berbagai kemungkinan field untuk waybill ID
-        return $orderResponse['waybill_id'] ?? 
+        // Prioritas: courier.waybill_id > courier.tracking_id > root level fields
+        return $orderResponse['courier']['waybill_id'] ?? 
+               $orderResponse['courier']['tracking_id'] ?? 
+               $orderResponse['waybill_id'] ?? 
                $orderResponse['waybill_number'] ?? 
                $orderResponse['tracking_id'] ?? 
                $orderResponse['tracking_number'] ?? 
-               ($orderResponse['order'] && isset($orderResponse['order']['waybill_id']) ? $orderResponse['order']['waybill_id'] : null) ??
                null;
     }
 

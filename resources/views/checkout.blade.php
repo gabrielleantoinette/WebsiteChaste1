@@ -322,6 +322,7 @@
                 <input type="hidden" id="shippingMethodValue" name="shipping_method_value" value="">
                 <input type="hidden" id="shippingCourierValue" name="shipping_courier" value="">
                 <input type="hidden" id="shippingServiceValue" name="shipping_service" value="">
+                <input type="hidden" id="shippingServiceCodeValue" name="shipping_service_code" value="">
             </section>
 
             <!-- Section Metode Pembayaran -->
@@ -588,7 +589,24 @@
             .then(data => {
                 loadingEl.classList.add('hidden');
                 
+                console.log('Shipping API Response:', data);
+                
                 if (data.success) {
+                    console.log('Couriers data:', data.couriers);
+                    console.log('Total couriers:', data.couriers ? data.couriers.length : 0);
+                    
+                    // Log detail setiap courier
+                    if (data.couriers && Array.isArray(data.couriers)) {
+                        data.couriers.forEach((courier, index) => {
+                            console.log(`Courier #${index}:`, {
+                                name: courier.courier_name,
+                                code: courier.courier,
+                                services_count: courier.services ? courier.services.length : 0,
+                                services: courier.services
+                            });
+                        });
+                    }
+                    
                     displayShippingOptions(data.couriers, data.destination_city);
                 } else {
                     console.error('Biteship API Error:', data);
@@ -607,7 +625,14 @@
             const container = document.getElementById('shippingOptionsList');
             container.innerHTML = '';
 
-            if (couriers.length === 0) {
+            console.log('displayShippingOptions called with:', {
+                couriers: couriers,
+                couriers_length: couriers ? couriers.length : 0,
+                destinationCity: destinationCity
+            });
+
+            if (!couriers || couriers.length === 0) {
+                console.warn('No couriers available');
                 showShippingError('Tidak ada layanan pengiriman tersedia untuk tujuan ini.');
                 return;
             }
@@ -637,6 +662,7 @@
                     const serviceCost = service.cost[0].value;
                     const serviceEtd = service.cost[0].etd || '-';
                     const serviceName = service.service;
+                    const serviceCode = service.service_code || serviceName.toLowerCase(); // Gunakan service_code jika ada
                     const serviceDescription = service.description || '';
 
                     const label = document.createElement('label');
@@ -648,7 +674,8 @@
                                data-cost="${serviceCost}"
                                data-courier="${courier.courier}"
                                data-service="${serviceName}"
-                               onclick="updateShippingCost(${serviceCost}, '${courier.courier}', '${serviceName}')">
+                               data-service-code="${serviceCode}"
+                               onclick="updateShippingCost(${serviceCost}, '${courier.courier}', '${serviceName}', '${serviceCode}')">
                         <div class="flex-1">
                             <div class="font-semibold text-gray-800">${courier.courier_name} - ${serviceName}</div>
                             <div class="text-xs text-gray-600">${serviceDescription || 'Estimasi: ' + serviceEtd}</div>
@@ -718,11 +745,12 @@
             }
         }
 
-        function updateShippingCost(cost, courier = '', service = '') {
+        function updateShippingCost(cost, courier = '', service = '', serviceCode = '') {
             document.getElementById('shippingCost').innerText = formatRupiah(cost);
             document.getElementById('shippingCostValue').value = cost;
             document.getElementById('shippingCourierValue').value = courier;
             document.getElementById('shippingServiceValue').value = service;
+            document.getElementById('shippingServiceCodeValue').value = serviceCode || service.toLowerCase();
             updateTotal(cost);
         }
 
