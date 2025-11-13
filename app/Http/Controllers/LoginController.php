@@ -35,7 +35,7 @@ class LoginController extends Controller
                 }
                 return redirect('/admin');
             } else {
-                return back()->with('error', 'Password salah.');
+                return back()->with('error', 'Password yang Anda masukkan salah. Silakan coba lagi.');
             }
         }
 
@@ -44,7 +44,11 @@ class LoginController extends Controller
 
         $customer = Customer::where('email', $credentials['email'])->first();
 
-        if ($customer && $credentials['password'] === $customer->password) {
+        if (!$customer) {
+            return back()->withErrors(['email' => 'Email tidak terdaftar. Silakan periksa kembali email Anda atau daftar akun baru.']);
+        }
+
+        if ($credentials['password'] === $customer->password) {
             session([
                 'user' => [
                     'id' => $customer->id,
@@ -58,7 +62,7 @@ class LoginController extends Controller
             ]);
             return redirect('/produk');
         } else {
-            return back()->withErrors(['email' => 'Email atau password salah.']);
+            return back()->withErrors(['email' => 'Password yang Anda masukkan salah. Silakan coba lagi.']);
         }
     }
 

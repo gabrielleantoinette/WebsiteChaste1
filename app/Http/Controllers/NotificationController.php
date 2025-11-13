@@ -240,7 +240,7 @@ class NotificationController extends Controller
             return response()->json(['count' => 0]);
         }
 
-        if ($user instanceof \App\Models\Employee && ($user->role === 'admin' || $user->role === 'keuangan')) {
+        if ($user instanceof \App\Models\Employee && in_array($user->role, ['admin', 'keuangan', 'owner'])) {
             $count = Notification::where('recipient_type', 'employee')
                 ->where('recipient_role', $user->role)
                 ->where('is_read', false)
@@ -264,8 +264,8 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         
-        // Untuk admin dan keuangan, ambil semua notifikasi role mereka
-        if ($user instanceof \App\Models\Employee && ($user->role === 'admin' || $user->role === 'keuangan')) {
+        // Untuk admin, keuangan, dan owner, ambil semua notifikasi role mereka
+        if ($user instanceof \App\Models\Employee && in_array($user->role, ['admin', 'keuangan', 'owner'])) {
             $notifications = Notification::where('recipient_type', 'employee')
                 ->where('recipient_role', $user->role)
                 ->orderBy('created_at', 'desc')

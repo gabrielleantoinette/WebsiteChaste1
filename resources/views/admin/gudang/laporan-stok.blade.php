@@ -46,9 +46,19 @@
                     <option value="tahunan" {{ $periode == 'tahunan' ? 'selected' : '' }}>Tahunan</option>
                 </select>
             </div>
-            <div class="flex-1 min-w-[200px]">
+            <div class="flex-1 min-w-[200px]" id="tanggalInput">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tanggal</label>
                 <input type="date" name="tanggal" value="{{ $tanggal }}" 
+                       class="w-full border border-gray-300 dark:border-gray-600 dark:bg-[#2c2c2c] dark:text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400">
+            </div>
+            <div class="flex-1 min-w-[200px] hidden" id="bulanInput">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bulan</label>
+                <input type="month" name="bulan" value="{{ $bulan ?? now()->format('Y-m') }}" 
+                       class="w-full border border-gray-300 dark:border-gray-600 dark:bg-[#2c2c2c] dark:text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400">
+            </div>
+            <div class="flex-1 min-w-[200px] hidden" id="tahunInput">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tahun</label>
+                <input type="number" name="tahun" value="{{ $tahun ?? now()->format('Y') }}" min="2020" max="2100"
                        class="w-full border border-gray-300 dark:border-gray-600 dark:bg-[#2c2c2c] dark:text-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400">
             </div>
             <div>
@@ -57,7 +67,44 @@
                     Filter
                 </button>
             </div>
+            <div>
+                <a href="{{ route('gudang.laporan-stok.pdf', ['periode' => $periode, 'tanggal' => $tanggal, 'bulan' => $bulan ?? now()->format('Y-m'), 'tahun' => $tahun ?? now()->format('Y')]) }}" 
+                   target="_blank"
+                   class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition shadow-sm inline-flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Export PDF
+                </a>
+            </div>
         </form>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const periodeSelect = document.querySelector('select[name="periode"]');
+                const tanggalInput = document.getElementById('tanggalInput');
+                const bulanInput = document.getElementById('bulanInput');
+                const tahunInput = document.getElementById('tahunInput');
+                
+                function toggleInputs() {
+                    const periode = periodeSelect.value;
+                    tanggalInput.classList.add('hidden');
+                    bulanInput.classList.add('hidden');
+                    tahunInput.classList.add('hidden');
+                    
+                    if (periode === 'harian' || periode === 'mingguan') {
+                        tanggalInput.classList.remove('hidden');
+                    } else if (periode === 'bulanan') {
+                        bulanInput.classList.remove('hidden');
+                    } else if (periode === 'tahunan') {
+                        tahunInput.classList.remove('hidden');
+                    }
+                }
+                
+                periodeSelect.addEventListener('change', toggleInputs);
+                toggleInputs(); // Initial call
+            });
+        </script>
         
         <div class="mt-4 p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
             <p class="text-sm text-gray-700 dark:text-gray-300">
@@ -122,75 +169,6 @@
             <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">
                 {{ number_format($stokSaatIni->sum('stok') + $stokMasuk->sum(function($item) { return collect($item['items'])->sum('qty'); }) - $stokKeluar->sum(function($item) { return collect($item['items'])->sum('qty'); }), 0, ',', '.') }}
             </p>
-        </div>
-    </div>
-
-    {{-- Stok Saat Ini --}}
-    <div class="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg mb-8">
-        <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-6">Stok Saat Ini</h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full table-auto data-table text-sm border border-gray-200 dark:border-gray-700">
-                <thead class="bg-gray-100 dark:bg-[#004d4d] text-gray-700 dark:text-[#ccf2f2]">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Nama Produk/Material</th>
-                        <th class="px-4 py-3 text-left font-semibold">Ukuran</th>
-                        <th class="px-4 py-3 text-left font-semibold">Kategori</th>
-                        <th class="px-4 py-3 text-left font-semibold">Tipe</th>
-                        <th class="px-4 py-3 text-left font-semibold">Total Stok</th>
-                        <th class="px-4 py-3 text-left font-semibold">Detail Variant</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($stokSaatIni as $item)
-                        <tr class="border-b border-gray-100 dark:border-gray-700 @if($loop->odd) bg-gray-50 dark:bg-[#2c2c2c] @endif hover:bg-teal-50 dark:hover:bg-[#003333] transition">
-                            <td class="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">{{ $item['nama'] }}</td>
-                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $item['ukuran'] ?? '-' }}</td>
-                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                                <span class="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">
-                                    {{ $item['kategori'] ?? '-' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold 
-                                    {{ $item['tipe'] == 'Produk Regular' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' }}">
-                                    {{ $item['tipe'] }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 font-bold text-lg">
-                                <span class="{{ $item['stok'] <= 10 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
-                                    {{ number_format($item['stok'], 0, ',', '.') }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="space-y-1">
-                                    @forelse ($item['variants'] ?? [] as $variant)
-                                        <div class="flex justify-between items-center text-xs">
-                                            <span class="font-medium text-gray-700 dark:text-gray-300">{{ $variant['warna'] ?? '-' }}</span>
-                                            <span class="px-2 py-1 rounded text-xs font-semibold {{ ($variant['stok'] ?? 0) <= 10 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' }}">
-                                                {{ $variant['stok'] ?? 0 }}
-                                            </span>
-                                        </div>
-                                    @empty
-                                        <span class="text-gray-500 dark:text-gray-400 text-xs">Tidak ada variant</span>
-                                    @endforelse
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center text-gray-500 dark:text-gray-400 py-8">
-                                <div class="flex flex-col items-center justify-center">
-                                    <svg class="w-16 h-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.75 7.5h16.5m-16.5 0v-1.125c0-.621.504-1.125 1.125-1.125h13.5c.621 0 1.125.504 1.125 1.125V7.5m-16.5 0h16.5" />
-                                    </svg>
-                                    <p class="text-lg font-medium">Tidak ada data stok</p>
-                                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Data stok akan muncul di sini</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
         </div>
     </div>
 

@@ -183,17 +183,32 @@ class CustomMaterialController extends Controller
 
     public function getColors($id)
     {
-        $material = CustomMaterial::with('variants')->find($id);
-        if (!$material) {
-            return response()->json([], 404);
-        }
+        try {
+            $material = CustomMaterial::with('variants')->find($id);
+            if (!$material) {
+                return response()->json([
+                    'error' => 'Material not found',
+                    'variants' => [],
+                    'price' => 0
+                ], 404);
+            }
 
-        return response()->json([
-            'variants' => $material->variants->map(function ($v) {
+            $variants = $material->variants->map(function ($v) {
                 return ['color' => $v->color];
-            }),
-            'price' => $material->price,
-        ]);
+            })->toArray();
+
+            return response()->json([
+                'variants' => $variants,
+                'price' => (float) $material->price,
+            ])->header('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            \Log::error('Error in getColors: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Server error',
+                'variants' => [],
+                'price' => 0
+            ], 500);
+        }
     }
 
     public function customTerpal()

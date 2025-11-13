@@ -21,15 +21,26 @@ class OwnerController extends Controller
     {
         $drivers = Employee::where('role', 'driver')->get();
         
-        // Hanya tampilkan transaksi yang sudah disiapkan gudang (status 'dikemas' dan sudah ada gudang_id)
-        $pengirimanNormal = HInvoice::where('status', 'dikemas')
+        // Hanya tampilkan transaksi yang sudah disiapkan gudang
+        // Untuk kurir perusahaan: status 'dikemas' dan sudah ada gudang_id
+        // Untuk ekspedisi: status 'dikirim_ke_agen' dan sudah ada gudang_id
+        $pengirimanNormal = HInvoice::whereIn('status', ['dikemas', 'dikirim_ke_agen'])
             ->whereNotNull('gudang_id')
             ->whereNotIn('status', ['retur_diajukan', 'retur_diambil'])
             ->get();
             
+        // Pisahkan pengiriman kurir perusahaan dan ekspedisi
+        $pengirimanKurir = $pengirimanNormal->filter(function($inv) {
+            return !$inv->shipping_courier || $inv->shipping_courier === 'kurir';
+        });
+        
+        $pengirimanEkspedisi = $pengirimanNormal->filter(function($inv) {
+            return $inv->shipping_courier && $inv->shipping_courier !== 'kurir';
+        });
+            
         $pengirimanRetur = HInvoice::whereIn('status', ['retur_diajukan', 'retur_diambil'])->get();
         
-        return view('admin.assign-driver.view', compact('pengirimanNormal', 'pengirimanRetur', 'drivers'));
+        return view('admin.assign-driver.view', compact('pengirimanNormal', 'pengirimanKurir', 'pengirimanEkspedisi', 'pengirimanRetur', 'drivers'));
     }
 
     public function createAssignDriver($id)
@@ -77,7 +88,15 @@ class OwnerController extends Controller
                 'customer_name' => $invoice->customer->name
             ]);
         } else {
-            $invoice->status = 'dikirim'; // Status untuk pengiriman normal
+            // Cek apakah menggunakan ekspedisi atau kurir perusahaan
+            if ($invoice->shipping_courier && $invoice->shipping_courier !== 'kurir') {
+                // Jika ekspedisi, status tetap "dikirim_ke_agen" (driver akan kirim ke agen)
+                // Status akan berubah ke "dikirim" setelah driver input tracking number
+                $invoice->status = 'dikirim_ke_agen';
+            } else {
+                // Jika kurir perusahaan, langsung status "dikirim"
+                $invoice->status = 'dikirim';
+            }
             
             // Kirim notifikasi ke driver untuk pengiriman
             $notificationService = app(NotificationService::class);
@@ -87,11 +106,13 @@ class OwnerController extends Controller
                 'customer_name' => $invoice->customer->name
             ]);
 
-            // Kirim notifikasi ke customer bahwa pesanan dikirim
-            $notificationService->notifyOrderShipped($invoice->id, $invoice->customer_id, [
-                'invoice_code' => $invoice->code,
-                'customer_name' => $invoice->customer->name
-            ]);
+            // Kirim notifikasi ke customer bahwa pesanan dikirim (hanya untuk kurir perusahaan)
+            if (!$invoice->shipping_courier || $invoice->shipping_courier === 'kurir') {
+                $notificationService->notifyOrderShipped($invoice->id, $invoice->customer_id, [
+                    'invoice_code' => $invoice->code,
+                    'customer_name' => $invoice->customer->name
+                ]);
+            }
         }
         
         $invoice->save();

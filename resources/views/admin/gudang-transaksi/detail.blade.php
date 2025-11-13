@@ -69,9 +69,24 @@
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                         <h3 class="text-md font-semibold text-green-800 mb-2">✅ Foto Bukti Kualitas Sudah Diupload</h3>
                         <div class="mb-3">
-                            <img src="{{ Storage::url($invoice->quality_proof_photo) }}" alt="Foto Bukti Kualitas" class="max-w-xs rounded-lg border">
+                            @php
+                                use Illuminate\Support\Facades\Storage;
+                                // Cek apakah path sudah mengandung 'storage/' atau belum
+                                $proofPath = $invoice->quality_proof_photo;
+                                if (!str_starts_with($proofPath, 'storage/')) {
+                                    $proofPath = 'storage/' . $proofPath;
+                                }
+                                // Gunakan Storage::url() sebagai fallback jika asset() tidak bekerja
+                                $imageUrl = Storage::disk('public')->exists($invoice->quality_proof_photo) 
+                                    ? Storage::disk('public')->url($invoice->quality_proof_photo)
+                                    : asset($proofPath);
+                            @endphp
+                            <a href="{{ $imageUrl }}" target="_blank" class="inline-block">
+                                <img src="{{ $imageUrl }}" alt="Foto Bukti Kualitas" class="max-w-xs rounded-lg border hover:opacity-80 transition cursor-pointer">
+                            </a>
                         </div>
-                        <p class="text-xs text-gray-600">Status: {{ ucfirst($invoice->status) }}</p>
+                        <p class="text-xs text-gray-500">Klik gambar untuk melihat ukuran penuh</p>
+                        <p class="text-xs text-gray-600 mt-2">Status: {{ ucfirst($invoice->status) }}</p>
                     </div>
                 @endif
             @endif

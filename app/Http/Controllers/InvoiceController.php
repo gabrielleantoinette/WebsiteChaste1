@@ -39,9 +39,16 @@ class InvoiceController extends Controller
     {
         $query = HInvoice::with(['customer', 'employee', 'driver', 'gudang', 'accountant']);
         
-        // Filter berdasarkan status
+        // Filter berdasarkan status - mapping ke status yang benar
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $statusMap = [
+                'menunggu_pembayaran' => 'Menunggu Pembayaran',
+                'dikemas' => 'Dikemas',
+                'dikirim' => 'Dikirim',
+                'selesai' => 'Selesai',
+            ];
+            $statusValue = $statusMap[$request->status] ?? $request->status;
+            $query->where('status', $statusValue);
         }
         
         // Search berdasarkan kode invoice atau nama customer
@@ -55,10 +62,10 @@ class InvoiceController extends Controller
             });
         }
         
-        // Get total counts for statistics
+        // Get total counts for statistics - gunakan status yang benar
         $totalInvoices = HInvoice::count();
-        $completedInvoices = HInvoice::where('status', 'completed')->count();
-        $pendingInvoices = HInvoice::where('status', 'pending')->count();
+        $completedInvoices = HInvoice::where('status', 'Selesai')->count();
+        $pendingInvoices = HInvoice::whereIn('status', ['Menunggu Pembayaran', 'Menunggu Konfirmasi Pembayaran'])->count();
         $totalSales = HInvoice::sum('grand_total');
         
         $invoices = $query->orderBy('receive_date', 'desc')->paginate(10);
@@ -341,7 +348,7 @@ class InvoiceController extends Controller
             'customer_id' => $customerId,
             'employee_id' => 1,
             'address' => $alamat,
-            'is_online' => 0,
+            'is_online' => 1, // Transaksi dari checkout online
             'status' => $statusInvoice,
             'is_dp' => $isFirstOrder ? true : false,
             'dp_amount' => $isFirstOrder ? $grandTotal / 2 : 0,
@@ -753,6 +760,11 @@ class InvoiceController extends Controller
             }
         }
 
+        // Pastikan session last_invoice_id sudah diset sebelum redirect
+        if ($paymentStatus == 'success' && $payment && $payment->invoice_id) {
+            session()->put('last_invoice_id', $payment->invoice_id);
+        }
+        
         return redirect()->route('order.success');
     }
 

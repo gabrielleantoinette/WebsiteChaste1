@@ -228,6 +228,88 @@
         </div>
         @endif
 
+        {{-- Tombol Batalkan Pesanan --}}
+        @php
+            $canCancel = in_array($transaction->status, ['Menunggu Pembayaran', 'Menunggu Konfirmasi Pembayaran', 'Dikemas']);
+            $createdAt = \Carbon\Carbon::parse($transaction->created_at);
+            $minutesDiff = $createdAt->diffInMinutes(now());
+            $withinTimeLimit = $minutesDiff <= 15;
+            $showCancelButton = $canCancel && $withinTimeLimit;
+        @endphp
+        @if($showCancelButton)
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Batalkan Pesanan</h3>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Anda dapat membatalkan pesanan ini maksimal 15 menit setelah pembuatan. 
+                        @if($minutesDiff > 0)
+                            <span class="font-medium text-orange-600">Waktu tersisa: {{ 15 - $minutesDiff }} menit</span>
+                        @endif
+                    </p>
+                    <button onclick="showCancelModal()" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Batalkan Pesanan
+                    </button>
+                </div>
+            </div>
+            
+            {{-- Modal Cancel --}}
+            <div id="cancelModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Batalkan Pesanan</h3>
+                    <form method="POST" action="{{ route('transaksi.cancel', $transaction->id) }}">
+                        @csrf
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Alasan Pembatalan <span class="text-red-500">*</span></label>
+                            <textarea name="cancellation_reason" id="cancellation_reason" rows="4" 
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500" 
+                                placeholder="Masukkan alasan pembatalan pesanan (minimal 10 karakter)" required></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Minimal 10 karakter, maksimal 500 karakter</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button" onclick="hideCancelModal()" 
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                                Batal
+                            </button>
+                            <button type="submit" 
+                                class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
+                                Konfirmasi Pembatalan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <script>
+                function showCancelModal() {
+                    document.getElementById('cancelModal').classList.remove('hidden');
+                }
+                function hideCancelModal() {
+                    document.getElementById('cancelModal').classList.add('hidden');
+                }
+                // Close modal when clicking outside
+                document.getElementById('cancelModal')?.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        hideCancelModal();
+                    }
+                });
+            </script>
+        @elseif($canCancel && !$withinTimeLimit)
+            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+                <p class="text-sm text-yellow-800">
+                    <strong>Pesanan tidak dapat dibatalkan.</strong> Waktu pembatalan (15 menit setelah pembuatan) telah habis.
+                </p>
+            </div>
+        @elseif(in_array($transaction->status, ['Dikirim', 'dikirim', 'sampai']))
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                <p class="text-sm text-red-800">
+                    <strong>Pesanan tidak dapat dibatalkan.</strong> Pesanan dengan status "{{ $transaction->status }}" tidak dapat dibatalkan karena sudah dalam proses pengiriman.
+                </p>
+            </div>
+        @endif
+
         @if ($transaction->status == 'sampai')
             <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
                 <div class="flex items-start gap-4">

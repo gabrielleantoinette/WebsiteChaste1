@@ -92,11 +92,11 @@ class NegotiationController extends Controller
         
         // Validasi tawaran customer (tidak reveal harga minimal)
         if ($offer < ($max * 0.5)) {
-            return back()->with('error', "Tawaran terlalu rendah. Silakan tawar minimal 50% dari harga normal.");
+            return back()->with('error', "Tawaran Anda Rp " . number_format($offer, 0, ',', '.') . " terlalu rendah. Silakan tawar minimal 50% dari harga normal (Rp " . number_format($max * 0.5, 0, ',', '.') . ").");
         }
         
         if ($offer >= $max) {
-            return back()->with('error', "Tawaran sudah mencapai atau melebihi harga normal. Tidak perlu tawar lagi.");
+            return back()->with('error', "Tawaran Anda Rp " . number_format($offer, 0, ',', '.') . " sudah mencapai atau melebihi harga normal Rp " . number_format($max, 0, ',', '.') . ". Tidak perlu tawar lagi, silakan beli dengan harga normal.");
         }
         
         // Logika counter offer yang lebih dinamis

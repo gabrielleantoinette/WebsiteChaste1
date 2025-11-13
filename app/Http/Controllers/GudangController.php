@@ -84,7 +84,13 @@ class GudangController extends Controller
             $path = $file->storeAs('quality_proofs', $filename, 'public');
             $invoice->quality_proof_photo = $path;
         }
-        $invoice->status = 'dikemas';
+        // Jika menggunakan ekspedisi (bukan kurir perusahaan), set status ke "dikirim_ke_agen"
+        // Jika menggunakan kurir perusahaan, tetap status "dikemas"
+        if ($invoice->shipping_courier && $invoice->shipping_courier !== 'kurir') {
+            $invoice->status = 'dikirim_ke_agen';
+        } else {
+            $invoice->status = 'dikemas';
+        }
         $invoice->save();
 
         // Kirim notifikasi ke customer bahwa pesanan sedang dikemas
@@ -215,7 +221,8 @@ class GudangController extends Controller
     {
         $periode = $request->get('periode', 'harian');
         $tanggal = $request->get('tanggal', now()->format('Y-m-d'));
-        $targetYear = $request->get('year');
+        $bulan = $request->get('bulan', now()->format('Y-m'));
+        $tahun = $request->get('tahun', now()->format('Y'));
         
         // Set tanggal berdasarkan periode
         switch ($periode) {
@@ -224,16 +231,22 @@ class GudangController extends Controller
                 $endDate = $tanggal;
                 break;
             case 'mingguan':
-                $startDate = now()->startOfWeek()->format('Y-m-d');
-                $endDate = now()->endOfWeek()->format('Y-m-d');
+                // Ambil tanggal yang dipilih, lalu cari awal dan akhir minggu
+                $selectedDate = \Carbon\Carbon::parse($tanggal);
+                $startDate = $selectedDate->copy()->startOfWeek()->format('Y-m-d');
+                $endDate = $selectedDate->copy()->endOfWeek()->format('Y-m-d');
                 break;
             case 'bulanan':
-                $startDate = now()->startOfMonth()->format('Y-m-d');
-                $endDate = now()->endOfMonth()->format('Y-m-d');
+                // Format bulan: YYYY-MM
+                $selectedMonth = \Carbon\Carbon::createFromFormat('Y-m', $bulan);
+                $startDate = $selectedMonth->copy()->startOfMonth()->format('Y-m-d');
+                $endDate = $selectedMonth->copy()->endOfMonth()->format('Y-m-d');
                 break;
             case 'tahunan':
-                $startDate = now()->startOfYear()->format('Y-m-d');
-                $endDate = now()->endOfYear()->format('Y-m-d');
+                // Format tahun: YYYY
+                $selectedYear = \Carbon\Carbon::createFromFormat('Y', $tahun);
+                $startDate = $selectedYear->copy()->startOfYear()->format('Y-m-d');
+                $endDate = $selectedYear->copy()->endOfYear()->format('Y-m-d');
                 break;
             default:
                 $startDate = $tanggal;
@@ -254,7 +267,9 @@ class GudangController extends Controller
             'stokMasuk', 
             'stokKeluar', 
             'periode', 
-            'tanggal', 
+            'tanggal',
+            'bulan',
+            'tahun',
             'startDate', 
             'endDate'
         ));
@@ -263,31 +278,48 @@ class GudangController extends Controller
     // Export PDF Laporan Stok
     public function exportLaporanStokPDF(Request $request)
     {
-        if ($request->has('periode') && !$request->has('range')) {
-            $request->merge(['range' => $request->input('periode')]);
+        $periode = $request->get('periode', 'harian');
+        $tanggal = $request->get('tanggal', now()->format('Y-m-d'));
+        $bulan = $request->get('bulan', now()->format('Y-m'));
+        $tahun = $request->get('tahun', now()->format('Y'));
+        
+        // Set tanggal berdasarkan periode (sama seperti laporanStokHarian)
+        switch ($periode) {
+            case 'harian':
+                $startDate = $tanggal;
+                $endDate = $tanggal;
+                $judulPeriode = 'Harian - ' . \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y');
+                break;
+            case 'mingguan':
+                $selectedDate = \Carbon\Carbon::parse($tanggal);
+                $startDate = $selectedDate->copy()->startOfWeek()->format('Y-m-d');
+                $endDate = $selectedDate->copy()->endOfWeek()->format('Y-m-d');
+                $judulPeriode = 'Mingguan - ' . \Carbon\Carbon::parse($startDate)->translatedFormat('d F Y') . ' s/d ' . \Carbon\Carbon::parse($endDate)->translatedFormat('d F Y');
+                break;
+            case 'bulanan':
+                $selectedMonth = \Carbon\Carbon::createFromFormat('Y-m', $bulan);
+                $startDate = $selectedMonth->copy()->startOfMonth()->format('Y-m-d');
+                $endDate = $selectedMonth->copy()->endOfMonth()->format('Y-m-d');
+                $judulPeriode = 'Bulanan - ' . $selectedMonth->translatedFormat('F Y');
+                break;
+            case 'tahunan':
+                $selectedYear = \Carbon\Carbon::createFromFormat('Y', $tahun);
+                $startDate = $selectedYear->copy()->startOfYear()->format('Y-m-d');
+                $endDate = $selectedYear->copy()->endOfYear()->format('Y-m-d');
+                $judulPeriode = 'Tahunan - ' . $tahun;
+                break;
+            default:
+                $startDate = $tanggal;
+                $endDate = $tanggal;
+                $judulPeriode = 'Harian - ' . \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y');
         }
-        if ($request->has('tanggal') && !$request->has('date')) {
-            $request->merge(['date' => $request->input('tanggal')]);
-        }
-        if ($request->has('bulan') && !$request->has('month')) {
-            $request->merge(['month' => $request->input('bulan')]);
-        }
-        if ($request->has('tahun') && !$request->has('year')) {
-            $request->merge(['year' => $request->input('tahun')]);
-        }
-
-        $range = ReportDateRange::fromRequest($request, 'harian');
-        $startDate = $range['start']->toDateString();
-        $endDate = $range['end']->toDateString();
-        $judulPeriode = $range['label'];
 
         $stokSaatIni = $this->getStokSaatIni();
         $stokMasuk = $this->getStokMasuk($startDate, $endDate);
         $stokKeluar = $this->getStokKeluar($startDate, $endDate);
 
-        $periodeStart = $range['start'];
-        $periodeEnd = $range['end'];
-        $periodeLabel = $judulPeriode;
+        $periodeStart = \Carbon\Carbon::parse($startDate);
+        $periodeEnd = \Carbon\Carbon::parse($endDate);
 
         $pdf = Pdf::loadView('exports.laporan_stok_pdf', compact(
             'stokSaatIni', 
@@ -297,11 +329,11 @@ class GudangController extends Controller
             'startDate', 
             'endDate',
             'periodeStart',
-            'periodeEnd',
-            'periodeLabel'
+            'periodeEnd'
         ));
 
-        return $pdf->download('laporan-stok-' . $range['range'] . '-' . date('Y-m-d') . '.pdf');
+        $filename = 'laporan-stok-' . $periode . '-' . date('Y-m-d') . '.pdf';
+        return $pdf->download($filename);
     }
 
     // Helper method untuk mendapatkan stok saat ini

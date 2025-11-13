@@ -130,41 +130,6 @@
         </div>
     </div>
 
-    {{-- Rangkuman Produk/Terpal Perlu Disiapkan --}}
-    <div class="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg mb-8">
-        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Produk/Terpal Perlu Disiapkan</h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full table-auto data-table text-sm border border-gray-200 dark:border-gray-700">
-                <thead class="bg-gray-100 dark:bg-[#004d4d] text-gray-700 dark:text-[#ccf2f2]">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Nama Produk/Terpal</th>
-                        <th class="px-4 py-3 text-left font-semibold">Total Qty</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($produkDisiapkan as $produk)
-                        <tr class="border-b border-gray-100 dark:border-gray-700 @if($loop->odd) bg-gray-50 dark:bg-[#2c2c2c] @endif hover:bg-teal-50 dark:hover:bg-[#003333] transition">
-                            <td class="px-4 py-3 text-gray-800 dark:text-gray-200">{{ $produk['nama'] }}</td>
-                            <td class="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">{{ $produk['qty'] }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="2" class="text-center text-gray-500 dark:text-gray-400 py-8">
-                                <div class="flex flex-col items-center justify-center">
-                                    <svg class="w-16 h-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                    </svg>
-                                    <p class="text-lg font-medium">Tidak ada produk perlu disiapkan</p>
-                                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Produk yang perlu disiapkan akan muncul di sini</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
     {{-- Daftar Returan Perlu Diproses --}}
     <div class="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg mb-8">
         <div class="flex justify-between items-center mb-4">

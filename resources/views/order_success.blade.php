@@ -28,20 +28,33 @@
             <h1 class="text-2xl font-bold text-teal-600 mb-2">Terima Kasih!</h1>
             <p class="text-gray-600 mb-6">Pesanan kamu telah berhasil dibuat. Tim kami akan segera memprosesnya!</p>
 
+            @php
+                $invoiceId = session('last_invoice_id');
+            @endphp
+            @if($invoiceId)
             <div class="grid grid-cols-2 gap-4">
-                <a href="{{ route('invoice.view', ['id' => session('last_invoice_id')]) }}" target="_blank"
-                    class="text-sm bg-white border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white font-semibold py-2 px-6 rounded-lg">
+                <a href="{{ route('invoice.view', ['id' => $invoiceId]) }}" target="_blank"
+                    class="text-sm bg-white border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white font-semibold py-2 px-6 rounded-lg transition">
                     Lihat Invoice
                 </a>
-                <a href="{{ route('invoice.download', ['id' => session('last_invoice_id')]) }}"
-                    class="text-sm bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg">
+                <a href="{{ route('invoice.download', ['id' => $invoiceId]) }}"
+                    class="text-sm bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg transition">
                     Download Invoice
                 </a>
                 <a href="{{ route('produk') }}"
-                    class="text-sm bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg col-span-2">
+                    class="text-sm bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg col-span-2 transition">
                     Kembali Belanja
                 </a>
             </div>
+            @else
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <p class="text-sm text-yellow-800">Invoice ID tidak ditemukan. Silakan cek di halaman transaksi Anda.</p>
+            </div>
+            <a href="{{ route('transaksi') }}"
+                class="text-sm bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg inline-block transition">
+                Lihat Transaksi Saya
+            </a>
+            @endif
 
         </div>
     </main>

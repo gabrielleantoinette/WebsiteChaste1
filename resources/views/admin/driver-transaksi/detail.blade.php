@@ -149,9 +149,36 @@
         </div>
         @endif
 
+        @if ($invoice->status === 'dikirim_ke_agen')
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">Input Nomor Resi Ekspedisi</h2>
+            <p class="text-sm text-gray-600 mb-4">Pesanan ini menggunakan ekspedisi {{ ucfirst($invoice->shipping_courier) }}. Silakan input nomor resi setelah mengirim ke agen.</p>
+            <form method="POST" action="{{ url('/admin/driver-transaksi/finish/' . $invoice->id) }}" class="space-y-4">
+                @csrf
+                <div>
+                    <label for="tracking_number" class="block text-sm font-medium text-gray-700 mb-1">Nomor Resi <span class="text-red-500">*</span></label>
+                    <input type="text" name="tracking_number" id="tracking_number" required
+                           class="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                           placeholder="Masukkan nomor resi ekspedisi">
+                </div>
+                <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition">
+                    Simpan Nomor Resi
+                </button>
+            </form>
+        </div>
+        @endif
+
         @if ($invoice->status === 'dikirim')
         <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-700 mb-4">Upload Bukti Pengiriman</h2>
+            @if($invoice->tracking_number)
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p class="text-sm text-blue-800">
+                    <strong>Nomor Resi:</strong> {{ $invoice->tracking_number }}<br>
+                    <strong>Ekspedisi:</strong> {{ ucfirst($invoice->shipping_courier) }}
+                </p>
+            </div>
+            @endif
             <form action="{{ url('/admin/invoices/upload-bukti/' . $invoice->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 <div>

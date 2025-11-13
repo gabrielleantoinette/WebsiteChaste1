@@ -19,7 +19,22 @@
     @if($invoice->transfer_proof)
         <div class="mb-6">
             <strong>Bukti Transfer:</strong><br>
-            <img src="{{ asset('storage/' . $invoice->transfer_proof) }}" alt="Bukti Transfer" class="w-64 border rounded mt-2">
+            @php
+                use Illuminate\Support\Facades\Storage;
+                // Cek apakah path sudah mengandung 'storage/' atau belum
+                $proofPath = $invoice->transfer_proof;
+                if (!str_starts_with($proofPath, 'storage/')) {
+                    $proofPath = 'storage/' . $proofPath;
+                }
+                // Gunakan Storage::url() sebagai fallback jika asset() tidak bekerja
+                $imageUrl = Storage::disk('public')->exists($invoice->transfer_proof) 
+                    ? Storage::disk('public')->url($invoice->transfer_proof)
+                    : asset($proofPath);
+            @endphp
+            <a href="{{ $imageUrl }}" target="_blank" class="inline-block mt-2">
+                <img src="{{ $imageUrl }}" alt="Bukti Transfer" class="w-64 border rounded hover:opacity-80 transition cursor-pointer">
+            </a>
+            <p class="text-xs text-gray-500 mt-1">Klik gambar untuk melihat ukuran penuh</p>
         </div>
     @endif
     @if($invoice->status === 'Menunggu Konfirmasi Pembayaran')

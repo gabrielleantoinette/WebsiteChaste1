@@ -133,27 +133,59 @@
           <!-- Harga Input -->
           <div>
             <label for="harga" class="text-sm text-gray-600">Penawaran Anda (Harga per pcs)</label>
-            <div class="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
-              <p class="text-xs text-amber-800">
-                <strong>Catatan:</strong> Masukkan harga tawar per pcs (per unit), bukan subtotal. Total akan otomatis dihitung: harga tawar × quantity.
-              </p>
-            </div>
-            <div class="flex items-center gap-2">
-              <input 
-                type="number" 
-                id="harga" 
-                name="harga" 
-                min="1" 
-                required
-                placeholder="Masukkan harga per pcs"
-                class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                value="{{ old('harga') }}"
-              />
-              <button type="submit"
-                      class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
-                Tawar
-              </button>
-            </div>
+            @php
+              $attempts = collect([$neg->cust_nego_1, $neg->cust_nego_2, $neg->cust_nego_3])->filter()->count();
+              $remainingAttempts = 3 - $attempts;
+            @endphp
+            @if($attempts >= 3 || $neg->status === 'final')
+              <div class="bg-red-50 border border-red-200 rounded-lg p-2 mb-2">
+                <p class="text-xs text-red-800 font-medium">
+                  ⚠️ Anda sudah mencapai maksimal 3 kali tawar. Silakan terima deal atau reset negosiasi.
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <input 
+                  type="number" 
+                  id="harga" 
+                  name="harga" 
+                  min="1" 
+                  disabled
+                  placeholder="Maksimal 3 kali tawar"
+                  class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm bg-gray-100 cursor-not-allowed"
+                  value="{{ old('harga') }}"
+                />
+                <button type="button"
+                        disabled
+                        class="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed">
+                  Tawar
+                </button>
+              </div>
+            @else
+              <div class="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
+                <p class="text-xs text-amber-800">
+                  <strong>Catatan:</strong> Masukkan harga tawar per pcs (per unit), bukan subtotal. Total akan otomatis dihitung: harga tawar × quantity.
+                  @if($attempts > 0)
+                    <br><strong>Sisa kesempatan: {{ $remainingAttempts }}x</strong>
+                  @endif
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <input 
+                  type="number" 
+                  id="harga" 
+                  name="harga" 
+                  min="1" 
+                  required
+                  placeholder="Masukkan harga per pcs"
+                  class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                  value="{{ old('harga') }}"
+                />
+                <button type="submit"
+                        class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
+                  Tawar ({{ $remainingAttempts }}x tersisa)
+                </button>
+              </div>
+            @endif
             <p class="text-xs text-gray-500 mt-1">
               Harga per pcs: <span id="pricePerPcsDisplay">-</span> | Total penawaran: <span id="totalOfferDisplay">-</span>
             </p>
@@ -164,11 +196,27 @@
         <div class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700">
           @php
             $hasAny = collect([$neg->cust_nego_1, $neg->cust_nego_2, $neg->cust_nego_3])->filter()->isNotEmpty();
+            $attempts = collect([$neg->cust_nego_1, $neg->cust_nego_2, $neg->cust_nego_3])->filter()->count();
+            $remainingAttempts = 3 - $attempts;
           @endphp
 
           @if(!$hasAny)
             <p class="italic text-gray-500">Belum ada tawaran.</p>
+            <p class="text-xs text-teal-600 mt-2 font-medium">💡 Anda memiliki 3 kesempatan untuk menawar</p>
           @else
+            @if($attempts < 3 && $neg->status !== 'final')
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                <p class="text-sm text-blue-800 font-medium">
+                  ⚡ Anda masih memiliki <strong>{{ $remainingAttempts }} kesempatan</strong> untuk menawar lagi!
+                </p>
+              </div>
+            @elseif($neg->status === 'final')
+              <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                <p class="text-sm text-red-800 font-medium">
+                  ⚠️ Anda sudah mencapai maksimal 3 kali tawar. Ini adalah tawaran final.
+                </p>
+              </div>
+            @endif
             <ul class="space-y-3">
               @foreach([1,2,3] as $i)
                 @php

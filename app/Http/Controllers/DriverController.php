@@ -93,6 +93,32 @@ class DriverController extends Controller
     public function finishTransaksi($id, Request $request)
     {
         $invoice = HInvoice::find($id);
+        
+        // Jika menggunakan ekspedisi dan status masih "dikirim_ke_agen", update tracking number dan ubah status ke "dikirim"
+        if ($invoice->status === 'dikirim_ke_agen' && $invoice->shipping_courier && $invoice->shipping_courier !== 'kurir') {
+            $request->validate([
+                'tracking_number' => 'required|string|max:100',
+            ], [
+                'tracking_number.required' => 'Nomor resi ekspedisi wajib diisi.',
+            ]);
+            
+            $invoice->tracking_number = $request->tracking_number;
+            $invoice->status = 'dikirim';
+            $invoice->save();
+            
+            // Kirim notifikasi ke customer bahwa pesanan dikirim dengan tracking number
+            $notificationService = app(NotificationService::class);
+            $notificationService->notifyOrderShipped($invoice->id, $invoice->customer_id, [
+                'invoice_code' => $invoice->code,
+                'customer_name' => $invoice->customer->name,
+                'tracking_number' => $request->tracking_number,
+                'courier' => $invoice->shipping_courier
+            ]);
+            
+            return redirect()->back()->with('success', 'Nomor resi berhasil disimpan. Pesanan sekarang dalam status "Dikirim".');
+        }
+        
+        // Untuk kurir perusahaan atau status sudah "dikirim", langsung ubah ke "sampai"
         $invoice->status = 'sampai';
         $invoice->save();
 
@@ -123,9 +149,9 @@ class DriverController extends Controller
     {
         $user = Session::get('user');
         
-        // Pesanan siap dikirim (status: dikirim)
+        // Pesanan siap dikirim (status: dikirim atau dikirim_ke_agen)
         $ordersReady = HInvoice::where('driver_id', $user->id)
-            ->where('status', 'dikirim')
+            ->whereIn('status', ['dikirim', 'dikirim_ke_agen'])
             ->with(['customer', 'details.product', 'details.variant'])
             ->get();
             
@@ -135,9 +161,9 @@ class DriverController extends Controller
             ->with(['customer', 'returns'])
             ->get();
 
-        // Pengiriman dalam proses (status: dikirim)
+        // Pengiriman dalam proses (status: dikirim atau dikirim_ke_agen)
         $ordersInProcess = HInvoice::where('driver_id', $user->id)
-            ->where('status', 'dikirim')
+            ->whereIn('status', ['dikirim', 'dikirim_ke_agen'])
             ->with(['customer', 'details.product', 'details.variant'])
             ->get();
             

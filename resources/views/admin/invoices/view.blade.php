@@ -98,9 +98,10 @@
                 </div>
                 <select name="status" id="status" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white shadow-sm">
                     <option value="">Semua Status</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Processing</option>
+                    <option value="menunggu_pembayaran" {{ request('status') == 'menunggu_pembayaran' ? 'selected' : '' }}>Menunggu Pembayaran</option>
+                    <option value="dikemas" {{ request('status') == 'dikemas' ? 'selected' : '' }}>Dikemas</option>
+                    <option value="dikirim" {{ request('status') == 'dikirim' ? 'selected' : '' }}>Dikirim</option>
+                    <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
                 </select>
             </div>
             <div class="flex flex-wrap items-center gap-3">
@@ -160,10 +161,18 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-emerald-600">Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ Str::limit($invoice->address, 30) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
-                                    {{ $invoice->status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 
-                                       ($invoice->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800') }}">
-                                    {{ ucfirst($invoice->status) }}
+                                @php
+                                    $statusColors = [
+                                        'Menunggu Pembayaran' => 'bg-yellow-100 text-yellow-800',
+                                        'Menunggu Konfirmasi Pembayaran' => 'bg-orange-100 text-orange-800',
+                                        'Dikemas' => 'bg-blue-100 text-blue-800',
+                                        'Dikirim' => 'bg-purple-100 text-purple-800',
+                                        'Selesai' => 'bg-emerald-100 text-emerald-800',
+                                    ];
+                                    $statusColor = $statusColors[$invoice->status] ?? 'bg-gray-100 text-gray-800';
+                                @endphp
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $statusColor }}">
+                                    {{ $invoice->status }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">

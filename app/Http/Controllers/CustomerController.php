@@ -325,6 +325,77 @@ class CustomerController extends Controller
         return redirect()->back();
     }
 
+    public function cancelOrder(Request $request, $id)
+    {
+        $user = Session::get('user');
+        $invoice = HInvoice::findOrFail($id);
+        
+        // Validasi bahwa invoice milik customer yang login
+        if ($invoice->customer_id != $user['id']) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk membatalkan pesanan ini.');
+        }
+        
+        // Validasi status - hanya bisa dibatalkan jika status "Menunggu Pembayaran" atau "Dikemas"
+        $allowedStatuses = ['Menunggu Pembayaran', 'Menunggu Konfirmasi Pembayaran', 'Dikemas'];
+        if (!in_array($invoice->status, $allowedStatuses)) {
+            return redirect()->back()->with('error', 'Pesanan dengan status "' . $invoice->status . '" tidak dapat dibatalkan. Hanya pesanan dengan status "Menunggu Pembayaran" atau "Dikemas" yang dapat dibatalkan.');
+        }
+        
+        // Validasi waktu - maksimal 15 menit setelah pembuatan pesanan
+        $createdAt = \Carbon\Carbon::parse($invoice->created_at);
+        $now = \Carbon\Carbon::now();
+        $minutesDiff = $createdAt->diffInMinutes($now);
+        
+        if ($minutesDiff > 15) {
+            return redirect()->back()->with('error', 'Pesanan hanya dapat dibatalkan maksimal 15 menit setelah pembuatan. Waktu pembatalan telah habis.');
+        }
+        
+        // Validasi input
+        $request->validate([
+            'cancellation_reason' => 'required|string|min:10|max:500',
+        ], [
+            'cancellation_reason.required' => 'Alasan pembatalan wajib diisi.',
+            'cancellation_reason.min' => 'Alasan pembatalan minimal 10 karakter.',
+            'cancellation_reason.max' => 'Alasan pembatalan maksimal 500 karakter.',
+        ]);
+        
+        // Update invoice
+        $invoice->status = 'Dibatalkan';
+        $invoice->cancelled_at = $now;
+        $invoice->cancellation_reason = $request->cancellation_reason;
+        $invoice->save();
+        
+        // Kembalikan stok jika sudah dikurangi
+        $dinvoices = \App\Models\DInvoice::where('hinvoice_id', $invoice->id)->get();
+        foreach ($dinvoices as $dinvoice) {
+            if ($dinvoice->variant_id) {
+                $variant = \App\Models\ProductVariant::find($dinvoice->variant_id);
+                if ($variant) {
+                    $variant->stock += $dinvoice->quantity;
+                    $variant->save();
+                }
+            }
+        }
+        
+        // Kirim notifikasi ke admin
+        $notificationService = app(\App\Services\NotificationService::class);
+        $notificationService->sendToRole(
+            'order_cancelled',
+            'Pesanan Dibatalkan',
+            "Pesanan {$invoice->code} telah dibatalkan oleh customer. Alasan: " . $request->cancellation_reason,
+            'admin',
+            [
+                'data_type' => 'order',
+                'data_id' => $invoice->id,
+                'action_url' => "/admin/invoices/detail/{$invoice->id}",
+                'priority' => 'high',
+                'icon' => 'fas fa-times-circle'
+            ]
+        );
+        
+        return redirect()->route('transaksi')->with('success', 'Pesanan berhasil dibatalkan.');
+    }
+
     public function filterTransaksiByStatus($status)
     {
         $user = Session::get('user');
