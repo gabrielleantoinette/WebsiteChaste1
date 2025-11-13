@@ -57,7 +57,7 @@ class OwnerController extends Controller
             'driver_id' => 'required|exists:employees,id'
         ]);
 
-        $invoice = HInvoice::with('customer')->findOrFail($id);
+        $invoice = HInvoice::with(['customer', 'details.product', 'details.variant'])->findOrFail($id);
         
         // Verify driver exists and is active
         $driver = Employee::where('id', $request->driver_id)
@@ -90,6 +90,106 @@ class OwnerController extends Controller
         } else {
             // Cek apakah menggunakan ekspedisi atau kurir perusahaan
             if ($invoice->shipping_courier && $invoice->shipping_courier !== 'kurir') {
+                // Jika ekspedisi, buat order di Biteship untuk mendapatkan waybill ID
+                try {
+                    $biteshipService = app(\App\Services\BiteshipService::class);
+                    
+                    // Cari area ID untuk origin (Surabaya) dan destination
+                    $originArea = $biteshipService->searchArea('Surabaya');
+                    $destinationCity = $this->extractCityFromAddress($invoice->address);
+                    $destinationArea = $biteshipService->searchArea($destinationCity);
+                    
+                    if ($originArea && $destinationArea) {
+                        // Hitung total berat (estimasi 1kg per item atau minimal 1kg)
+                        $totalWeight = max(count($invoice->details) * 1000, 1000);
+                        
+                        // Siapkan items untuk Biteship
+                        $items = [];
+                        foreach ($invoice->details as $detail) {
+                            $items[] = [
+                                'name' => $detail->product->name ?? 'Item',
+                                'description' => $detail->variant->color ?? '',
+                                'value' => $detail->price * $detail->quantity,
+                                'length' => 10,
+                                'width' => 10,
+                                'height' => 10,
+                                'weight' => 1000 // Estimasi 1kg per item
+                            ];
+                        }
+                        
+                        // Jika items kosong, buat default item
+                        if (empty($items)) {
+                            $items[] = [
+                                'name' => 'Paket',
+                                'description' => 'Paket pengiriman',
+                                'value' => $invoice->grand_total,
+                                'length' => 10,
+                                'width' => 10,
+                                'height' => 10,
+                                'weight' => $totalWeight
+                            ];
+                        }
+                        
+                        // Buat order di Biteship
+                        $orderData = [
+                            'origin_contact_name' => 'Chaste Gemilang Mandiri',
+                            'origin_contact_phone' => '081234567890', // Ganti dengan nomor perusahaan
+                            'origin_address' => 'Surabaya', // Ganti dengan alamat lengkap perusahaan
+                            'origin_area_id' => $originArea['id'],
+                            'destination_contact_name' => $invoice->customer->name,
+                            'destination_contact_phone' => $invoice->customer->phone ?? '081234567890',
+                            'destination_address' => $invoice->address,
+                            'destination_area_id' => $destinationArea['id'],
+                            'courier_company' => strtolower($invoice->shipping_courier), // jne, pos, tiki, dll
+                            'courier_type' => $invoice->shipping_service ?? 'REG',
+                            'delivery_type' => 'later',
+                            'items' => $items
+                        ];
+                        
+                        $biteshipOrder = $biteshipService->createOrder($orderData);
+                        
+                        if ($biteshipOrder) {
+                            // Coba ambil waybill ID
+                            $waybillId = $biteshipService->extractWaybillId($biteshipOrder);
+                            
+                            // Jika belum ada, coba polling
+                            if (!$waybillId && isset($biteshipOrder['id'])) {
+                                $waybillId = $biteshipService->getWaybillIdWithPolling($biteshipOrder['id'], 3, 2);
+                            }
+                            
+                            if ($waybillId) {
+                                $invoice->tracking_number = $waybillId;
+                                \Log::info('Biteship waybill ID saved to invoice', [
+                                    'invoice_id' => $invoice->id,
+                                    'waybill_id' => $waybillId
+                                ]);
+                            } else {
+                                \Log::warning('Biteship order created but waybill ID not available yet', [
+                                    'invoice_id' => $invoice->id,
+                                    'biteship_order_id' => $biteshipOrder['id'] ?? null
+                                ]);
+                            }
+                        } else {
+                            \Log::error('Failed to create Biteship order', [
+                                'invoice_id' => $invoice->id
+                            ]);
+                        }
+                    } else {
+                        \Log::warning('Failed to find area for Biteship order', [
+                            'invoice_id' => $invoice->id,
+                            'origin_area' => $originArea ? 'found' : 'not found',
+                            'destination_area' => $destinationArea ? 'found' : 'not found',
+                            'destination_city' => $destinationCity
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Error creating Biteship order', [
+                        'invoice_id' => $invoice->id,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                }
+                
                 // Jika ekspedisi, status tetap "dikirim_ke_agen" (driver akan kirim ke agen)
                 // Status akan berubah ke "dikirim" setelah driver input tracking number
                 $invoice->status = 'dikirim_ke_agen';
@@ -108,16 +208,59 @@ class OwnerController extends Controller
 
             // Kirim notifikasi ke customer bahwa pesanan dikirim (hanya untuk kurir perusahaan)
             if (!$invoice->shipping_courier || $invoice->shipping_courier === 'kurir') {
-                $notificationService->notifyOrderShipped($invoice->id, $invoice->customer_id, [
-                    'invoice_code' => $invoice->code,
-                    'customer_name' => $invoice->customer->name
-                ]);
+            $notificationService->notifyOrderShipped($invoice->id, $invoice->customer_id, [
+                'invoice_code' => $invoice->code,
+                'customer_name' => $invoice->customer->name
+            ]);
             }
         }
         
         $invoice->save();
 
         return redirect()->route('admin.assign-driver.index')->with('success', 'Driver berhasil di-assign untuk pengiriman ini.');
+    }
+
+    /**
+     * Extract city name from address string
+     * 
+     * @param string $address Full address string
+     * @return string City name
+     */
+    private function extractCityFromAddress($address)
+    {
+        if (!$address) {
+            return 'Surabaya'; // Default
+        }
+
+        // List of common city names in Indonesia
+        $cities = [
+            'Jakarta', 'Surabaya', 'Bandung', 'Medan', 'Semarang', 'Makassar', 
+            'Palembang', 'Depok', 'Tangerang', 'Bekasi', 'Yogyakarta', 'Malang',
+            'Banyuwangi', 'Jember', 'Kediri', 'Pasuruan', 'Mojokerto', 'Gresik',
+            'Sidoarjo', 'Denpasar', 'Bogor', 'Padang', 'Pekanbaru', 'Balikpapan',
+            'Samarinda', 'Pontianak', 'Manado', 'Cirebon', 'Sukabumi', 'Tasikmalaya'
+        ];
+
+        $addressLower = strtolower($address);
+        
+        // Cari kota yang disebutkan di alamat
+        foreach ($cities as $city) {
+            if (str_contains($addressLower, strtolower($city))) {
+                return $city;
+            }
+        }
+
+        // Jika tidak ditemukan, coba ekstrak dari pattern "Kec. X, Kota Y" atau "Kota Y"
+        if (preg_match('/kota\s+([^,\s]+)/i', $address, $matches)) {
+            return ucfirst(trim($matches[1]));
+        }
+
+        if (preg_match('/kab\.?\s+([^,\s]+)/i', $address, $matches)) {
+            return ucfirst(trim($matches[1]));
+        }
+
+        // Default ke Surabaya jika tidak ditemukan
+        return 'Surabaya';
     }
 
     public function transactionsIndex(Request $request)
