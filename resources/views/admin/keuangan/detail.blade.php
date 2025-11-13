@@ -23,14 +23,35 @@
                 $proofPath = $invoice->transfer_proof;
                 $imageUrl = null;
                 
+                // Log untuk debugging
+                \Log::info('Loading transfer proof', [
+                    'invoice_id' => $invoice->id,
+                    'invoice_code' => $invoice->code,
+                    'transfer_proof_path' => $proofPath
+                ]);
+                
                 // Method 1: Coba Storage::url() dulu (paling reliable)
                 if ($proofPath) {
                     try {
-                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($proofPath)) {
+                        // Cek apakah file benar-benar ada
+                        $fileExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($proofPath);
+                        \Log::info('File existence check', [
+                            'path' => $proofPath,
+                            'exists' => $fileExists
+                        ]);
+                        
+                        if ($fileExists) {
                             $imageUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($proofPath);
+                            \Log::info('Storage URL generated', ['url' => $imageUrl]);
+                        } else {
+                            \Log::warning('File not found in storage', ['path' => $proofPath]);
                         }
                     } catch (\Exception $e) {
-                        \Log::warning('Storage::url() failed', ['path' => $proofPath, 'error' => $e->getMessage()]);
+                        \Log::error('Storage::url() failed', [
+                            'path' => $proofPath, 
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
                     }
                 }
                 
@@ -42,20 +63,26 @@
                         $assetPath = 'storage/' . ltrim($assetPath, '/');
                     }
                     $imageUrl = asset($assetPath);
+                    \Log::info('Using asset() fallback', ['url' => $imageUrl]);
                 }
                 
                 // Method 3: Fallback ke path langsung jika masih gagal
                 if (!$imageUrl && $proofPath) {
                     // Coba dengan path relatif dari public
                     $directPath = 'storage/' . ltrim($proofPath, '/');
-                    if (file_exists(public_path($directPath))) {
+                    $fullPath = public_path($directPath);
+                    if (file_exists($fullPath)) {
                         $imageUrl = url($directPath);
+                        \Log::info('Using direct path', ['url' => $imageUrl, 'full_path' => $fullPath]);
+                    } else {
+                        \Log::warning('Direct path not found', ['path' => $fullPath]);
                     }
                 }
                 
                 // Method 4: Jika semua gagal, gunakan path asli dari database
                 if (!$imageUrl) {
                     $imageUrl = $proofPath ? url('storage/' . ltrim($proofPath, '/')) : '#';
+                    \Log::info('Using database path as final fallback', ['url' => $imageUrl]);
                 }
             @endphp
             <a href="{{ $imageUrl }}" target="_blank" class="inline-block mt-2">
@@ -66,7 +93,12 @@
             </a>
             <p class="text-xs text-gray-500 mt-1">Klik gambar untuk melihat ukuran penuh</p>
             @if($proofPath)
-            <p class="text-xs text-gray-400 mt-1">Path: {{ $proofPath }}</p>
+            <div class="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                <p><strong>Path di Database:</strong> {{ $proofPath }}</p>
+                <p><strong>URL yang digunakan:</strong> {{ $imageUrl }}</p>
+                <p><strong>Invoice ID:</strong> {{ $invoice->id }}</p>
+                <p><strong>Invoice Code:</strong> {{ $invoice->code }}</p>
+            </div>
             @endif
         </div>
     @endif

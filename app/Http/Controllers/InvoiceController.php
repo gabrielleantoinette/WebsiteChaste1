@@ -340,7 +340,25 @@ class InvoiceController extends Controller
         }
         $transferProofPath = null;
         if ($paymentMethod == 'transfer' && $request->hasFile('bukti_transfer')) {
-            $transferProofPath = $request->file('bukti_transfer')->store('bukti_transfer', 'public');
+            $file = $request->file('bukti_transfer');
+            $transferProofPath = $file->store('bukti_transfer', 'public');
+            
+            // Log untuk debugging
+            \Log::info('Transfer proof uploaded', [
+                'original_name' => $file->getClientOriginalName(),
+                'stored_path' => $transferProofPath,
+                'file_size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'customer_id' => $customerId
+            ]);
+            
+            // Verifikasi file benar-benar tersimpan
+            if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($transferProofPath)) {
+                \Log::error('Transfer proof file not saved correctly', [
+                    'path' => $transferProofPath,
+                    'customer_id' => $customerId
+                ]);
+            }
         }
         // ⬇️ Ubah ini supaya insert sekaligus ambil ID
         $newInvoiceId = DB::table('hinvoice')->insertGetId([
@@ -361,6 +379,16 @@ class InvoiceController extends Controller
             'updated_at' => now(),
             'transfer_proof' => $transferProofPath,
         ]);
+        
+        // Log untuk memastikan path tersimpan dengan benar
+        if ($transferProofPath) {
+            \Log::info('Invoice created with transfer proof', [
+                'invoice_id' => $newInvoiceId,
+                'invoice_code' => $invoiceCode,
+                'transfer_proof_path' => $transferProofPath,
+                'customer_id' => $customerId
+            ]);
+        }
 
         // Midtrans
         // Hanya buat midtrans kalau payment_method adalah ewallet.
