@@ -19,24 +19,28 @@
     <script type="text/javascript">
         window.snap.pay("{{ $snapToken }}", {
             onSuccess: function(result) {
-                alert("Pembayaran berhasil!");
-                console.log(result);
-
-                window.location.href = "/checkout/midtrans-result?paymentId={{ $paymentId }}&status=success";
+                console.log("Pembayaran berhasil!", result);
+                // Redirect akan dilakukan oleh Midtrans via finish_redirect_url
+                // Tapi sebagai backup, kita juga redirect manual
+                window.location.href = "{{ url('/checkout/midtrans-result?paymentId=' . $paymentId . '&status=success') }}";
             },
             onPending: function(result) {
-                alert("Menunggu pembayaran!");
-                console.log(result);
+                console.log("Menunggu pembayaran!", result);
+                // Redirect akan dilakukan oleh Midtrans via unfinish_redirect_url
+                window.location.href = "{{ url('/checkout/midtrans-result?paymentId=' . $paymentId . '&status=pending') }}";
             },
             onError: function(result) {
-                alert("Pembayaran gagal!");
-                console.log(result);
+                console.log("Pembayaran gagal!", result);
+                // Redirect akan dilakukan oleh Midtrans via error_redirect_url
+                window.location.href = "{{ url('/checkout/midtrans-result?paymentId=' . $paymentId . '&status=error') }}";
             },
             onClose: function() {
-                alert('Anda menutup pop-up tanpa menyelesaikan pembayaran');
+                // User menutup popup, redirect ke halaman produk
+                if (confirm('Anda menutup pop-up tanpa menyelesaikan pembayaran. Apakah Anda ingin kembali ke halaman produk?')) {
+                    window.location.href = "{{ url('/produk') }}";
+                }
             }
         });
-        // });
     </script>
 </body>
 

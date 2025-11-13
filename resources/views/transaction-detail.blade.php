@@ -139,93 +139,153 @@
             </div>
         </div>
 
-        @if($product)
+        @if($transaction->details && $transaction->details->count() > 0)
+        @php
+            $detailCount = $transaction->details->count();
+            $showCollapse = $detailCount > 1;
+        @endphp
         {{-- Detail Produk yang Dibeli --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
-                <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                    </svg>
-                    Detail Produk yang Dibeli
-                </h2>
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        Detail Produk yang Dibeli
+                        <span class="text-sm font-normal opacity-90">({{ $detailCount }} barang)</span>
+                    </h2>
+                    @if($showCollapse)
+                    <button onclick="toggleProductDetails()" 
+                            id="toggleBtn"
+                            class="text-white hover:text-teal-100 transition flex items-center gap-2 text-sm font-medium">
+                        <span id="toggleText">Lihat Semua</span>
+                        <svg id="toggleIcon" class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    @endif
+                </div>
             </div>
             
             <div class="p-6">
-                <div class="flex flex-col md:flex-row gap-6">
-                    {{-- Foto Produk --}}
-                    <div class="md:w-1/3 flex-shrink-0">
-                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 flex items-center justify-center shadow-inner">
-                            <img src="{{ asset($product->image_url) }}" 
-                                 alt="{{ $product->name }}" 
-                                 class="w-full h-64 object-cover rounded-lg shadow-md">
-                        </div>
-                    </div>
-                    
-                    {{-- Informasi Produk --}}
-                    <div class="md:w-2/3 flex-1">
-                        <div class="space-y-4">
-                            <div>
-                                <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ $product->name }}</h3>
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
-                                    </svg>
-                                    <span>Ukuran: 
-                                        @if($dinvoice && $dinvoice->selected_size)
-                                            <span class="font-semibold text-teal-600">{{ $dinvoice->selected_size }}</span>
-                                        @else
-                                            {{ $product->size }}
-                                        @endif
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div class="pt-4 border-t border-gray-200">
-                                <div class="flex items-baseline gap-3">
-                                    <p class="text-3xl font-bold text-teal-600">
-                                        Rp {{ number_format($dinvoice->price ?? $product->price, 0, ',', '.') }}
-                                    </p>
-                                    <span class="text-gray-500">/ unit</span>
-                                </div>
-                                @if($dinvoice && $dinvoice->price != $product->price)
-                                    <div class="mt-2 flex items-center gap-2">
-                                        <p class="text-sm text-gray-500 line-through">
-                                            Rp {{ number_format($product->price, 0, ',', '.') }} / unit
-                                        </p>
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            Harga hasil tawar
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">No</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">Produk</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">Warna</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-700">Ukuran</th>
+                                <th class="px-4 py-3 text-right font-semibold text-gray-700">Harga</th>
+                                <th class="px-4 py-3 text-center font-semibold text-gray-700">Qty</th>
+                                <th class="px-4 py-3 text-right font-semibold text-gray-700">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @foreach ($transaction->details as $detail)
+                                <tr class="hover:bg-gray-50 transition product-row {{ $showCollapse && $loop->iteration > 1 ? 'hidden' : '' }}">
+                                    <td class="px-4 py-3 text-gray-600">{{ $loop->iteration }}</td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-3">
+                                            @if($detail->product && $detail->product->image_url)
+                                            <img src="{{ asset($detail->product->image_url) }}" 
+                                                 alt="{{ $detail->product->name }}" 
+                                                 class="w-16 h-16 object-cover rounded-lg border border-gray-200">
+                                            @endif
+                                            <div>
+                                                <p class="font-medium text-gray-900">{{ $detail->product->name ?? '-' }}</p>
+                                                @if($detail->product && $detail->product->description)
+                                                <p class="text-xs text-gray-500 mt-1 line-clamp-1">{{ Str::limit($detail->product->description, 50) }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-600">{{ $detail->variant->color ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-gray-600">
+                                        @php
+                                            $sizeText = '-';
+                                            if (!empty($detail->kebutuhan_custom) && preg_match('/\((\d+)x(\d+)\)/', $detail->kebutuhan_custom, $m)) {
+                                                $sizeText = $m[1] . 'x' . $m[2];
+                                            } elseif($detail->selected_size) {
+                                                $sizeText = $detail->selected_size;
+                                            }
+                                        @endphp
+                                        {{ $sizeText }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right text-gray-900">Rp {{ number_format($detail->price, 0, ',', '.') }}</td>
+                                    <td class="px-4 py-3 text-center text-gray-900">{{ $detail->quantity }}</td>
+                                    <td class="px-4 py-3 text-right font-semibold text-gray-900">Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-gray-50 border-t-2 border-gray-300">
+                            <tr>
+                                <td colspan="6" class="px-4 py-3 text-right font-semibold text-gray-700">Total:</td>
+                                <td class="px-4 py-3 text-right font-bold text-teal-600 text-lg">
+                                    Rp {{ number_format($transaction->grand_total - ($transaction->shipping_cost ?? 0), 0, ',', '.') }}
+                                </td>
+                            </tr>
+                            @if($transaction->shipping_cost > 0)
+                            <tr>
+                                <td colspan="6" class="px-4 py-3 text-right font-semibold text-gray-700">
+                                    Ongkos Kirim
+                                    @if($transaction->shipping_courier || $transaction->shipping_service)
+                                        <span class="text-sm text-gray-500 font-normal">
+                                            ({{ $transaction->shipping_courier ? ucfirst($transaction->shipping_courier) : 'Kurir Perusahaan' }}
+                                            @if($transaction->shipping_service)
+                                                - {{ $transaction->shipping_service }}
+                                            @endif)
                                         </span>
-                                    </div>
-                                @endif
-                            </div>
-                            
-                            <div class="pt-4 border-t border-gray-200">
-                                <p class="text-gray-700 leading-relaxed">{{ $product->description }}</p>
-                            </div>
-                            
-                            @if($dinvoice)
-                            <div class="bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-200 rounded-xl p-4 mt-4">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p class="text-sm text-gray-600 mb-1">Jumlah yang dibeli</p>
-                                        <p class="text-lg font-semibold text-gray-900">{{ $dinvoice->quantity }} unit</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-600 mb-1">Subtotal</p>
-                                        <p class="text-lg font-bold text-teal-600">Rp {{ number_format($dinvoice->subtotal ?? ($dinvoice->quantity * ($dinvoice->price ?? $product->price)), 0, ',', '.') }}</p>
-                                    </div>
-                                </div>
-                            </div>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">
+                                    Rp {{ number_format($transaction->shipping_cost, 0, ',', '.') }}
+                                </td>
+                            </tr>
                             @endif
-                        </div>
-                    </div>
+                            <tr>
+                                <td colspan="6" class="px-4 py-3 text-right font-bold text-gray-900 text-lg">Grand Total:</td>
+                                <td class="px-4 py-3 text-right font-bold text-teal-600 text-xl">
+                                    Rp {{ number_format($transaction->grand_total, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
         </div>
+        
+        @if($showCollapse)
+        <script>
+            let isExpanded = false;
+            function toggleProductDetails() {
+                const rows = document.querySelectorAll('.product-row');
+                const toggleText = document.getElementById('toggleText');
+                const toggleIcon = document.getElementById('toggleIcon');
+                
+                isExpanded = !isExpanded;
+                
+                rows.forEach((row, index) => {
+                    if (index > 0) { // Skip first row
+                        if (isExpanded) {
+                            row.classList.remove('hidden');
+                        } else {
+                            row.classList.add('hidden');
+                        }
+                    }
+                });
+                
+                if (isExpanded) {
+                    toggleText.textContent = 'Sembunyikan';
+                    toggleIcon.classList.add('rotate-180');
+                } else {
+                    toggleText.textContent = 'Lihat Semua';
+                    toggleIcon.classList.remove('rotate-180');
+                }
+            }
+        </script>
+        @endif
         @endif
 
         {{-- Tombol Batalkan Pesanan --}}

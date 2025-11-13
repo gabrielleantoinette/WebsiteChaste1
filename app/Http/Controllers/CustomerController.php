@@ -264,17 +264,33 @@ class CustomerController extends Controller
 
     public function detailTransaction($id)
     {
-        $transaction = HInvoice::find($id);
         $user = Session::get('user');
         
-        // Ambil detail produk dari dinvoice
-        $dinvoice = \App\Models\DInvoice::where('hinvoice_id', $id)->first();
+        // Ambil transaction dengan eager loading untuk details, product, dan variant
+        $transaction = HInvoice::with(['details.product', 'details.variant'])->find($id);
+        
+        if (!$transaction) {
+            return redirect()->route('transaksi')->with('error', 'Transaksi tidak ditemukan.');
+        }
+        
+        // Validasi bahwa invoice milik customer yang login
+        if ($transaction->customer_id != $user['id']) {
+            return redirect()->route('transaksi')->with('error', 'Anda tidak memiliki akses untuk melihat transaksi ini.');
+        }
+        
+        // Ambil semua detail invoice (dinvoice) - untuk backup jika diperlukan
+        $dinvoices = \App\Models\DInvoice::where('hinvoice_id', $id)
+            ->with('product', 'variant')
+            ->get();
+        
+        // Untuk review, ambil product pertama (jika ada)
+        $firstDinvoice = $transaction->details->first();
         $product = null;
         $productId = null;
         
-        if ($dinvoice) {
-            $productId = $dinvoice->product_id;
-            $product = \App\Models\Product::find($productId);
+        if ($firstDinvoice && $firstDinvoice->product) {
+            $productId = $firstDinvoice->product_id;
+            $product = $firstDinvoice->product;
         }
         
         // Cek apakah user sudah review untuk order ini
@@ -286,7 +302,7 @@ class CustomerController extends Controller
                 ->exists();
         }
         
-        return view('transaction-detail', compact('transaction', 'product', 'productId', 'hasReviewed', 'dinvoice'));
+        return view('transaction-detail', compact('transaction', 'product', 'productId', 'hasReviewed', 'dinvoices'));
     }
 
     public function viewProfile()

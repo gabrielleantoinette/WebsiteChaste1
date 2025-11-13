@@ -429,6 +429,20 @@ class InvoiceController extends Controller
                 }
             }
             
+            // Buat payment record dulu untuk mendapatkan ID
+            $newPayment = new PaymentModel();
+            $newPayment->invoice_id = $newInvoiceId;
+            $newPayment->method = 'midtrans';
+            $newPayment->type = $isFirstOrder ? 'dp' : 'full';
+            $newPayment->is_paid = false;
+            $newPayment->amount = $grandTotal;
+            $newPayment->save();
+            
+            // Buat URL redirect setelah pembayaran selesai menggunakan payment ID
+            $finishRedirectUrl = url('/checkout/midtrans-result?paymentId=' . $newPayment->id . '&status=success');
+            $unfinishRedirectUrl = url('/checkout/midtrans-result?paymentId=' . $newPayment->id . '&status=pending');
+            $errorRedirectUrl = url('/checkout/midtrans-result?paymentId=' . $newPayment->id . '&status=error');
+            
             $payload = [
                 'transaction_details' => [
                     'order_id'      => now() . '-' . $newInvoiceId,
@@ -438,16 +452,14 @@ class InvoiceController extends Controller
                     'first_name'    => $customer->name,
                     'email'         => $customer->email,
                 ],
-                'item_details' => $itemDetails
+                'item_details' => $itemDetails,
+                'finish_redirect_url' => $finishRedirectUrl,
+                'unfinish_redirect_url' => $unfinishRedirectUrl,
+                'error_redirect_url' => $errorRedirectUrl
             ];
             $snapToken = Snap::getSnapToken($payload);
-
-            $newPayment = new PaymentModel();
-            $newPayment->invoice_id = $newInvoiceId;
-            $newPayment->method = 'midtrans';
-            $newPayment->type = $isFirstOrder ? 'dp' : 'full';
-            $newPayment->is_paid = false;
-            $newPayment->amount = $grandTotal;
+            
+            // Update payment dengan snap token
             $newPayment->snap_token = $snapToken;
             $newPayment->save();
 
@@ -642,12 +654,31 @@ class InvoiceController extends Controller
 
     public function midtransPaymentAction(Request $request)
     {
-        $paymentStatus = $request->query('status');
-
-        $paymentId = $request->query('paymentId');
-        $payment = PaymentModel::find($paymentId);
-        $payment->is_paid = $paymentStatus == 'success' ? true : false;
-        $payment->save();
+        try {
+            \Log::info('Midtrans callback received', [
+                'url' => $request->fullUrl(),
+                'query' => $request->all(),
+                'method' => $request->method()
+            ]);
+            
+            $paymentStatus = $request->query('status');
+            $paymentId = $request->query('paymentId');
+            
+            if (!$paymentId) {
+                \Log::error('Midtrans callback: paymentId tidak ditemukan', $request->all());
+                return redirect()->route('produk')->with('error', 'Payment ID tidak ditemukan.');
+            }
+            
+            $payment = PaymentModel::find($paymentId);
+            if (!$payment) {
+                \Log::error('Midtrans callback: Payment tidak ditemukan', ['paymentId' => $paymentId]);
+                return redirect()->route('produk')->with('error', 'Data pembayaran tidak ditemukan.');
+            }
+            
+            \Log::info('Midtrans callback: Payment found', ['paymentId' => $paymentId, 'invoice_id' => $payment->invoice_id]);
+            
+            $payment->is_paid = $paymentStatus == 'success' ? true : false;
+            $payment->save();
 
         // Set session last_invoice_id agar halaman sukses tidak error
         session()->put('last_invoice_id', $payment->invoice_id);
@@ -673,7 +704,15 @@ class InvoiceController extends Controller
         // Kirim notifikasi ke customer jika pembayaran berhasil
         if ($paymentStatus == 'success') {
             $invoice = HInvoice::find($payment->invoice_id);
+            if (!$invoice) {
+                \Log::error('Midtrans callback: Invoice tidak ditemukan', ['invoice_id' => $payment->invoice_id]);
+                return redirect()->route('produk')->with('error', 'Invoice tidak ditemukan.');
+            }
             $customer = Customer::find($invoice->customer_id);
+            if (!$customer) {
+                \Log::error('Midtrans callback: Customer tidak ditemukan', ['customer_id' => $invoice->customer_id]);
+                return redirect()->route('produk')->with('error', 'Data customer tidak ditemukan.');
+            }
             
             $notificationService = app(NotificationService::class);
             $notificationService->sendToCustomer(
@@ -760,12 +799,27 @@ class InvoiceController extends Controller
             }
         }
 
-        // Pastikan session last_invoice_id sudah diset sebelum redirect
-        if ($paymentStatus == 'success' && $payment && $payment->invoice_id) {
-            session()->put('last_invoice_id', $payment->invoice_id);
+            // Pastikan session last_invoice_id sudah diset sebelum redirect
+            if ($paymentStatus == 'success' && $payment && $payment->invoice_id) {
+                session()->put('last_invoice_id', $payment->invoice_id);
+                // Simpan juga di cookie sebagai backup jika session hilang
+                cookie()->queue('last_invoice_id', $payment->invoice_id, 60); // 60 menit
+            }
+            
+            // Redirect ke order success dengan invoice_id di query string sebagai fallback
+            $redirectUrl = route('order.success');
+            if ($paymentStatus == 'success' && $payment && $payment->invoice_id) {
+                $redirectUrl .= '?invoice_id=' . $payment->invoice_id;
+            }
+            
+            return redirect($redirectUrl);
+        } catch (\Exception $e) {
+            \Log::error('Midtrans callback error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+            return redirect()->route('produk')->with('error', 'Terjadi kesalahan saat memproses pembayaran. Silakan hubungi admin.');
         }
-        
-        return redirect()->route('order.success');
     }
 
     public function viewInvoice($id)

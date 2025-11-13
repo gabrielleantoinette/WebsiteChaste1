@@ -126,8 +126,12 @@ Route::middleware([LoggedIn::class])->group(function () {
     // Route::get('/checkout/invoice', [InvoiceController::class, 'storeFromCheckoutGet'])->name('checkout.invoice.get');
     Route::get('/checkout/midtrans-payment', [InvoiceController::class, 'midtransPayment'])->name('checkout.midtrans.payment');
     Route::get('/checkout/midtrans-result', [InvoiceController::class, 'midtransPaymentAction'])->name('checkout.midtrans.result');
-
-    Route::get('/order-success', function () {
+    Route::get('/order-success', function (Request $request) {
+        // Ambil invoice_id dari query string jika session hilang
+        $invoiceId = $request->query('invoice_id') ?? session('last_invoice_id');
+        if ($invoiceId) {
+            session()->put('last_invoice_id', $invoiceId);
+        }
         return view('order_success');
     })->name('order.success');
 

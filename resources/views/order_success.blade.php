@@ -29,7 +29,11 @@
             <p class="text-gray-600 mb-6">Pesanan kamu telah berhasil dibuat. Tim kami akan segera memprosesnya!</p>
 
             @php
-                $invoiceId = session('last_invoice_id');
+                // Ambil invoice_id dari query string atau session (untuk handle callback Midtrans)
+                $invoiceId = request()->query('invoice_id') ?? session('last_invoice_id');
+                if ($invoiceId) {
+                    session()->put('last_invoice_id', $invoiceId);
+                }
             @endphp
             @if($invoiceId)
             <div class="grid grid-cols-2 gap-4">
@@ -50,10 +54,18 @@
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                 <p class="text-sm text-yellow-800">Invoice ID tidak ditemukan. Silakan cek di halaman transaksi Anda.</p>
             </div>
-            <a href="{{ route('transaksi') }}"
-                class="text-sm bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg inline-block transition">
-                Lihat Transaksi Saya
-            </a>
+            <div class="space-y-2">
+                <a href="{{ route('produk') }}"
+                    class="text-sm bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg inline-block transition">
+                    Kembali Belanja
+                </a>
+                @auth
+                <a href="{{ route('transaksi') }}"
+                    class="text-sm bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg inline-block transition ml-2">
+                    Lihat Transaksi Saya
+                </a>
+                @endauth
+            </div>
             @endif
 
         </div>
