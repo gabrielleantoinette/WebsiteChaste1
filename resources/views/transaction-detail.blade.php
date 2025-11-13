@@ -246,6 +246,16 @@
                                 </td>
                             </tr>
                             @endif
+                            @if($transaction->tracking_number)
+                            <tr>
+                                <td colspan="6" class="px-4 py-3 text-right font-semibold text-gray-700">
+                                    Nomor Resi:
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <span class="font-mono font-semibold text-blue-600">{{ $transaction->tracking_number }}</span>
+                                </td>
+                            </tr>
+                            @endif
                             <tr>
                                 <td colspan="6" class="px-4 py-3 text-right font-bold text-gray-900 text-lg">Total:</td>
                                 <td class="px-4 py-3 text-right font-bold text-teal-600 text-xl">

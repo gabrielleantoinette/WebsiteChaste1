@@ -314,11 +314,41 @@ class BiteshipService
 
             if ($response->successful()) {
                 $data = $response->json();
-                Log::info('Biteship createOrder success', [
+                
+                // Log full response untuk debugging
+                Log::info('Biteship createOrder success - Full Response', [
+                    'full_response' => $data,
+                    'response_keys' => array_keys($data ?? []),
                     'order_id' => $data['id'] ?? null,
                     'waybill_id' => $data['waybill_id'] ?? null,
+                    'waybill_number' => $data['waybill_number'] ?? null,
+                    'tracking_id' => $data['tracking_id'] ?? null,
+                    'tracking_number' => $data['tracking_number'] ?? null,
                     'status' => $data['status'] ?? null
                 ]);
+
+                // Cek berbagai kemungkinan field untuk waybill ID
+                $waybillId = $data['waybill_id'] ?? 
+                            $data['waybill_number'] ?? 
+                            $data['tracking_id'] ?? 
+                            $data['tracking_number'] ?? 
+                            ($data['order'] && isset($data['order']['waybill_id']) ? $data['order']['waybill_id'] : null) ??
+                            null;
+
+                if ($waybillId) {
+                    Log::info('Biteship waybill ID found', [
+                        'waybill_id' => $waybillId,
+                        'source_field' => isset($data['waybill_id']) ? 'waybill_id' : 
+                                         (isset($data['waybill_number']) ? 'waybill_number' : 
+                                         (isset($data['tracking_id']) ? 'tracking_id' : 
+                                         (isset($data['tracking_number']) ? 'tracking_number' : 'order.waybill_id')))
+                    ]);
+                } else {
+                    Log::warning('Biteship waybill ID not found in response', [
+                        'available_fields' => array_keys($data ?? []),
+                        'note' => 'Waybill ID mungkin akan tersedia setelah order diproses atau status berubah'
+                    ]);
+                }
 
                 return $data;
             } else {
@@ -337,6 +367,67 @@ class BiteshipService
             ]);
             return null;
         }
+    }
+
+    /**
+     * Extract waybill ID from order response
+     * 
+     * @param array $orderResponse Response dari createOrder atau getOrder
+     * @return string|null
+     */
+    public function extractWaybillId($orderResponse)
+    {
+        if (!$orderResponse || !is_array($orderResponse)) {
+            return null;
+        }
+
+        // Cek berbagai kemungkinan field untuk waybill ID
+        return $orderResponse['waybill_id'] ?? 
+               $orderResponse['waybill_number'] ?? 
+               $orderResponse['tracking_id'] ?? 
+               $orderResponse['tracking_number'] ?? 
+               ($orderResponse['order'] && isset($orderResponse['order']['waybill_id']) ? $orderResponse['order']['waybill_id'] : null) ??
+               null;
+    }
+
+    /**
+     * Get waybill ID dengan polling jika belum tersedia
+     * 
+     * @param string $orderId Biteship order ID
+     * @param int $maxAttempts Maksimal percobaan polling
+     * @param int $delay Delay antar percobaan (detik)
+     * @return string|null
+     */
+    public function getWaybillIdWithPolling($orderId, $maxAttempts = 5, $delay = 2)
+    {
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $order = $this->getOrder($orderId);
+            
+            if ($order) {
+                $waybillId = $this->extractWaybillId($order);
+                
+                if ($waybillId) {
+                    Log::info('Biteship waybill ID obtained via polling', [
+                        'order_id' => $orderId,
+                        'waybill_id' => $waybillId,
+                        'attempt' => $i + 1
+                    ]);
+                    return $waybillId;
+                }
+            }
+            
+            // Tunggu sebelum coba lagi (kecuali percobaan terakhir)
+            if ($i < $maxAttempts - 1) {
+                sleep($delay);
+            }
+        }
+        
+        Log::warning('Biteship waybill ID not found after polling', [
+            'order_id' => $orderId,
+            'attempts' => $maxAttempts
+        ]);
+        
+        return null;
     }
 
     /**
