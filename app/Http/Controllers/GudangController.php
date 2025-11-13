@@ -80,9 +80,46 @@ class GudangController extends Controller
         // Upload file
         if ($request->hasFile('quality_proof_photo')) {
             $file = $request->file('quality_proof_photo');
-            $filename = 'quality_proof_' . $invoice->code . '_' . time() . '.' . $file->getClientOriginalExtension();
+            
+            // Buat nama file yang unik dengan invoice code, timestamp, dan random string
+            $originalName = $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $timestamp = now()->format('YmdHis');
+            $randomString = \Str::random(10);
+            $filename = 'quality_proof_' . $invoice->code . '_' . $timestamp . '_' . $randomString . '_' . \Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $extension;
+            
             $path = $file->storeAs('quality_proofs', $filename, 'public');
             $invoice->quality_proof_photo = $path;
+            
+            // Log untuk debugging
+            \Log::info('Quality proof photo uploaded', [
+                'original_name' => $originalName,
+                'unique_file_name' => $filename,
+                'stored_path' => $path,
+                'file_size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'invoice_id' => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'gudang_id' => $user->id,
+                'timestamp' => $timestamp
+            ]);
+            
+            // Verifikasi file benar-benar tersimpan
+            if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+                \Log::error('Quality proof file not saved correctly', [
+                    'path' => $path,
+                    'invoice_id' => $invoice->id
+                ]);
+            } else {
+                // Verifikasi file size untuk memastikan file tersimpan dengan benar
+                $storedFileSize = \Illuminate\Support\Facades\Storage::disk('public')->size($path);
+                \Log::info('Quality proof file verified', [
+                    'path' => $path,
+                    'original_size' => $file->getSize(),
+                    'stored_size' => $storedFileSize,
+                    'match' => $file->getSize() === $storedFileSize
+                ]);
+            }
         }
         // Jika menggunakan ekspedisi (bukan kurir perusahaan), set status ke "dikirim_ke_agen"
         // Jika menggunakan kurir perusahaan, tetap status "dikemas"
@@ -92,6 +129,39 @@ class GudangController extends Controller
             $invoice->status = 'dikemas';
         }
         $invoice->save();
+        
+        // Verifikasi path tersimpan dengan benar setelah save
+        if ($invoice->quality_proof_photo) {
+            $storedPath = $invoice->fresh()->quality_proof_photo;
+            $fileExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($invoice->quality_proof_photo);
+            
+            \Log::info('Invoice updated with quality proof photo', [
+                'invoice_id' => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'quality_proof_path' => $invoice->quality_proof_photo,
+                'stored_path_in_db' => $storedPath,
+                'path_match' => $invoice->quality_proof_photo === $storedPath,
+                'file_exists' => $fileExists,
+                'gudang_id' => $user->id
+            ]);
+            
+            // Jika path tidak match, log error
+            if ($invoice->quality_proof_photo !== $storedPath) {
+                \Log::error('Quality proof path mismatch!', [
+                    'invoice_id' => $invoice->id,
+                    'expected_path' => $invoice->quality_proof_photo,
+                    'stored_path' => $storedPath
+                ]);
+            }
+            
+            // Jika file tidak ada, log warning
+            if (!$fileExists) {
+                \Log::warning('Quality proof file not found after invoice update', [
+                    'invoice_id' => $invoice->id,
+                    'path' => $invoice->quality_proof_photo
+                ]);
+            }
+        }
 
         // Kirim notifikasi ke customer bahwa pesanan sedang dikemas
         $notificationService = app(NotificationService::class);

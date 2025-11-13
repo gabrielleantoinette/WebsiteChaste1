@@ -70,21 +70,87 @@
                         <h3 class="text-md font-semibold text-green-800 mb-2">✅ Foto Bukti Kualitas Sudah Diupload</h3>
                         <div class="mb-3">
                             @php
-                                // Cek apakah path sudah mengandung 'storage/' atau belum
                                 $proofPath = $invoice->quality_proof_photo;
-                                if (!str_starts_with($proofPath, 'storage/')) {
-                                    $proofPath = 'storage/' . $proofPath;
+                                $imageUrl = null;
+                                
+                                // Log untuk debugging
+                                \Log::info('Loading quality proof photo', [
+                                    'invoice_id' => $invoice->id,
+                                    'invoice_code' => $invoice->code,
+                                    'quality_proof_path' => $proofPath
+                                ]);
+                                
+                                // Method 1: Coba Storage::url() dulu (paling reliable)
+                                if ($proofPath) {
+                                    try {
+                                        // Cek apakah file benar-benar ada
+                                        $fileExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($proofPath);
+                                        \Log::info('Quality proof file existence check', [
+                                            'path' => $proofPath,
+                                            'exists' => $fileExists
+                                        ]);
+                                        
+                                        if ($fileExists) {
+                                            $imageUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($proofPath);
+                                            \Log::info('Quality proof Storage URL generated', ['url' => $imageUrl]);
+                                        } else {
+                                            \Log::warning('Quality proof file not found in storage', ['path' => $proofPath]);
+                                        }
+                                    } catch (\Exception $e) {
+                                        \Log::error('Quality proof Storage::url() failed', [
+                                            'path' => $proofPath, 
+                                            'error' => $e->getMessage(),
+                                            'trace' => $e->getTraceAsString()
+                                        ]);
+                                    }
                                 }
-                                // Gunakan Storage::url() sebagai fallback jika asset() tidak bekerja
-                                $imageUrl = \Illuminate\Support\Facades\Storage::disk('public')->exists($invoice->quality_proof_photo) 
-                                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($invoice->quality_proof_photo)
-                                    : asset($proofPath);
+                                
+                                // Method 2: Jika Storage::url() gagal, coba dengan asset()
+                                if (!$imageUrl && $proofPath) {
+                                    // Pastikan path dimulai dengan 'storage/'
+                                    $assetPath = $proofPath;
+                                    if (!str_starts_with($assetPath, 'storage/')) {
+                                        $assetPath = 'storage/' . ltrim($assetPath, '/');
+                                    }
+                                    $imageUrl = asset($assetPath);
+                                    \Log::info('Using asset() fallback for quality proof', ['url' => $imageUrl]);
+                                }
+                                
+                                // Method 3: Fallback ke path langsung jika masih gagal
+                                if (!$imageUrl && $proofPath) {
+                                    // Coba dengan path relatif dari public
+                                    $directPath = 'storage/' . ltrim($proofPath, '/');
+                                    $fullPath = public_path($directPath);
+                                    if (file_exists($fullPath)) {
+                                        $imageUrl = url($directPath);
+                                        \Log::info('Using direct path for quality proof', ['url' => $imageUrl, 'full_path' => $fullPath]);
+                                    } else {
+                                        \Log::warning('Direct path not found for quality proof', ['path' => $fullPath]);
+                                    }
+                                }
+                                
+                                // Method 4: Jika semua gagal, gunakan path asli dari database
+                                if (!$imageUrl) {
+                                    $imageUrl = $proofPath ? url('storage/' . ltrim($proofPath, '/')) : '#';
+                                    \Log::info('Using database path as final fallback for quality proof', ['url' => $imageUrl]);
+                                }
                             @endphp
                             <a href="{{ $imageUrl }}" target="_blank" class="inline-block">
-                                <img src="{{ $imageUrl }}" alt="Foto Bukti Kualitas" class="max-w-xs rounded-lg border hover:opacity-80 transition cursor-pointer">
+                                <img src="{{ $imageUrl }}" 
+                                     alt="Foto Bukti Kualitas" 
+                                     class="max-w-xs rounded-lg border hover:opacity-80 transition cursor-pointer"
+                                     onerror="this.onerror=null; this.src='{{ asset('images/gulungan-terpal.png') }}'; this.alt='Gambar tidak dapat dimuat'; this.style.border='2px dashed #ccc'; this.style.padding='20px';">
                             </a>
                         </div>
                         <p class="text-xs text-gray-500">Klik gambar untuk melihat ukuran penuh</p>
+                        @if($proofPath)
+                        <div class="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                            <p><strong>Path di Database:</strong> {{ $proofPath }}</p>
+                            <p><strong>URL yang digunakan:</strong> {{ $imageUrl }}</p>
+                            <p><strong>Invoice ID:</strong> {{ $invoice->id }}</p>
+                            <p><strong>Invoice Code:</strong> {{ $invoice->code }}</p>
+                        </div>
+                        @endif
                         <p class="text-xs text-gray-600 mt-2">Status: {{ ucfirst($invoice->status) }}</p>
                     </div>
                 @endif

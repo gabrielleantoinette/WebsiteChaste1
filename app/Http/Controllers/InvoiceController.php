@@ -341,15 +341,26 @@ class InvoiceController extends Controller
         $transferProofPath = null;
         if ($paymentMethod == 'transfer' && $request->hasFile('bukti_transfer')) {
             $file = $request->file('bukti_transfer');
-            $transferProofPath = $file->store('bukti_transfer', 'public');
+            
+            // Buat nama file yang unik dengan timestamp dan hash untuk menghindari konflik
+            $originalName = $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $timestamp = now()->format('YmdHis');
+            $randomString = \Str::random(10);
+            $uniqueFileName = $timestamp . '_' . $randomString . '_' . \Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $extension;
+            
+            // Simpan file dengan nama unik
+            $transferProofPath = $file->storeAs('bukti_transfer', $uniqueFileName, 'public');
             
             // Log untuk debugging
             \Log::info('Transfer proof uploaded', [
-                'original_name' => $file->getClientOriginalName(),
+                'original_name' => $originalName,
+                'unique_file_name' => $uniqueFileName,
                 'stored_path' => $transferProofPath,
                 'file_size' => $file->getSize(),
                 'mime_type' => $file->getMimeType(),
-                'customer_id' => $customerId
+                'customer_id' => $customerId,
+                'timestamp' => $timestamp
             ]);
             
             // Verifikasi file benar-benar tersimpan
@@ -357,6 +368,15 @@ class InvoiceController extends Controller
                 \Log::error('Transfer proof file not saved correctly', [
                     'path' => $transferProofPath,
                     'customer_id' => $customerId
+                ]);
+            } else {
+                // Verifikasi file size untuk memastikan file tersimpan dengan benar
+                $storedFileSize = \Illuminate\Support\Facades\Storage::disk('public')->size($transferProofPath);
+                \Log::info('Transfer proof file verified', [
+                    'path' => $transferProofPath,
+                    'original_size' => $file->getSize(),
+                    'stored_size' => $storedFileSize,
+                    'match' => $file->getSize() === $storedFileSize
                 ]);
             }
         }
@@ -382,12 +402,36 @@ class InvoiceController extends Controller
         
         // Log untuk memastikan path tersimpan dengan benar
         if ($transferProofPath) {
+            // Verifikasi sekali lagi setelah invoice dibuat
+            $storedPath = DB::table('hinvoice')->where('id', $newInvoiceId)->value('transfer_proof');
+            $fileExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($transferProofPath);
+            
             \Log::info('Invoice created with transfer proof', [
                 'invoice_id' => $newInvoiceId,
                 'invoice_code' => $invoiceCode,
                 'transfer_proof_path' => $transferProofPath,
+                'stored_path_in_db' => $storedPath,
+                'path_match' => $transferProofPath === $storedPath,
+                'file_exists' => $fileExists,
                 'customer_id' => $customerId
             ]);
+            
+            // Jika path tidak match, log error
+            if ($transferProofPath !== $storedPath) {
+                \Log::error('Transfer proof path mismatch!', [
+                    'invoice_id' => $newInvoiceId,
+                    'expected_path' => $transferProofPath,
+                    'stored_path' => $storedPath
+                ]);
+            }
+            
+            // Jika file tidak ada, log warning
+            if (!$fileExists) {
+                \Log::warning('Transfer proof file not found after invoice creation', [
+                    'invoice_id' => $newInvoiceId,
+                    'path' => $transferProofPath
+                ]);
+            }
         }
 
         // Midtrans
