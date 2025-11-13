@@ -23,66 +23,18 @@
                 $proofPath = $invoice->transfer_proof;
                 $imageUrl = null;
                 
-                // Log untuk debugging
-                \Log::info('Loading transfer proof', [
-                    'invoice_id' => $invoice->id,
-                    'invoice_code' => $invoice->code,
-                    'transfer_proof_path' => $proofPath
-                ]);
-                
-                // Method 1: Coba Storage::url() dulu (paling reliable)
                 if ($proofPath) {
-                    try {
-                        // Cek apakah file benar-benar ada
-                        $fileExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($proofPath);
-                        \Log::info('File existence check', [
-                            'path' => $proofPath,
-                            'exists' => $fileExists
-                        ]);
-                        
-                        if ($fileExists) {
-                            $imageUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($proofPath);
-                            \Log::info('Storage URL generated', ['url' => $imageUrl]);
-                        } else {
-                            \Log::warning('File not found in storage', ['path' => $proofPath]);
-                        }
-                    } catch (\Exception $e) {
-                        \Log::error('Storage::url() failed', [
-                            'path' => $proofPath, 
-                            'error' => $e->getMessage(),
-                            'trace' => $e->getTraceAsString()
-                        ]);
-                    }
+                    // Bersihkan path dari karakter yang tidak valid
+                    $cleanPath = ltrim($proofPath, '/');
+                    
+                    // Gunakan format yang sama seperti produk: /public/storage/{path}
+                    // Ini akan menghasilkan URL seperti: https://domain.com/public/storage/bukti_transfer/...
+                    $imageUrl = url('/public/storage/' . $cleanPath);
                 }
                 
-                // Method 2: Jika Storage::url() gagal, coba dengan asset()
-                if (!$imageUrl && $proofPath) {
-                    // Pastikan path dimulai dengan 'storage/'
-                    $assetPath = $proofPath;
-                    if (!str_starts_with($assetPath, 'storage/')) {
-                        $assetPath = 'storage/' . ltrim($assetPath, '/');
-                    }
-                    $imageUrl = asset($assetPath);
-                    \Log::info('Using asset() fallback', ['url' => $imageUrl]);
-                }
-                
-                // Method 3: Fallback ke path langsung jika masih gagal
-                if (!$imageUrl && $proofPath) {
-                    // Coba dengan path relatif dari public
-                    $directPath = 'storage/' . ltrim($proofPath, '/');
-                    $fullPath = public_path($directPath);
-                    if (file_exists($fullPath)) {
-                        $imageUrl = url($directPath);
-                        \Log::info('Using direct path', ['url' => $imageUrl, 'full_path' => $fullPath]);
-                    } else {
-                        \Log::warning('Direct path not found', ['path' => $fullPath]);
-                    }
-                }
-                
-                // Method 4: Jika semua gagal, gunakan path asli dari database
+                // Jika masih null, set ke placeholder
                 if (!$imageUrl) {
-                    $imageUrl = $proofPath ? url('storage/' . ltrim($proofPath, '/')) : '#';
-                    \Log::info('Using database path as final fallback', ['url' => $imageUrl]);
+                    $imageUrl = asset('images/gulungan-terpal.png');
                 }
             @endphp
             <a href="{{ $imageUrl }}" target="_blank" class="inline-block mt-2">
@@ -92,14 +44,6 @@
                      onerror="this.onerror=null; this.src='{{ asset('images/gulungan-terpal.png') }}'; this.alt='Gambar tidak dapat dimuat'; this.style.border='2px dashed #ccc'; this.style.padding='20px';">
             </a>
             <p class="text-xs text-gray-500 mt-1">Klik gambar untuk melihat ukuran penuh</p>
-            @if($proofPath)
-            <div class="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
-                <p><strong>Path di Database:</strong> {{ $proofPath }}</p>
-                <p><strong>URL yang digunakan:</strong> {{ $imageUrl }}</p>
-                <p><strong>Invoice ID:</strong> {{ $invoice->id }}</p>
-                <p><strong>Invoice Code:</strong> {{ $invoice->code }}</p>
-            </div>
-            @endif
         </div>
     @endif
     @if($invoice->status === 'Menunggu Konfirmasi Pembayaran')

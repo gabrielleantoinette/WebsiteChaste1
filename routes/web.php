@@ -33,23 +33,61 @@ Route::get('/', function () {
 });
 
 Route::get('/public/storage/{path}', function (string $path) {
-    if (str_contains($path, '..')) {
-        abort(403);
+    // Security check: prevent directory traversal
+    if (str_contains($path, '..') || str_contains($path, "\0")) {
+        \Log::warning('Blocked suspicious path in storage route', ['path' => $path]);
+        abort(403, 'Invalid path');
     }
 
     $cleanPath = ltrim($path, '/');
     $fullPath = storage_path('app/public/' . $cleanPath);
 
-    if (!File::exists($fullPath) || File::isDirectory($fullPath)) {
-        abort(404);
+    \Log::info('Storage route accessed', [
+        'requested_path' => $path,
+        'clean_path' => $cleanPath,
+        'full_path' => $fullPath,
+        'file_exists' => File::exists($fullPath),
+        'is_directory' => File::isDirectory($fullPath)
+    ]);
+
+    if (!File::exists($fullPath)) {
+        \Log::warning('Storage file not found', [
+            'path' => $path,
+            'clean_path' => $cleanPath,
+            'full_path' => $fullPath
+        ]);
+        abort(404, 'File not found');
     }
 
-    $mimeType = File::mimeType($fullPath) ?: 'application/octet-stream';
+    if (File::isDirectory($fullPath)) {
+        \Log::warning('Storage path is directory, not file', [
+            'path' => $path,
+            'full_path' => $fullPath
+        ]);
+        abort(404, 'Path is a directory');
+    }
 
-    return response()->file($fullPath, [
-        'Content-Type' => $mimeType,
-        'Cache-Control' => 'public, max-age=31536000',
-    ]);
+    try {
+        $mimeType = File::mimeType($fullPath) ?: 'application/octet-stream';
+        
+        \Log::info('Serving storage file', [
+            'path' => $path,
+            'mime_type' => $mimeType,
+            'file_size' => File::size($fullPath)
+        ]);
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Cache-Control' => 'public, max-age=31536000',
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Error serving storage file', [
+            'path' => $path,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        abort(500, 'Error serving file');
+    }
 })->where('path', '.*');
 
 Route::get('logout', [LoginController::class, 'logout'])->name('logout');

@@ -324,7 +324,6 @@
                 <input type="hidden" id="shippingServiceValue" name="shipping_service" value="">
             </section>
 
-
             <!-- Section Metode Pembayaran -->
             <section class="border border-gray-200 rounded-lg p-6 mb-6 bg-white shadow-sm">
                 <h2 class="font-bold text-xl mb-4 text-gray-800 flex items-center">
