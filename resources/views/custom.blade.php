@@ -188,15 +188,61 @@ const pakaiTaliInput = document.querySelector('input[name="pakai_tali"]');
 const totalPriceText = document.getElementById('totalPrice');
 
 bahanSelect.addEventListener('change', function() {
-  fetch(`/api/custom-materials/${this.value}/colors`)
-    .then(response => response.json())
+  const materialId = this.value;
+  if (!materialId) {
+    warnaSelect.innerHTML = '<option value="">-- Pilih Warna --</option>';
+    selectedPrice = 0;
+    calculateTotal();
+    return;
+  }
+
+  // Show loading state
+  warnaSelect.innerHTML = '<option value="">Memuat...</option>';
+  warnaSelect.disabled = true;
+
+  fetch(`{{ url('/api/custom-materials') }}/${materialId}/colors`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
+      // Check if data is valid
+      if (!data || data.error) {
+        console.error('Error loading colors:', data?.error || 'Unknown error');
+        warnaSelect.innerHTML = '<option value="">-- Error memuat warna --</option>';
+        selectedPrice = 0;
+        calculateTotal();
+        return;
+      }
+
+      // Populate color dropdown
       warnaSelect.innerHTML = '<option value="">-- Pilih Warna --</option>';
-      data.variants.forEach(warna => {
-        warnaSelect.innerHTML += `<option value="${warna.color}">${warna.color}</option>`;
-      });
-      selectedPrice = data.price || 0;
+      if (data.variants && Array.isArray(data.variants) && data.variants.length > 0) {
+        data.variants.forEach(warna => {
+          if (warna && warna.color) {
+            warnaSelect.innerHTML += `<option value="${warna.color}">${warna.color}</option>`;
+          }
+        });
+      } else {
+        warnaSelect.innerHTML = '<option value="">-- Tidak ada warna tersedia --</option>';
+      }
+
+      // Set price
+      selectedPrice = parseFloat(data.price) || 0;
       calculateTotal();
+      warnaSelect.disabled = false;
+    })
+    .catch(error => {
+      console.error('Error fetching colors:', error);
+      warnaSelect.innerHTML = '<option value="">-- Error memuat data --</option>';
+      selectedPrice = 0;
+      calculateTotal();
+      warnaSelect.disabled = false;
+      
+      // Show user-friendly error message
+      alert('Terjadi kesalahan saat memuat data warna. Silakan refresh halaman dan coba lagi.');
     });
 });
 

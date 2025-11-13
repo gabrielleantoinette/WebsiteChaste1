@@ -76,13 +76,11 @@ Route::middleware([LoggedIn::class])->group(function () {
     Route::post('/produk/{id}', [CartController::class, 'addItem'])->name('produk.add');
     Route::get('/custom-terpal', [CustomMaterialController::class, 'customTerpal'])->name('custom.terpal');
 
-
     Route::get('/keranjang', [CartController::class, 'view'])->name('keranjang');
     Route::post('/keranjang/add', [CartController::class, 'addItemFromCart'])->name('keranjang.add');
     Route::post('/keranjang/update/{id}', [CartController::class, 'updateQuantity'])->name('keranjang.update');
     Route::get('/keranjang/delete/{id}', [CartController::class, 'deleteItem'])->name('keranjang.delete');
     Route::post('/keranjang/custom/add', [CartController::class, 'addCustomItem'])->name('keranjang.custom.add');
-    Route::get('/custom-terpal', [CustomMaterialController::class, 'showCustomPage'])->name('custom.terpal');
 
     Route::get('/transaksi', [CustomerController::class, 'viewTransaction'])->name('transaksi');
     Route::get('/transaksi/detail/{id}', [CustomerController::class, 'detailTransaction'])->name('transaksi.detail');

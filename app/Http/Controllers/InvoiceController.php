@@ -684,8 +684,70 @@ class InvoiceController extends Controller
         session()->put('last_invoice_id', $payment->invoice_id);
 
         // Hapus cart setelah pembayaran sukses (midtrans)
-        if ($paymentStatus == 'success' && session()->has('cart_ids_to_delete')) {
-            $cartIds = session('cart_ids_to_delete');
+        $invoice = null;
+        if ($paymentStatus == 'success') {
+            $invoice = HInvoice::find($payment->invoice_id);
+            if (!$invoice) {
+                \Log::error('Midtrans callback: Invoice tidak ditemukan', ['invoice_id' => $payment->invoice_id]);
+                return redirect()->route('produk')->with('error', 'Invoice tidak ditemukan.');
+            }
+            
+            $cartIds = [];
+            
+            // Coba ambil dari session dulu
+            if (session()->has('cart_ids_to_delete')) {
+                $cartIds = session('cart_ids_to_delete');
+                session()->forget('cart_ids_to_delete');
+            }
+            
+            // Jika session hilang, hapus cart berdasarkan dinvoice yang sudah dibuat
+            if (empty($cartIds)) {
+                \Log::info('Cart IDs tidak ditemukan di session, menghapus cart berdasarkan dinvoice', [
+                    'invoice_id' => $invoice->id,
+                    'customer_id' => $invoice->customer_id
+                ]);
+                
+                // Ambil semua dinvoice untuk invoice ini
+                $dinvoices = DB::table('dinvoice')->where('hinvoice_id', $invoice->id)->get();
+                
+                // Hapus cart yang sesuai dengan dinvoice
+                foreach ($dinvoices as $dinvoice) {
+                    if ($dinvoice->variant_id) {
+                        // Match cart berdasarkan customer_id, variant_id, quantity, dan selected_size
+                        $matchingCarts = DB::table('cart')
+                            ->where('user_id', $invoice->customer_id)
+                            ->where('variant_id', $dinvoice->variant_id)
+                            ->where('quantity', $dinvoice->quantity)
+                            ->where(function($query) use ($dinvoice) {
+                                if ($dinvoice->selected_size) {
+                                    $query->where('selected_size', $dinvoice->selected_size);
+                                } else {
+                                    $query->whereNull('selected_size');
+                                }
+                            })
+                            ->get();
+                        
+                        foreach ($matchingCarts as $cart) {
+                            $cartIds[] = $cart->id;
+                        }
+                    } elseif ($dinvoice->kebutuhan_custom) {
+                        // Match cart custom berdasarkan customer_id, kebutuhan_custom, quantity
+                        $matchingCarts = DB::table('cart')
+                            ->where('user_id', $invoice->customer_id)
+                            ->where('kebutuhan_custom', $dinvoice->kebutuhan_custom)
+                            ->where('quantity', $dinvoice->quantity)
+                            ->get();
+                        
+                        foreach ($matchingCarts as $cart) {
+                            $cartIds[] = $cart->id;
+                        }
+                    }
+                }
+                
+                // Hapus duplikasi
+                $cartIds = array_unique($cartIds);
+            }
+            
             if (!empty($cartIds)) {
                 // Validasi stok sebelum mengurangi (untuk memastikan tidak ada perubahan stok selama proses pembayaran)
                 $stockValidation = $this->validateStockAvailability($cartIds);
@@ -693,21 +755,22 @@ class InvoiceController extends Controller
                     // Kurangi stok sebelum menghapus cart
                     $this->reduceStockFromCart($cartIds);
                     DB::table('cart')->whereIn('id', $cartIds)->delete();
+                    \Log::info('Cart berhasil dihapus setelah payment sukses', [
+                        'cart_ids' => $cartIds,
+                        'invoice_id' => $invoice->id
+                    ]);
                 } else {
                     // Jika stok tidak cukup, kembalikan pembayaran atau handle sesuai kebijakan
                     \Log::error("Stok tidak cukup setelah pembayaran midtrans: " . $stockValidation['message']);
                 }
+            } else {
+                \Log::warning('Tidak ada cart yang ditemukan untuk dihapus', [
+                    'invoice_id' => $invoice->id,
+                    'customer_id' => $invoice->customer_id
+                ]);
             }
-            session()->forget('cart_ids_to_delete');
-        }
 
-        // Kirim notifikasi ke customer jika pembayaran berhasil
-        if ($paymentStatus == 'success') {
-            $invoice = HInvoice::find($payment->invoice_id);
-            if (!$invoice) {
-                \Log::error('Midtrans callback: Invoice tidak ditemukan', ['invoice_id' => $payment->invoice_id]);
-                return redirect()->route('produk')->with('error', 'Invoice tidak ditemukan.');
-            }
+            // Kirim notifikasi ke customer jika pembayaran berhasil
             $customer = Customer::find($invoice->customer_id);
             if (!$customer) {
                 \Log::error('Midtrans callback: Customer tidak ditemukan', ['customer_id' => $invoice->customer_id]);

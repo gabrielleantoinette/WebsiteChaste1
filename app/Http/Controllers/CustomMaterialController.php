@@ -184,30 +184,48 @@ class CustomMaterialController extends Controller
     public function getColors($id)
     {
         try {
+            \Log::info('getColors called', ['material_id' => $id]);
+            
             $material = CustomMaterial::with('variants')->find($id);
             if (!$material) {
+                \Log::warning('Material not found', ['material_id' => $id]);
                 return response()->json([
                     'error' => 'Material not found',
                     'variants' => [],
                     'price' => 0
-                ], 404);
+                ], 404)->header('Content-Type', 'application/json; charset=utf-8');
             }
 
             $variants = $material->variants->map(function ($v) {
                 return ['color' => $v->color];
             })->toArray();
 
-            return response()->json([
+            $response = [
                 'variants' => $variants,
                 'price' => (float) $material->price,
-            ])->header('Content-Type', 'application/json');
+            ];
+
+            \Log::info('getColors response', [
+                'material_id' => $id,
+                'variants_count' => count($variants),
+                'price' => $response['price']
+            ]);
+
+            return response()->json($response)
+                ->header('Content-Type', 'application/json; charset=utf-8')
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type');
         } catch (\Exception $e) {
-            \Log::error('Error in getColors: ' . $e->getMessage());
+            \Log::error('Error in getColors: ' . $e->getMessage(), [
+                'material_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'error' => 'Server error',
                 'variants' => [],
                 'price' => 0
-            ], 500);
+            ], 500)->header('Content-Type', 'application/json; charset=utf-8');
         }
     }
 
