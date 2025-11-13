@@ -220,13 +220,15 @@
                             @endforeach
                         </tbody>
                         <tfoot class="bg-gray-50 border-t-2 border-gray-300">
+                            @if($transaction->shipping_cost > 0)
                             <tr>
-                                <td colspan="6" class="px-4 py-3 text-right font-semibold text-gray-700">Total:</td>
-                                <td class="px-4 py-3 text-right font-bold text-teal-600 text-lg">
+                                <td colspan="6" class="px-4 py-3 text-right font-semibold text-gray-700">
+                                    Subtotal Produk:
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-gray-900">
                                     Rp {{ number_format($transaction->grand_total - ($transaction->shipping_cost ?? 0), 0, ',', '.') }}
                                 </td>
                             </tr>
-                            @if($transaction->shipping_cost > 0)
                             <tr>
                                 <td colspan="6" class="px-4 py-3 text-right font-semibold text-gray-700">
                                     Ongkos Kirim
@@ -245,7 +247,7 @@
                             </tr>
                             @endif
                             <tr>
-                                <td colspan="6" class="px-4 py-3 text-right font-bold text-gray-900 text-lg">Grand Total:</td>
+                                <td colspan="6" class="px-4 py-3 text-right font-bold text-gray-900 text-lg">Total:</td>
                                 <td class="px-4 py-3 text-right font-bold text-teal-600 text-xl">
                                     Rp {{ number_format($transaction->grand_total, 0, ',', '.') }}
                                 </td>
