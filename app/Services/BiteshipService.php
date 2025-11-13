@@ -255,4 +255,165 @@ class BiteshipService
         
         return array_values($groupedRates);
     }
+
+    /**
+     * Create order/pengiriman di Biteship
+     * 
+     * @param array $orderData Data order yang berisi:
+     *   - origin_contact_name: Nama pengirim
+     *   - origin_contact_phone: Telepon pengirim
+     *   - origin_address: Alamat pengirim
+     *   - origin_area_id: Area ID pengirim
+     *   - destination_contact_name: Nama penerima
+     *   - destination_contact_phone: Telepon penerima
+     *   - destination_address: Alamat penerima
+     *   - destination_area_id: Area ID penerima
+     *   - courier_company: Kode kurir (jne, pos, tiki, dll)
+     *   - courier_type: Tipe layanan kurir
+     *   - courier_insurance: Nilai asuransi (optional)
+     *   - delivery_type: Tipe pengiriman (now, schedule, later)
+     *   - items: Array items yang dikirim
+     * @return array|null Mengembalikan data order dengan waybill ID atau null jika gagal
+     */
+    public function createOrder($orderData)
+    {
+        try {
+            Log::info('Biteship createOrder request', [
+                'order_data' => $orderData
+            ]);
+
+            $payload = [
+                'origin_contact_name' => $orderData['origin_contact_name'] ?? 'Pengirim',
+                'origin_contact_phone' => $orderData['origin_contact_phone'] ?? '',
+                'origin_address' => $orderData['origin_address'] ?? '',
+                'origin_area_id' => $orderData['origin_area_id'] ?? '',
+                'destination_contact_name' => $orderData['destination_contact_name'] ?? '',
+                'destination_contact_phone' => $orderData['destination_contact_phone'] ?? '',
+                'destination_address' => $orderData['destination_address'] ?? '',
+                'destination_area_id' => $orderData['destination_area_id'] ?? '',
+                'courier_company' => $orderData['courier_company'] ?? 'jne',
+                'courier_type' => $orderData['courier_type'] ?? '',
+                'delivery_type' => $orderData['delivery_type'] ?? 'later',
+                'items' => $orderData['items'] ?? []
+            ];
+
+            // Tambahkan courier_insurance jika ada
+            if (isset($orderData['courier_insurance']) && $orderData['courier_insurance'] > 0) {
+                $payload['courier_insurance'] = $orderData['courier_insurance'];
+            }
+
+            // Tambahkan delivery_date jika delivery_type adalah schedule
+            if (isset($orderData['delivery_date']) && $orderData['delivery_type'] === 'schedule') {
+                $payload['delivery_date'] = $orderData['delivery_date'];
+            }
+
+            $response = Http::withHeaders([
+                'authorization' => $this->apiKey,
+                'content-type' => 'application/json'
+            ])->post($this->baseUrl . '/orders', $payload);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info('Biteship createOrder success', [
+                    'order_id' => $data['id'] ?? null,
+                    'waybill_id' => $data['waybill_id'] ?? null,
+                    'status' => $data['status'] ?? null
+                ]);
+
+                return $data;
+            } else {
+                $errorBody = $response->json();
+                Log::error('Biteship createOrder failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'error_json' => $errorBody
+                ]);
+
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Biteship createOrder error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Get order details by order ID
+     * 
+     * @param string $orderId Biteship order ID
+     * @return array|null
+     */
+    public function getOrder($orderId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'authorization' => $this->apiKey,
+                'content-type' => 'application/json'
+            ])->get($this->baseUrl . '/orders/' . $orderId);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info('Biteship getOrder success', [
+                    'order_id' => $orderId,
+                    'waybill_id' => $data['waybill_id'] ?? null,
+                    'status' => $data['status'] ?? null
+                ]);
+
+                return $data;
+            } else {
+                Log::error('Biteship getOrder failed', [
+                    'order_id' => $orderId,
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Biteship getOrder error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Track order by waybill ID
+     * 
+     * @param string $waybillId Waybill ID untuk tracking
+     * @param string $courierCode Kode kurir (jne, pos, tiki, dll)
+     * @return array|null
+     */
+    public function trackOrder($waybillId, $courierCode)
+    {
+        try {
+            $response = Http::withHeaders([
+                'authorization' => $this->apiKey,
+                'content-type' => 'application/json'
+            ])->get($this->baseUrl . '/trackings/' . $waybillId . '/' . $courierCode);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info('Biteship trackOrder success', [
+                    'waybill_id' => $waybillId,
+                    'courier_code' => $courierCode,
+                    'status' => $data['status'] ?? null
+                ]);
+
+                return $data;
+            } else {
+                Log::error('Biteship trackOrder failed', [
+                    'waybill_id' => $waybillId,
+                    'courier_code' => $courierCode,
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Biteship trackOrder error: ' . $e->getMessage());
+            return null;
+        }
+    }
 }
