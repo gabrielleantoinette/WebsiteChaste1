@@ -4,7 +4,7 @@
 <div class="py-6">
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6">
-        <div>
+    <div>
             <h1 class="text-3xl font-bold text-gray-800 mb-2">Detail Invoice</h1>
             <p class="text-gray-600">Informasi lengkap transaksi dan detail produk</p>
         </div>
@@ -89,10 +89,10 @@
                             {{ $invoice->is_paid ? 'Lunas' : 'Belum Lunas' }}
                         </span>
                     </div>
-                </div>
-            </div>
+        </div>
+    </div>
 
-            {{-- Daftar Produk --}}
+    {{-- Daftar Produk --}}
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="p-2 bg-blue-100 rounded-lg">
@@ -102,7 +102,7 @@
                     </div>
                     <h2 class="text-xl font-semibold text-gray-800">Daftar Produk</h2>
                 </div>
-                <div class="overflow-x-auto">
+        <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
@@ -113,51 +113,51 @@
                                 <th class="px-4 py-3 text-right font-semibold text-gray-700">Harga</th>
                                 <th class="px-4 py-3 text-center font-semibold text-gray-700">Qty</th>
                                 <th class="px-4 py-3 text-right font-semibold text-gray-700">Subtotal</th>
-                            </tr>
-                        </thead>
+                    </tr>
+                </thead>
                         <tbody class="divide-y divide-gray-200">
-                            @foreach ($invoice->details as $detail)
+                    @foreach ($invoice->details as $detail)
                                 <tr class="hover:bg-gray-50 transition">
                                     <td class="px-4 py-3 text-gray-600">{{ $loop->iteration }}</td>
                                     <td class="px-4 py-3 font-medium text-gray-900">{{ $detail->product->name }}</td>
                                     <td class="px-4 py-3 text-gray-600">{{ $detail->variant->color ?? '-' }}</td>
                                     <td class="px-4 py-3 text-gray-600">
-                                        @php
-                                            $sizeText = '-';
-                                            if (!empty($detail->kebutuhan_custom) && preg_match('/\((\d+)x(\d+)\)/', $detail->kebutuhan_custom, $m)) {
-                                                $sizeText = $m[1] . 'x' . $m[2];
+                                @php
+                                    $sizeText = '-';
+                                    if (!empty($detail->kebutuhan_custom) && preg_match('/\((\d+)x(\d+)\)/', $detail->kebutuhan_custom, $m)) {
+                                        $sizeText = $m[1] . 'x' . $m[2];
                                             } elseif($detail->selected_size) {
                                                 $sizeText = $detail->selected_size;
-                                            }
-                                        @endphp
-                                        {{ $sizeText }}
-                                    </td>
+                                    }
+                                @endphp
+                                {{ $sizeText }}
+                            </td>
                                     <td class="px-4 py-3 text-right text-gray-900">Rp {{ number_format($detail->price, 0, ',', '.') }}</td>
                                     <td class="px-4 py-3 text-center text-gray-900">{{ $detail->quantity }}</td>
                                     <td class="px-4 py-3 text-right font-semibold text-gray-900">Rp {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
 
                 <div class="mt-6 pt-6 border-t border-gray-200 space-y-2">
                     <div class="flex justify-between text-base text-gray-700">
-                        <span class="font-medium">Subtotal Produk:</span>
+                <span class="font-medium">Subtotal Produk:</span> 
                         <span class="font-semibold">Rp {{ number_format($invoice->grand_total - ($invoice->shipping_cost ?? 0), 0, ',', '.') }}</span>
-                    </div>
-                    @if($invoice->shipping_cost > 0)
+            </div>
+            @if($invoice->shipping_cost > 0)
                     <div class="flex justify-between text-base text-gray-700">
                         <span class="font-medium">
                             Ongkos Kirim
-                            @if($invoice->shipping_courier || $invoice->shipping_service)
+                @if($invoice->shipping_courier || $invoice->shipping_service)
                                 <span class="text-sm text-gray-500 font-normal">
-                                    ({{ $invoice->shipping_courier ? ucfirst($invoice->shipping_courier) : 'Kurir Perusahaan' }}
-                                    @if($invoice->shipping_service)
-                                        - {{ $invoice->shipping_service }}
-                                    @endif)
-                                </span>
-                            @endif
+                        ({{ $invoice->shipping_courier ? ucfirst($invoice->shipping_courier) : 'Kurir Perusahaan' }}
+                        @if($invoice->shipping_service)
+                            - {{ $invoice->shipping_service }}
+                        @endif)
+                    </span>
+                @endif
                         </span>
                         <span class="font-semibold">Rp {{ number_format($invoice->shipping_cost, 0, ',', '.') }}</span>
                     </div>
@@ -207,8 +207,8 @@
                     <div>
                         <p class="text-xs text-gray-500 mb-1">Alamat Pengiriman</p>
                         <p class="text-gray-900 text-sm">{{ $invoice->address }}</p>
-                    </div>
-                    @endif
+            </div>
+            @endif
                 </div>
             </div>
 
@@ -239,7 +239,7 @@
                     </div>
                 </div>
             </div>
+            </div>
         </div>
     </div>
-</div>
 @endsection

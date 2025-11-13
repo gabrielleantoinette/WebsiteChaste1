@@ -256,7 +256,7 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
     });
 
     Route::prefix('invoices')->group(function () {
-        Route::get('/', [InvoiceController::class, 'view']);
+        Route::get('/', [InvoiceController::class, 'view'])->name('admin.invoices.view');
         Route::get('/create-customer', [InvoiceController::class, 'createCustomer']);
         Route::post('/create-customer', [InvoiceController::class, 'createCustomerAction']);
         Route::get('/create-product', [InvoiceController::class, 'createProduct']);
