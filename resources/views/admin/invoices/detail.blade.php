@@ -2,28 +2,34 @@
 
 @section('content')
 <div class="py-6">
+    {{-- Breadcrumb --}}
+    <div class="mb-6">
+        <nav class="flex" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="{{ route('admin.invoices.view') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-teal-600">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                        </svg>
+                        Kelola Penjualan
+                    </a>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Detail Invoice</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
     {{-- Header --}}
-    <div class="flex justify-between items-center mb-6">
-    <div>
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Detail Invoice</h1>
-            <p class="text-gray-600">Informasi lengkap transaksi dan detail produk</p>
-        </div>
-        <div class="flex gap-3">
-            <a href="{{ route('admin.invoices.view') }}"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                </svg>
-                Kembali
-            </a>
-            <a href="{{ url('/admin/invoices/export-pdf?id=' . $invoice->id) }}" target="_blank"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                Download PDF
-            </a>
-        </div>
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Detail Invoice</h1>
+        <p class="text-gray-600">Informasi lengkap transaksi dan detail produk</p>
     </div>
 
     {{-- Status Badge --}}
@@ -212,33 +218,6 @@
                 </div>
             </div>
 
-            {{-- Info Pegawai --}}
-            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="p-2 bg-green-100 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-green-600">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                        </svg>
-                    </div>
-                    <h2 class="text-lg font-semibold text-gray-800">Pegawai</h2>
-                </div>
-                <div class="space-y-3">
-                    <div>
-                        <p class="text-xs text-gray-500 mb-1">Nama</p>
-                        <p class="font-semibold text-gray-900">{{ $invoice->employee->name }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 mb-1">Email</p>
-                        <p class="text-gray-900">{{ $invoice->employee->email }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 mb-1">Status</p>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold {{ $invoice->employee->active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                            {{ $invoice->employee->active ? 'Aktif' : 'Tidak Aktif' }}
-                        </span>
-                    </div>
-                </div>
-            </div>
             </div>
         </div>
     </div>
