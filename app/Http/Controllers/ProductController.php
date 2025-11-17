@@ -122,7 +122,7 @@ class ProductController extends Controller
                     'description' => 'nullable|string',
                     'image'       => 'nullable|image|max:2048',
                     'price'       => 'required|numeric|min:0',
-                    'size'        => 'required|in:2x3,3x4,4x6,6x8',
+                    'size'        => 'nullable|in:2x3,3x4,4x6,6x8', // Ubah jadi nullable karena tidak ada di form
                     'live'        => 'required|boolean',
                 ]);
                 \Log::info('Validation passed', ['data_keys' => array_keys($data)]);
@@ -139,6 +139,12 @@ class ProductController extends Controller
 
             \Log::info('Finding product', ['product_id' => $id]);
             $product = Product::findOrFail($id);
+            
+            // Jika size tidak ada di request, gunakan size dari product yang sudah ada
+            if (!isset($data['size']) || empty($data['size'])) {
+                $data['size'] = $product->size ?? '2x3';
+                \Log::info('Size not in request, using existing product size', ['size' => $data['size']]);
+            }
             
             \Log::info('Product found, starting update', [
                 'product_id' => $id,
