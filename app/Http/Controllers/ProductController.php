@@ -113,16 +113,31 @@ class ProductController extends Controller
                 'content_type' => $request->header('Content-Type')
             ]);
             
+            \Log::info('Starting validation');
+            
             // 1) Validasi
-            $data = $request->validate([
-                'name'        => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'image'       => 'nullable|image|max:2048',
-                'price'       => 'required|numeric|min:0',
-                'size'        => 'required|in:2x3,3x4,4x6,6x8',
-                'live'        => 'required|boolean',
-            ]);
+            try {
+                $data = $request->validate([
+                    'name'        => 'required|string|max:255',
+                    'description' => 'nullable|string',
+                    'image'       => 'nullable|image|max:2048',
+                    'price'       => 'required|numeric|min:0',
+                    'size'        => 'required|in:2x3,3x4,4x6,6x8',
+                    'live'        => 'required|boolean',
+                ]);
+                \Log::info('Validation passed', ['data_keys' => array_keys($data)]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                \Log::error('Validation failed', [
+                    'errors' => $e->errors(),
+                    'product_id' => $id
+                ]);
+                return redirect()
+                    ->back()
+                    ->withErrors($e->errors())
+                    ->withInput();
+            }
 
+            \Log::info('Finding product', ['product_id' => $id]);
             $product = Product::findOrFail($id);
             
             \Log::info('Product found, starting update', [
