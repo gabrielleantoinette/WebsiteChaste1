@@ -400,3 +400,36 @@ Route::prefix('notifications')->middleware([LoggedIn::class])->group(function ()
     Route::post('/{id}/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 });
+
+// Debug route untuk cek konfigurasi upload (hanya untuk development/debugging)
+Route::get('/debug/upload-config', function() {
+    $config = [
+        'php_upload_max_filesize' => ini_get('upload_max_filesize'),
+        'php_post_max_size' => ini_get('post_max_size'),
+        'php_max_file_uploads' => ini_get('max_file_uploads'),
+        'php_memory_limit' => ini_get('memory_limit'),
+        'php_max_execution_time' => ini_get('max_execution_time'),
+        'directories' => [
+            'public/images' => [
+                'exists' => file_exists(public_path('images')),
+                'writable' => is_writable(public_path('images')),
+                'permissions' => file_exists(public_path('images')) ? substr(sprintf('%o', fileperms(public_path('images'))), -4) : 'N/A',
+            ],
+            'public/images/products' => [
+                'exists' => file_exists(public_path('images/products')),
+                'writable' => is_writable(public_path('images/products')),
+                'permissions' => file_exists(public_path('images/products')) ? substr(sprintf('%o', fileperms(public_path('images/products'))), -4) : 'N/A',
+            ],
+            'storage/app/public' => [
+                'exists' => file_exists(storage_path('app/public')),
+                'writable' => is_writable(storage_path('app/public')),
+                'permissions' => file_exists(storage_path('app/public')) ? substr(sprintf('%o', fileperms(storage_path('app/public'))), -4) : 'N/A',
+            ],
+        ],
+        'symlink_available' => function_exists('symlink'),
+        'storage_link_exists' => file_exists(public_path('storage')),
+        'storage_link_is_link' => is_link(public_path('storage')),
+    ];
+    
+    return response()->json($config, 200, [], JSON_PRETTY_PRINT);
+})->name('debug.upload.config');

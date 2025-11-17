@@ -49,7 +49,7 @@
     </div>
   @endif
 
-  <form method="POST" enctype="multipart/form-data" class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+  <form method="POST" action="{{ url('/admin/products/detail/' . $product->id) }}" enctype="multipart/form-data" class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
     @csrf
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       {{-- Nama Produk --}}

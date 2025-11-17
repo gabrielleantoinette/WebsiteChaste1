@@ -103,6 +103,16 @@ class ProductController extends Controller
     public function updateProductAction(Request $request, $id)
     {
         try {
+            \Log::info('UpdateProductAction called', [
+                'product_id' => $id,
+                'has_file' => $request->hasFile('image'),
+                'file_valid' => $request->hasFile('image') ? $request->file('image')->isValid() : false,
+                'file_size' => $request->hasFile('image') ? $request->file('image')->getSize() : null,
+                'all_input' => $request->except(['image']),
+                'method' => $request->method(),
+                'content_type' => $request->header('Content-Type')
+            ]);
+            
             // 1) Validasi
             $data = $request->validate([
                 'name'        => 'required|string|max:255',
@@ -114,6 +124,11 @@ class ProductController extends Controller
             ]);
 
             $product = Product::findOrFail($id);
+            
+            \Log::info('Product found, starting update', [
+                'product_id' => $id,
+                'current_image' => $product->image
+            ]);
 
             // 2) Jika ada upload baru, hapus file lama dan simpan yang baru
             if ($request->hasFile('image')) {
@@ -203,29 +218,50 @@ class ProductController extends Controller
                 'destination' => $fullPath,
                 'directory_exists' => File::exists($directory),
                 'directory_writable' => is_writable($directory),
-                'file_size' => $file->getSize()
+                'file_size' => $file->getSize(),
+                'file_error' => $file->getError(),
+                'file_error_message' => $file->getErrorMessage(),
+                'php_upload_max_filesize' => ini_get('upload_max_filesize'),
+                'php_post_max_size' => ini_get('post_max_size'),
+                'php_max_file_uploads' => ini_get('max_file_uploads')
             ]);
+            
+            // Cek error upload
+            if ($file->getError() !== UPLOAD_ERR_OK) {
+                $errorMessages = [
+                    UPLOAD_ERR_INI_SIZE => 'File terlalu besar (melebihi upload_max_filesize)',
+                    UPLOAD_ERR_FORM_SIZE => 'File terlalu besar (melebihi MAX_FILE_SIZE)',
+                    UPLOAD_ERR_PARTIAL => 'File hanya ter-upload sebagian',
+                    UPLOAD_ERR_NO_FILE => 'Tidak ada file yang diupload',
+                    UPLOAD_ERR_NO_TMP_DIR => 'Folder temporary tidak ditemukan',
+                    UPLOAD_ERR_CANT_WRITE => 'Gagal menulis file ke disk',
+                    UPLOAD_ERR_EXTENSION => 'Upload dihentikan oleh extension PHP'
+                ];
+                $errorMsg = $errorMessages[$file->getError()] ?? 'Unknown upload error: ' . $file->getError();
+                throw new \Exception($errorMsg);
+            }
             
             // Gunakan move_uploaded_file untuk keamanan yang lebih baik
             if ($file->isValid()) {
                 $moved = $file->move($directory, $filename);
                 
                 if (!$moved || !File::exists($fullPath)) {
-                    throw new \Exception('Failed to move uploaded file');
+                    throw new \Exception('Failed to move uploaded file. Check directory permissions.');
                 }
                 
                 // Set permission file
-                chmod($fullPath, 0644);
+                @chmod($fullPath, 0644);
                 
                 \Log::info('File uploaded successfully', [
                     'filename' => $filename,
                     'path' => $fullPath,
-                    'size' => File::size($fullPath)
+                    'size' => File::size($fullPath),
+                    'url' => 'images/products/' . $filename
                 ]);
                 
                 return 'images/products/' . $filename;
             } else {
-                throw new \Exception('Uploaded file is not valid');
+                throw new \Exception('Uploaded file is not valid: ' . $file->getErrorMessage());
             }
         } catch (\Exception $e) {
             \Log::error('Error uploading product image', [
