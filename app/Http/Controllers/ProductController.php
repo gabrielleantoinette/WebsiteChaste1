@@ -132,23 +132,53 @@ class ProductController extends Controller
 
             // 2) Jika ada upload baru, hapus file lama dan simpan yang baru
             if ($request->hasFile('image')) {
+                \Log::info('Processing image upload', [
+                    'product_id' => $id,
+                    'file_name' => $request->file('image')->getClientOriginalName(),
+                    'file_size' => $request->file('image')->getSize(),
+                    'file_mime' => $request->file('image')->getMimeType()
+                ]);
+                
                 try {
-                    $this->deleteExistingImage($product->image);
+                    // Hapus file lama jika ada
+                    if ($product->image) {
+                        \Log::info('Deleting old image', ['old_image' => $product->image]);
+                        $this->deleteExistingImage($product->image);
+                    }
+                    
+                    // Simpan file baru
+                    \Log::info('Calling storeProductImage');
                     $data['image'] = $this->storeProductImage($request->file('image'), $data['name']);
+                    \Log::info('Image stored successfully', ['new_image_path' => $data['image']]);
                 } catch (\Exception $e) {
                     \Log::error('Error uploading image in updateProductAction', [
                         'error' => $e->getMessage(),
-                        'product_id' => $id
+                        'trace' => $e->getTraceAsString(),
+                        'product_id' => $id,
+                        'file_name' => $request->file('image')->getClientOriginalName()
                     ]);
                     return redirect()
                         ->back()
                         ->withInput()
                         ->with('error', 'Gagal mengupload gambar: ' . $e->getMessage());
                 }
+            } else {
+                \Log::info('No image file in request, skipping image update');
             }
 
             // 3) Update
+            \Log::info('Updating product data', [
+                'product_id' => $id,
+                'data_keys' => array_keys($data),
+                'has_image' => isset($data['image'])
+            ]);
+            
             $product->update($data);
+            
+            \Log::info('Product updated successfully', [
+                'product_id' => $id,
+                'updated_image' => $product->fresh()->image
+            ]);
 
             // 4) Kirim notifikasi ke owner
             $notificationService = app(NotificationService::class);
