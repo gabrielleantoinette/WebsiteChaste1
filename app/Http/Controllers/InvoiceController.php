@@ -733,8 +733,22 @@ class InvoiceController extends Controller
                 'method' => $request->method()
             ]);
             
-            $paymentStatus = $request->query('status');
-            $paymentId = $request->query('paymentId');
+            // Ambil status dengan berbagai cara untuk handle URL encoding issues
+            $paymentStatus = $request->query('status') 
+                ?? $request->query('amp;status') 
+                ?? $request->input('status') 
+                ?? $request->get('status');
+            
+            // Ambil paymentId
+            $paymentId = $request->query('paymentId') 
+                ?? $request->input('paymentId') 
+                ?? $request->get('paymentId');
+            
+            \Log::info('Midtrans callback: Parsed parameters', [
+                'paymentStatus' => $paymentStatus,
+                'paymentId' => $paymentId,
+                'all_query' => $request->all()
+            ]);
             
             if (!$paymentId) {
                 \Log::error('Midtrans callback: paymentId tidak ditemukan', $request->all());
@@ -749,20 +763,35 @@ class InvoiceController extends Controller
             
             \Log::info('Midtrans callback: Payment found', ['paymentId' => $paymentId, 'invoice_id' => $payment->invoice_id]);
             
-            $payment->is_paid = $paymentStatus == 'success' ? true : false;
-            $payment->save();
-
-        // Set session last_invoice_id agar halaman sukses tidak error
-        session()->put('last_invoice_id', $payment->invoice_id);
-
-        // Hapus cart setelah pembayaran sukses (midtrans)
-        $invoice = null;
-        if ($paymentStatus == 'success') {
+            // Ambil invoice terlebih dahulu
             $invoice = HInvoice::find($payment->invoice_id);
             if (!$invoice) {
                 \Log::error('Midtrans callback: Invoice tidak ditemukan', ['invoice_id' => $payment->invoice_id]);
                 return redirect()->route('produk')->with('error', 'Invoice tidak ditemukan.');
             }
+            
+            // Ambil customer
+            $customer = Customer::find($invoice->customer_id);
+            if (!$customer) {
+                \Log::error('Midtrans callback: Customer tidak ditemukan', ['customer_id' => $invoice->customer_id]);
+                return redirect()->route('produk')->with('error', 'Data customer tidak ditemukan.');
+            }
+            
+            // Update payment status
+            $payment->is_paid = $paymentStatus == 'success' ? true : false;
+            $payment->save();
+            
+            \Log::info('Midtrans callback: Payment status updated', [
+                'paymentId' => $paymentId,
+                'is_paid' => $payment->is_paid,
+                'status' => $paymentStatus
+            ]);
+
+        // Set session last_invoice_id agar halaman sukses tidak error
+        session()->put('last_invoice_id', $payment->invoice_id);
+
+        // Hapus cart dan update invoice setelah pembayaran sukses (midtrans)
+        if ($paymentStatus == 'success') {
             
             $cartIds = [];
             
@@ -842,14 +871,23 @@ class InvoiceController extends Controller
                 ]);
             }
 
-            // Kirim notifikasi ke customer jika pembayaran berhasil
-            $customer = Customer::find($invoice->customer_id);
-            if (!$customer) {
-                \Log::error('Midtrans callback: Customer tidak ditemukan', ['customer_id' => $invoice->customer_id]);
-                return redirect()->route('produk')->with('error', 'Data customer tidak ditemukan.');
-            }
+            // Update Invoice setelah payment berhasil
+            $invoice->status = 'Dikemas'; // Langsung ubah ke status Dikemas agar masuk ke gudang
+            $invoice->is_paid = 1;
+            $invoice->paid_amount = $payment->amount;
+            $invoice->save();
+            
+            \Log::info('Midtrans callback: Invoice updated', [
+                'invoice_id' => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'status' => $invoice->status,
+                'is_paid' => $invoice->is_paid,
+                'paid_amount' => $invoice->paid_amount
+            ]);
             
             $notificationService = app(NotificationService::class);
+            
+            // Kirim notifikasi ke customer jika pembayaran berhasil
             $notificationService->sendToCustomer(
                 'payment_success',
                 'Pembayaran Berhasil',
@@ -869,69 +907,64 @@ class InvoiceController extends Controller
                 'customer_name' => $customer->name,
                 'invoice_code' => $invoice->code
             ]);
-        }
-
-        // Update Invoice setelah payment berhasil
-        if ($paymentStatus == 'success') {
-            $invoice = HInvoice::find($payment->invoice_id);
-            if ($invoice) {
-                $invoice->status = 'Dikemas'; // Langsung ubah ke status Dikemas agar masuk ke gudang
-                $invoice->is_paid = 1;
-                $invoice->paid_amount = $payment->amount;
-                $invoice->save();
-                
-                // Kirim notifikasi ke owner tentang pesanan baru
-                $notificationService = app(NotificationService::class);
-                $notificationService->notifyOrderCreated($invoice->id, $customer->id, [
-                    'total_amount' => $payment->amount,
-                    'invoice_code' => $invoice->code,
-                    'customer_name' => $customer->name
-                ]);
-                
-                // Kirim notifikasi ke gudang tentang pesanan baru yang perlu diproses
-                $notificationService->sendToRole(
-                    'order_created',
-                    'Pesanan Baru Siap Diproses',
-                    "Pesanan baru {$invoice->code} dari {$customer->name} sebesar Rp " . number_format($payment->amount) . " siap untuk diproses",
-                    'gudang',
-                    [
-                        'data_type' => 'order',
-                        'data_id' => $invoice->id,
-                        'action_url' => "/admin/gudang-transaksi/detail/{$invoice->id}",
-                        'priority' => 'high',
-                        'icon' => 'fas fa-box'
-                    ]
-                );
-                
-                // Kirim notifikasi ke owner tentang pesanan baru
-                $notificationService->notifyWarehouseAction([
-                    'message' => "Pesanan baru {$invoice->code} dari {$customer->name} sebesar Rp " . number_format($payment->amount) . " siap untuk diproses",
-                    'action_id' => $invoice->id,
+            
+            // Kirim notifikasi ke owner tentang pesanan baru
+            $notificationService->notifyOrderCreated($invoice->id, $customer->id, [
+                'total_amount' => $payment->amount,
+                'invoice_code' => $invoice->code,
+                'customer_name' => $customer->name
+            ]);
+            
+            // Kirim notifikasi ke gudang tentang pesanan baru yang perlu diproses
+            $notificationService->sendToRole(
+                'order_created',
+                'Pesanan Baru Siap Diproses',
+                "Pesanan baru {$invoice->code} dari {$customer->name} sebesar Rp " . number_format($payment->amount) . " siap untuk diproses",
+                'gudang',
+                [
+                    'data_type' => 'order',
+                    'data_id' => $invoice->id,
                     'action_url' => "/admin/gudang-transaksi/detail/{$invoice->id}",
-                    'priority' => 'high'
-                ]);
-                
-                // Kirim notifikasi ke admin tentang pesanan baru
-                $notificationService->sendToRole(
-                    'order_created',
-                    'Pesanan Baru',
-                    "Pesanan baru {$invoice->code} dari {$customer->name} sebesar Rp " . number_format($payment->amount) . " telah dibuat",
-                    'admin',
-                    [
-                        'data_type' => 'order',
-                        'data_id' => $invoice->id,
-                        'action_url' => "/admin/invoices/{$invoice->id}",
-                        'priority' => 'high',
-                        'icon' => 'fas fa-shopping-cart'
-                    ]
-                );
-                
-                // Cek apakah dinvoice sudah ada (seharusnya sudah dibuat saat checkout)
-                $existingDInvoice = DB::table('dinvoice')->where('hinvoice_id', $invoice->id)->first();
-                if (!$existingDInvoice) {
-                    \Log::warning("No dinvoice data found for invoice {$invoice->id}. This should not happen.");
-                }
+                    'priority' => 'high',
+                    'icon' => 'fas fa-box'
+                ]
+            );
+            
+            // Kirim notifikasi ke owner tentang pesanan baru
+            $notificationService->notifyWarehouseAction([
+                'message' => "Pesanan baru {$invoice->code} dari {$customer->name} sebesar Rp " . number_format($payment->amount) . " siap untuk diproses",
+                'action_id' => $invoice->id,
+                'action_url' => "/admin/gudang-transaksi/detail/{$invoice->id}",
+                'priority' => 'high'
+            ]);
+            
+            // Kirim notifikasi ke admin tentang pesanan baru
+            $notificationService->sendToRole(
+                'order_created',
+                'Pesanan Baru',
+                "Pesanan baru {$invoice->code} dari {$customer->name} sebesar Rp " . number_format($payment->amount) . " telah dibuat",
+                'admin',
+                [
+                    'data_type' => 'order',
+                    'data_id' => $invoice->id,
+                    'action_url' => "/admin/invoices/{$invoice->id}",
+                    'priority' => 'high',
+                    'icon' => 'fas fa-shopping-cart'
+                ]
+            );
+            
+            // Cek apakah dinvoice sudah ada (seharusnya sudah dibuat saat checkout)
+            $existingDInvoice = DB::table('dinvoice')->where('hinvoice_id', $invoice->id)->first();
+            if (!$existingDInvoice) {
+                \Log::warning("No dinvoice data found for invoice {$invoice->id}. This should not happen.");
             }
+        } else {
+            // Jika payment tidak sukses, log untuk debugging
+            \Log::warning('Midtrans callback: Payment not successful', [
+                'paymentId' => $paymentId,
+                'status' => $paymentStatus,
+                'invoice_id' => $payment->invoice_id
+            ]);
         }
 
             // Pastikan session last_invoice_id sudah diset sebelum redirect

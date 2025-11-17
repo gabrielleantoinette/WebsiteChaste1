@@ -15,20 +15,31 @@
     <main class="min-h-screen bg-white flex items-center justify-center px-4 py-10">
         <div class="flex flex-col md:flex-row w-full max-w-5xl rounded-[20px] shadow-lg border border-gray-200 overflow-hidden bg-white">
             <!-- Gambar Kiri (Desktop only) -->
-            <div class="hidden md:block md:w-1/2">
+            <div class="hidden md:block md:w-1/2 bg-gray-50 relative" style="min-height: 600px;">
                 <img src="{{ asset('images/terpal-login.png') }}" alt="Terpal Gulungan"
-                    class="w-full h-full object-cover">
+                    class="absolute inset-0 w-full h-full object-cover" style="will-change: auto;">
             </div>
 
             <!-- Form Kanan -->
             <div class="w-full md:w-1/2 p-8">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">DAFTAR</h2>
-                <form method="POST" action="{{ url('/register') }}" class="space-y-4">
+                <form method="POST" action="{{ url('/register') }}" class="space-y-4" id="registerForm">
                     @csrf
+                    @if ($errors->any())
+                        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+                            <ul class="list-disc list-inside">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" name="email" required
-                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
+                        <label class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
+                        <input type="text" name="email" id="email" required
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black"
+                            placeholder="contoh@email.com">
+                        <div id="email-error" class="text-red-600 text-sm mt-1 hidden"></div>
                     </div>
 
                     <div>
@@ -176,13 +187,64 @@
             }
         }
 
-        // Add event listeners for password validation
+        // Email validation
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Add event listeners for password validation and email validation
         document.addEventListener('DOMContentLoaded', function() {
             const passwordField = document.getElementById('password');
             const passwordConfirmationField = document.getElementById('password_confirmation');
+            const emailField = document.getElementById('email');
+            const emailErrorDiv = document.getElementById('email-error');
+            const registerForm = document.getElementById('registerForm');
             
             passwordField.addEventListener('input', validatePasswordMatch);
             passwordConfirmationField.addEventListener('input', validatePasswordMatch);
+            
+            // Email validation on input
+            emailField.addEventListener('input', function() {
+                const emailValue = this.value.trim();
+                if (emailValue === '') {
+                    emailErrorDiv.classList.add('hidden');
+                    this.classList.remove('border-red-500');
+                    return;
+                }
+                
+                if (!validateEmail(emailValue)) {
+                    emailErrorDiv.textContent = '⚠️ Format email tidak valid. Harus mengandung @ dan domain (contoh: nama@email.com)';
+                    emailErrorDiv.classList.remove('hidden');
+                    this.classList.add('border-red-500');
+                } else {
+                    emailErrorDiv.classList.add('hidden');
+                    this.classList.remove('border-red-500');
+                }
+            });
+            
+            // Email validation on blur
+            emailField.addEventListener('blur', function() {
+                const emailValue = this.value.trim();
+                if (emailValue !== '' && !validateEmail(emailValue)) {
+                    emailErrorDiv.textContent = '⚠️ Format email tidak valid. Harus mengandung @ dan domain (contoh: nama@email.com)';
+                    emailErrorDiv.classList.remove('hidden');
+                    this.classList.add('border-red-500');
+                }
+            });
+            
+            // Form submission validation
+            registerForm.addEventListener('submit', function(e) {
+                const emailValue = emailField.value.trim();
+                if (!validateEmail(emailValue)) {
+                    e.preventDefault();
+                    emailErrorDiv.textContent = '⚠️ Format email tidak valid. Harus mengandung @ dan domain (contoh: nama@email.com)';
+                    emailErrorDiv.classList.remove('hidden');
+                    emailField.classList.add('border-red-500');
+                    emailField.focus();
+                    return false;
+                }
+            });
         });
 
         // Indonesia wilayah data

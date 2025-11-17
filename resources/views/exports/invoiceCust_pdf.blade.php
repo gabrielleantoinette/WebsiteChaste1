@@ -122,6 +122,7 @@
             <tr>
                 <th>Produk</th>
                 <th>Warna</th>
+                <th>Ukuran</th>
                 <th>Jumlah</th>
                 <th>Harga Satuan</th>
                 <th>Total Harga</th>
@@ -138,6 +139,19 @@
                         @endif
                     </td>
                     <td>{{ $item->warna_custom ?? $item->variant_color ?? '-' }}</td>
+                    <td>
+                        @php
+                            $sizeText = '-';
+                            if (!empty($item->kebutuhan_custom) && preg_match('/\((\d+)x(\d+)\)/', $item->kebutuhan_custom, $matches)) {
+                                $sizeText = $matches[1] . 'x' . $matches[2];
+                            } elseif(isset($item->selected_size) && $item->selected_size) {
+                                $sizeText = $item->selected_size;
+                            } elseif(isset($item->ukuran_custom) && $item->ukuran_custom) {
+                                $sizeText = $item->ukuran_custom;
+                            }
+                        @endphp
+                        {{ $sizeText }}
+                    </td>
                     <td>{{ $item->quantity }}</td>
                     <td>
                         Rp {{ number_format(isset($item->kebutuhan_custom) && $item->kebutuhan_custom ? ($item->harga_custom ?? 0) : ($item->price ?? 0), 0, ',', '.') }}
