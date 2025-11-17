@@ -45,13 +45,28 @@ class Product extends Model
     public function getImageUrlAttribute(): string
     {
         if ($this->image) {
+            // Cek apakah path sudah relatif ke public (images/products/...)
+            if (str_starts_with($this->image, 'images/products/')) {
+                $publicPath = $this->image;
+                if (file_exists(public_path($publicPath))) {
+                    return $publicPath;
+                }
+            }
+            
+            // Cek apakah file ada di storage/app/public
             if (Storage::disk('public')->exists($this->image)) {
+                // Jika symlink tidak tersedia, gunakan route
+                $linkPath = public_path('storage');
+                if (!file_exists($linkPath) || !is_link($linkPath)) {
+                    // Gunakan route-based serving
+                    return '/public/storage/' . ltrim($this->image, '/');
+                }
                 return 'storage/' . ltrim($this->image, '/');
             }
 
+            // Coba cari di public/images/products berdasarkan filename
             $fileName = basename($this->image);
             $publicPath = 'images/products/' . $fileName;
-
             if (file_exists(public_path($publicPath))) {
                 return $publicPath;
             }

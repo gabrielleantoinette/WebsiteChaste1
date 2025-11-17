@@ -62,14 +62,33 @@ class FixUploadDirectories extends Command
             }
         }
 
-        // Check if storage link exists
+        // Check if storage link exists or if we can create it
         $linkPath = public_path('storage');
+        $storagePath = storage_path('app/public');
+        
         if (!File::exists($linkPath)) {
-            $this->warn('Storage link does not exist. Run: php artisan storage:link');
+            // Try to create symlink if function is available
+            if (function_exists('symlink')) {
+                try {
+                    symlink($storagePath, $linkPath);
+                    $this->info('Storage link created successfully');
+                } catch (\Exception $e) {
+                    $this->warn('Could not create storage symlink: ' . $e->getMessage());
+                    $this->info('Using route-based file serving instead (/public/storage/{path})');
+                }
+            } else {
+                $this->warn('symlink() function is not available on this server');
+                $this->info('Using route-based file serving instead (/public/storage/{path})');
+                $this->info('Files in storage/app/public will be accessible via: /public/storage/{path}');
+            }
         } else {
             $this->info('Storage link exists');
         }
 
+        $this->info('');
+        $this->info('Upload directories are ready!');
+        $this->info('Product images: public/images/products');
+        $this->info('Storage files: storage/app/public (accessible via /public/storage/{path})');
         $this->info('Done!');
         return 0;
     }
