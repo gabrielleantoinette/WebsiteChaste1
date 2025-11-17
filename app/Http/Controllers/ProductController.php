@@ -33,36 +33,62 @@ class ProductController extends Controller
 
     public function createProductAction(Request $request)
     {
-        // 1) Validasi
-        $data = $request->validate([
-            'name'        => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'image'       => 'nullable|image|max:2048', // max 2MB
-            'price'       => 'required|numeric|min:0',
-            'size'        => 'required|in:2x3,3x4,4x6,6x8',
-            'live'        => 'required|boolean',
-        ]);
+        try {
+            // 1) Validasi
+            $data = $request->validate([
+                'name'        => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'image'       => 'nullable|image|max:2048', // max 2MB
+                'price'       => 'required|numeric|min:0',
+                'size'        => 'required|in:2x3,3x4,4x6,6x8',
+                'live'        => 'required|boolean',
+            ]);
 
-        // 2) Upload image jika ada
-        if ($request->hasFile('image')) {
-            $data['image'] = $this->storeProductImage($request->file('image'), $data['name']);
+            // 2) Upload image jika ada
+            if ($request->hasFile('image')) {
+                try {
+                    $data['image'] = $this->storeProductImage($request->file('image'), $data['name']);
+                } catch (\Exception $e) {
+                    \Log::error('Error uploading image in createProductAction', [
+                        'error' => $e->getMessage()
+                    ]);
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with('error', 'Gagal mengupload gambar: ' . $e->getMessage());
+                }
+            }
+
+            // 3) Simpan
+            $product = Product::create($data);
+
+            // 4) Kirim notifikasi ke owner
+            $notificationService = app(NotificationService::class);
+            $notificationService->notifyAdminAction([
+                'message' => "Admin telah menambahkan produk baru: {$product->name}",
+                'action_id' => $product->id,
+                'action_url' => "/admin/products/detail/{$product->id}",
+                'priority' => 'normal'
+            ]);
+
+            return redirect()
+                ->route('admin.products.view')
+                ->with('success', 'Produk baru berhasil ditambahkan.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Error creating product', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menambahkan produk: ' . $e->getMessage());
         }
-
-        // 3) Simpan
-        $product = Product::create($data);
-
-        // 4) Kirim notifikasi ke owner
-        $notificationService = app(NotificationService::class);
-        $notificationService->notifyAdminAction([
-            'message' => "Admin telah menambahkan produk baru: {$product->name}",
-            'action_id' => $product->id,
-            'action_url' => "/admin/products/detail/{$product->id}",
-            'priority' => 'normal'
-        ]);
-
-        return redirect()
-            ->route('admin.products.view')
-            ->with('success', 'Produk baru berhasil ditambahkan.');
     }
 
     public function detail($id)
@@ -76,53 +102,140 @@ class ProductController extends Controller
 
     public function updateProductAction(Request $request, $id)
     {
-        // 1) Validasi
-        $data = $request->validate([
-            'name'        => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'image'       => 'nullable|image|max:2048',
-            'price'       => 'required|numeric|min:0',
-            'size'        => 'required|in:2x3,3x4,4x6,6x8',
-            'live'        => 'required|boolean',
-        ]);
+        try {
+            // 1) Validasi
+            $data = $request->validate([
+                'name'        => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'image'       => 'nullable|image|max:2048',
+                'price'       => 'required|numeric|min:0',
+                'size'        => 'required|in:2x3,3x4,4x6,6x8',
+                'live'        => 'required|boolean',
+            ]);
 
-        $product = Product::findOrFail($id);
+            $product = Product::findOrFail($id);
 
-        // 2) Jika ada upload baru, hapus file lama dan simpan yang baru
-        if ($request->hasFile('image')) {
-            $this->deleteExistingImage($product->image);
-            $data['image'] = $this->storeProductImage($request->file('image'), $data['name']);
+            // 2) Jika ada upload baru, hapus file lama dan simpan yang baru
+            if ($request->hasFile('image')) {
+                try {
+                    $this->deleteExistingImage($product->image);
+                    $data['image'] = $this->storeProductImage($request->file('image'), $data['name']);
+                } catch (\Exception $e) {
+                    \Log::error('Error uploading image in updateProductAction', [
+                        'error' => $e->getMessage(),
+                        'product_id' => $id
+                    ]);
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with('error', 'Gagal mengupload gambar: ' . $e->getMessage());
+                }
+            }
+
+            // 3) Update
+            $product->update($data);
+
+            // 4) Kirim notifikasi ke owner
+            $notificationService = app(NotificationService::class);
+            $notificationService->notifyAdminAction([
+                'message' => "Admin telah mengupdate produk: {$product->name}",
+                'action_id' => $product->id,
+                'action_url' => "/admin/products/detail/{$product->id}",
+                'priority' => 'normal'
+            ]);
+
+            return redirect()
+                ->route('admin.products.view')
+                ->with('success', 'Produk berhasil diupdate.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Error updating product', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'product_id' => $id
+            ]);
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat mengupdate produk: ' . $e->getMessage());
         }
-
-        // 3) Update
-        $product->update($data);
-
-        // 4) Kirim notifikasi ke owner
-        $notificationService = app(NotificationService::class);
-        $notificationService->notifyAdminAction([
-            'message' => "Admin telah mengupdate produk: {$product->name}",
-            'action_id' => $product->id,
-            'action_url' => "/admin/products/detail/{$product->id}",
-            'priority' => 'normal'
-        ]);
-
-        return redirect()
-            ->route('admin.products.view')
-            ->with('success', 'Produk berhasil diupdate.');
     }
 
     private function storeProductImage($file, string $productName): string
     {
-        $directory = public_path('images/products');
-        if (!File::exists($directory)) {
-            File::makeDirectory($directory, 0755, true);
+        try {
+            $directory = public_path('images/products');
+            
+            // Pastikan folder parent juga ada
+            $parentDir = public_path('images');
+            if (!File::exists($parentDir)) {
+                File::makeDirectory($parentDir, 0775, true);
+                \Log::info('Created images directory', ['path' => $parentDir]);
+            }
+            
+            // Buat folder products jika belum ada
+            if (!File::exists($directory)) {
+                $created = File::makeDirectory($directory, 0775, true);
+                \Log::info('Created products directory', [
+                    'path' => $directory,
+                    'created' => $created,
+                    'exists_after' => File::exists($directory),
+                    'is_writable' => is_writable($directory)
+                ]);
+            }
+            
+            // Pastikan folder writable
+            if (!is_writable($directory)) {
+                chmod($directory, 0775);
+                \Log::warning('Changed directory permissions', ['path' => $directory]);
+            }
+            
+            $extension = $file->getClientOriginalExtension();
+            $filename = Str::slug($productName) . '-' . time() . '.' . $extension;
+            $fullPath = $directory . '/' . $filename;
+            
+            \Log::info('Attempting to move uploaded file', [
+                'source' => $file->getPathname(),
+                'destination' => $fullPath,
+                'directory_exists' => File::exists($directory),
+                'directory_writable' => is_writable($directory),
+                'file_size' => $file->getSize()
+            ]);
+            
+            // Gunakan move_uploaded_file untuk keamanan yang lebih baik
+            if ($file->isValid()) {
+                $moved = $file->move($directory, $filename);
+                
+                if (!$moved || !File::exists($fullPath)) {
+                    throw new \Exception('Failed to move uploaded file');
+                }
+                
+                // Set permission file
+                chmod($fullPath, 0644);
+                
+                \Log::info('File uploaded successfully', [
+                    'filename' => $filename,
+                    'path' => $fullPath,
+                    'size' => File::size($fullPath)
+                ]);
+                
+                return 'images/products/' . $filename;
+            } else {
+                throw new \Exception('Uploaded file is not valid');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error uploading product image', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'product_name' => $productName,
+                'directory' => $directory ?? 'not set'
+            ]);
+            throw $e;
         }
-
-        $extension = $file->getClientOriginalExtension();
-        $filename = Str::slug($productName) . '-' . time() . '.' . $extension;
-        $file->move($directory, $filename);
-
-        return 'images/products/' . $filename;
     }
 
     private function deleteExistingImage(?string $path): void
