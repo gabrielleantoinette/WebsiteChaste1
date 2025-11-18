@@ -34,7 +34,7 @@ class GudangController extends Controller
             ->select(
                 'dinvoice.*',
                 'products.name as product_name',
-                'products.size as product_size',
+                'dinvoice.selected_size as selected_size', // Ukuran yang dipilih customer
                 'product_variants.color as variant_color',
                 'dinvoice.price as harga_custom',
                 'dinvoice.quantity',
@@ -53,7 +53,7 @@ class GudangController extends Controller
                 ->select(
                     'cart.*',
                     'products.name as product_name',
-                    'products.size as product_size',
+                    'cart.selected_size as selected_size', // Ukuran yang dipilih customer
                     'product_variants.color as variant_color'
                 )
                 ->where('cart.user_id', $invoice->customer_id)

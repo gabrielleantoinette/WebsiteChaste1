@@ -129,13 +129,20 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-2">
-                                    @if(isset($item->product_size) && $item->product_size)
-                                        {{ $item->product_size }}
-                                    @elseif(isset($item->kebutuhan_custom) && $item->kebutuhan_custom)
-                                        <span class="text-gray-600">Custom</span>
-                                    @else
-                                        -
-                                    @endif
+                                    @php
+                                        $sizeText = '-';
+                                        // Untuk produk custom, coba ekstrak ukuran dari kebutuhan_custom
+                                        if (!empty($item->kebutuhan_custom) && preg_match('/\((\d+)x(\d+)\)/', $item->kebutuhan_custom, $matches)) {
+                                            $sizeText = $matches[1] . 'x' . $matches[2];
+                                        } elseif (!empty($item->selected_size)) {
+                                            // Untuk produk regular, gunakan selected_size yang dipilih customer
+                                            $sizeText = $item->selected_size;
+                                        } elseif (!empty($item->kebutuhan_custom)) {
+                                            // Jika ada kebutuhan_custom tapi tidak ada format ukuran, tampilkan Custom
+                                            $sizeText = 'Custom';
+                                        }
+                                    @endphp
+                                    <span class="text-gray-700 font-medium">{{ $sizeText }}</span>
                                 </td>
                                 <td class="px-4 py-2">
                                     @if(isset($item->variant_color) && $item->variant_color)
