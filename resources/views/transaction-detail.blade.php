@@ -137,6 +137,18 @@
                         </div>
                     </div>
                 </div>
+                
+                {{-- Tombol Download Invoice --}}
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <a href="{{ route('invoice.download', $transaction->id) }}" 
+                       class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span>Download Invoice PDF</span>
+                    </a>
+                    <p class="text-xs text-gray-500 mt-2">Unduh invoice dalam format PDF untuk keperluan dokumentasi</p>
+                </div>
             </div>
         </div>
 
@@ -209,65 +221,71 @@
                                                 @endif
                                                 {{-- Detail Custom Terpal --}}
                                                 @if($detail->kebutuhan_custom && !$detail->product)
-                                                <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2 text-xs">
-                                                    <div class="font-semibold text-blue-900 mb-2 text-sm">Detail Custom Terpal:</div>
-                                                    
-                                                    @if($detail->bahan_custom)
-                                                    <div class="flex items-start gap-2">
-                                                        <span class="font-medium text-gray-700 min-w-[100px]">Bahan:</span>
-                                                        <span class="text-gray-800 flex-1 font-semibold">{{ $detail->bahan_custom }}</span>
+                                                <div class="mt-3 p-4 bg-gradient-to-br from-blue-50 to-teal-50 border border-blue-200 rounded-lg shadow-sm">
+                                                    <div class="flex items-center gap-2 mb-3">
+                                                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        <div class="font-semibold text-blue-900 text-sm">Detail Custom Terpal</div>
                                                     </div>
-                                                    @endif
-                                                    
-                                                    @if($detail->kebutuhan_custom)
-                                                    <div class="flex items-start gap-2">
-                                                        <span class="font-medium text-gray-700 min-w-[100px]">Kebutuhan:</span>
-                                                        <span class="text-gray-800 flex-1">{{ $detail->kebutuhan_custom }}</span>
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                                                        @if($detail->bahan_custom)
+                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
+                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Bahan:</span>
+                                                            <span class="text-gray-900 font-medium flex-1">{{ $detail->bahan_custom }}</span>
+                                                        </div>
+                                                        @endif
+                                                        
+                                                        @if($detail->kebutuhan_custom)
+                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
+                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Kebutuhan:</span>
+                                                            <span class="text-gray-900 flex-1">{{ $detail->kebutuhan_custom }}</span>
+                                                        </div>
+                                                        @endif
+                                                        
+                                                        @if($detail->ukuran_custom)
+                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
+                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Ukuran:</span>
+                                                            <span class="text-gray-900 font-semibold flex-1">{{ $detail->ukuran_custom }}</span>
+                                                        </div>
+                                                        @endif
+                                                        
+                                                        @if($detail->warna_custom)
+                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
+                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Warna:</span>
+                                                            <span class="text-gray-900 flex-1">{{ $detail->warna_custom }}</span>
+                                                        </div>
+                                                        @endif
+                                                        
+                                                        @if($detail->jumlah_ring_custom)
+                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
+                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Jumlah Ring:</span>
+                                                            <span class="text-gray-900 flex-1">{{ $detail->jumlah_ring_custom }} buah</span>
+                                                        </div>
+                                                        @endif
+                                                        
+                                                        @if($detail->pakai_tali_custom)
+                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
+                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Tali:</span>
+                                                            <span class="text-gray-900 flex-1">
+                                                                @if($detail->pakai_tali_custom == 'ya' || $detail->pakai_tali_custom == '1' || $detail->pakai_tali_custom == 1)
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Ya, perlu tali</span>
+                                                                @elseif($detail->pakai_tali_custom == 'tidak' || $detail->pakai_tali_custom == '0' || $detail->pakai_tali_custom == 0)
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">Tidak</span>
+                                                                @else
+                                                                    {{ $detail->pakai_tali_custom }}
+                                                                @endif
+                                                            </span>
+                                                        </div>
+                                                        @endif
+                                                        
+                                                        @if($detail->catatan_custom)
+                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100 md:col-span-2">
+                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Catatan:</span>
+                                                            <span class="text-gray-900 flex-1">{{ $detail->catatan_custom }}</span>
+                                                        </div>
+                                                        @endif
                                                     </div>
-                                                    @endif
-                                                    
-                                                    @if($detail->ukuran_custom)
-                                                    <div class="flex items-start gap-2">
-                                                        <span class="font-medium text-gray-700 min-w-[100px]">Ukuran:</span>
-                                                        <span class="text-gray-800 flex-1 font-semibold">{{ $detail->ukuran_custom }}</span>
-                                                    </div>
-                                                    @endif
-                                                    
-                                                    @if($detail->warna_custom)
-                                                    <div class="flex items-start gap-2">
-                                                        <span class="font-medium text-gray-700 min-w-[100px]">Warna:</span>
-                                                        <span class="text-gray-800 flex-1">{{ $detail->warna_custom }}</span>
-                                                    </div>
-                                                    @endif
-                                                    
-                                                    @if($detail->jumlah_ring_custom)
-                                                    <div class="flex items-start gap-2">
-                                                        <span class="font-medium text-gray-700 min-w-[100px]">Jumlah Ring:</span>
-                                                        <span class="text-gray-800 flex-1">{{ $detail->jumlah_ring_custom }} buah</span>
-                                                    </div>
-                                                    @endif
-                                                    
-                                                    @if($detail->pakai_tali_custom)
-                                                    <div class="flex items-start gap-2">
-                                                        <span class="font-medium text-gray-700 min-w-[100px]">Tali:</span>
-                                                        <span class="text-gray-800 flex-1">
-                                                            @if($detail->pakai_tali_custom == 'ya' || $detail->pakai_tali_custom == '1' || $detail->pakai_tali_custom == 1)
-                                                                Ya, perlu tali
-                                                            @elseif($detail->pakai_tali_custom == 'tidak' || $detail->pakai_tali_custom == '0' || $detail->pakai_tali_custom == 0)
-                                                                Tidak
-                                                            @else
-                                                                {{ $detail->pakai_tali_custom }}
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                    @endif
-                                                    
-                                                    @if($detail->catatan_custom)
-                                                    <div class="flex items-start gap-2">
-                                                        <span class="font-medium text-gray-700 min-w-[100px]">Catatan:</span>
-                                                        <span class="text-gray-800 flex-1">{{ $detail->catatan_custom }}</span>
-                                                    </div>
-                                                    @endif
                                                 </div>
                                                 @endif
                                             </div>

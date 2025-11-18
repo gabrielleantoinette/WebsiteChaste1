@@ -1019,7 +1019,15 @@ class InvoiceController extends Controller
                 'product_variants.color as variant_color',
                 'dinvoice.price as harga_custom',
                 'dinvoice.quantity',
-                'dinvoice.subtotal'
+                'dinvoice.subtotal',
+                'dinvoice.kebutuhan_custom',
+                'dinvoice.bahan_custom',
+                'dinvoice.warna_custom',
+                'dinvoice.ukuran_custom',
+                'dinvoice.jumlah_ring_custom',
+                'dinvoice.pakai_tali_custom',
+                'dinvoice.catatan_custom',
+                'dinvoice.selected_size'
             )
             ->where('dinvoice.hinvoice_id', $invoice->id)
             ->get();
@@ -1063,7 +1071,15 @@ class InvoiceController extends Controller
                 'product_variants.color as variant_color',
                 'dinvoice.price as harga_custom',
                 'dinvoice.quantity',
-                'dinvoice.subtotal'
+                'dinvoice.subtotal',
+                'dinvoice.kebutuhan_custom',
+                'dinvoice.bahan_custom',
+                'dinvoice.warna_custom',
+                'dinvoice.ukuran_custom',
+                'dinvoice.jumlah_ring_custom',
+                'dinvoice.pakai_tali_custom',
+                'dinvoice.catatan_custom',
+                'dinvoice.selected_size'
             )
             ->where('dinvoice.hinvoice_id', $invoice->id)
             ->get();

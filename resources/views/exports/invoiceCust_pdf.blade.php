@@ -131,9 +131,35 @@
             <tbody>
             @foreach($cartItems as $item)
                 <tr>
-                    <td>
+                    <td style="vertical-align: top;">
                         @if(isset($item->kebutuhan_custom) && $item->kebutuhan_custom)
-                            Produk Custom ({{ $item->kebutuhan_custom }})
+                            <strong>Custom Terpal</strong>
+                            <div style="font-size: 11px; color: #666; margin-top: 4px; line-height: 1.4;">
+                                @if($item->bahan_custom)
+                                    <div><strong>Bahan:</strong> {{ $item->bahan_custom }}</div>
+                                @endif
+                                <div><strong>Kebutuhan:</strong> {{ $item->kebutuhan_custom }}</div>
+                                @if($item->ukuran_custom)
+                                    <div><strong>Ukuran:</strong> {{ $item->ukuran_custom }}</div>
+                                @endif
+                                @if($item->jumlah_ring_custom)
+                                    <div><strong>Ring:</strong> {{ $item->jumlah_ring_custom }} buah</div>
+                                @endif
+                                @if($item->pakai_tali_custom)
+                                    <div><strong>Tali:</strong> 
+                                        @if($item->pakai_tali_custom == 'ya' || $item->pakai_tali_custom == '1' || $item->pakai_tali_custom == 1)
+                                            Ya
+                                        @elseif($item->pakai_tali_custom == 'tidak' || $item->pakai_tali_custom == '0' || $item->pakai_tali_custom == 0)
+                                            Tidak
+                                        @else
+                                            {{ $item->pakai_tali_custom }}
+                                        @endif
+                                    </div>
+                                @endif
+                                @if($item->catatan_custom)
+                                    <div><strong>Catatan:</strong> {{ $item->catatan_custom }}</div>
+                                @endif
+                            </div>
                         @else
                             {{ $item->product_name ?? 'Produk Biasa' }}
                         @endif
@@ -142,12 +168,23 @@
                     <td>
                         @php
                             $sizeText = '-';
-                            if (!empty($item->kebutuhan_custom) && preg_match('/\((\d+)x(\d+)\)/', $item->kebutuhan_custom, $matches)) {
-                                $sizeText = $matches[1] . 'x' . $matches[2];
-                            } elseif(isset($item->selected_size) && $item->selected_size) {
-                                $sizeText = $item->selected_size;
-                            } elseif(isset($item->ukuran_custom) && $item->ukuran_custom) {
+                            // Prioritas 1: ukuran_custom
+                            if (!empty($item->ukuran_custom)) {
                                 $sizeText = $item->ukuran_custom;
+                            }
+                            // Prioritas 2: selected_size
+                            elseif(isset($item->selected_size) && $item->selected_size) {
+                                $sizeText = $item->selected_size;
+                            }
+                            // Prioritas 3: ekstrak dari kebutuhan_custom
+                            elseif (!empty($item->kebutuhan_custom)) {
+                                if (preg_match('/\(?\s*(\d+)\s*[xX×]\s*(\d+)\s*\)?/', $item->kebutuhan_custom, $matches)) {
+                                    $sizeText = $matches[1] . 'x' . $matches[2];
+                                } elseif (preg_match('/ukuran\s*:?\s*(\d+)\s*[xX×]\s*(\d+)/i', $item->kebutuhan_custom, $matches)) {
+                                    $sizeText = $matches[1] . 'x' . $matches[2];
+                                } elseif (preg_match('/(\d+)\s*[xX×]\s*(\d+)/', $item->kebutuhan_custom, $matches)) {
+                                    $sizeText = $matches[1] . 'x' . $matches[2];
+                                }
                             }
                         @endphp
                         {{ $sizeText }}
