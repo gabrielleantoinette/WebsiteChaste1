@@ -104,9 +104,9 @@
                                 <ol class="list-decimal list-inside space-y-1 text-gray-600 ml-2">
                                     <li>Pilih ukuran, warna, dan jumlah produk yang diinginkan</li>
                                     <li>Pastikan jumlah minimal {{ $product->min_buying_stock }} pcs untuk bisa menawar</li>
-                                    <li>Klik tombol "Tawar Harga" di bawah</li>
-                                    <li>Masukkan harga tawaran Anda (harga per pcs/unit)</li>
-                                    <li>Tunggu konfirmasi dari penjual</li>
+                                    <li>Klik tombol "Tawar Harga" di bawah ketika sudah menyala</li>
+                                    <li>Masukkan harga tawaran Anda (harga per pcs/unit) dengan maksimal 3 kali tawar</li>
+                                    <li>Tunggu konfirmasi dari sistem</li>
                                     <li>Jika deal, harga akan dihitung: <strong>Harga Tawar × Jumlah</strong></li>
                                 </ol>
                             </div>
