@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('dinvoice', function (Blueprint $table) {
-            $table->string('ukuran_custom')->nullable()->after('warna_custom');
+            $table->string('bahan_custom')->nullable()->after('warna_custom');
+            $table->string('ukuran_custom')->nullable()->after('bahan_custom');
             $table->integer('jumlah_ring_custom')->nullable()->after('ukuran_custom');
             $table->string('pakai_tali_custom')->nullable()->after('jumlah_ring_custom');
             $table->text('catatan_custom')->nullable()->after('pakai_tali_custom');
@@ -26,6 +27,7 @@ return new class extends Migration
     {
         Schema::table('dinvoice', function (Blueprint $table) {
             $table->dropColumn([
+                'bahan_custom',
                 'ukuran_custom',
                 'jumlah_ring_custom',
                 'pakai_tali_custom',

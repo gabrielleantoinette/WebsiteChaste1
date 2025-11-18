@@ -126,6 +126,40 @@
                                         {{ $item->product_name }}
                                     @else
                                         <span class="text-blue-600">Custom Terpal</span>
+                                        {{-- Detail Custom Terpal --}}
+                                        @if($item->kebutuhan_custom || $item->bahan_custom || $item->ukuran_custom || $item->warna_custom || $item->jumlah_ring_custom || $item->pakai_tali_custom || $item->catatan_custom)
+                                        <div class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs space-y-1">
+                                            @if($item->bahan_custom)
+                                            <div><span class="font-medium">Bahan:</span> <span class="font-semibold">{{ $item->bahan_custom }}</span></div>
+                                            @endif
+                                            @if($item->kebutuhan_custom)
+                                            <div><span class="font-medium">Kebutuhan:</span> {{ $item->kebutuhan_custom }}</div>
+                                            @endif
+                                            @if($item->ukuran_custom)
+                                            <div><span class="font-medium">Ukuran:</span> <span class="font-semibold">{{ $item->ukuran_custom }}</span></div>
+                                            @endif
+                                            @if($item->warna_custom)
+                                            <div><span class="font-medium">Warna:</span> {{ $item->warna_custom }}</div>
+                                            @endif
+                                            @if($item->jumlah_ring_custom)
+                                            <div><span class="font-medium">Jumlah Ring:</span> {{ $item->jumlah_ring_custom }} buah</div>
+                                            @endif
+                                            @if($item->pakai_tali_custom)
+                                            <div><span class="font-medium">Tali:</span> 
+                                                @if($item->pakai_tali_custom == 'ya' || $item->pakai_tali_custom == '1' || $item->pakai_tali_custom == 1)
+                                                    Ya, perlu tali
+                                                @elseif($item->pakai_tali_custom == 'tidak' || $item->pakai_tali_custom == '0' || $item->pakai_tali_custom == 0)
+                                                    Tidak
+                                                @else
+                                                    {{ $item->pakai_tali_custom }}
+                                                @endif
+                                            </div>
+                                            @endif
+                                            @if($item->catatan_custom)
+                                            <div><span class="font-medium">Catatan:</span> {{ $item->catatan_custom }}</div>
+                                            @endif
+                                        </div>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="px-4 py-2">
@@ -140,15 +174,15 @@
                                         elseif (!empty($item->kebutuhan_custom)) {
                                             // Coba format (2x3) atau (2 x 3) di awal atau akhir string
                                             if (preg_match('/\(?\s*(\d+)\s*[xX×]\s*(\d+)\s*\)?/', $item->kebutuhan_custom, $matches)) {
-                                                $sizeText = $matches[1] . 'x' . $matches[2];
+                                                $sizeText = $matches[1] . 'x' . $matches[2] . ' m';
                                             } 
                                             // Coba format "ukuran: 2x3" atau "ukuran 2x3"
                                             elseif (preg_match('/ukuran\s*:?\s*(\d+)\s*[xX×]\s*(\d+)/i', $item->kebutuhan_custom, $matches)) {
-                                                $sizeText = $matches[1] . 'x' . $matches[2];
+                                                $sizeText = $matches[1] . 'x' . $matches[2] . ' m';
                                             }
                                             // Coba cari pola angka x angka di mana saja dalam string
                                             elseif (preg_match('/(\d+)\s*[xX×]\s*(\d+)/', $item->kebutuhan_custom, $matches)) {
-                                                $sizeText = $matches[1] . 'x' . $matches[2];
+                                                $sizeText = $matches[1] . 'x' . $matches[2] . ' m';
                                             }
                                             // Jika tidak ada format ukuran yang jelas, tampilkan Custom
                                             else {

@@ -58,23 +58,34 @@
 
                             @if (!$item->variant)
                                 <div class="text-sm text-gray-500 mt-1 space-y-1">
+                                    @if ($item->bahan_custom)
+                                        <div><span class="font-medium">Bahan:</span> {{ $item->bahan_custom }}</div>
+                                    @endif
                                     @if ($item->kebutuhan_custom)
-                                        <div>Kebutuhan: {{ $item->kebutuhan_custom }}</div>
+                                        <div><span class="font-medium">Kebutuhan:</span> {{ $item->kebutuhan_custom }}</div>
                                     @endif
                                     @if ($item->ukuran_custom)
-                                        <div>Ukuran: {{ $item->ukuran_custom }}</div>
+                                        <div><span class="font-medium">Ukuran:</span> {{ $item->ukuran_custom }}</div>
                                     @endif
                                     @if ($item->warna_custom)
-                                        <div>Warna: {{ $item->warna_custom }}</div>
+                                        <div><span class="font-medium">Warna:</span> {{ $item->warna_custom }}</div>
                                     @endif
                                     @if ($item->jumlah_ring_custom)
-                                        <div>Jumlah Ring: {{ $item->jumlah_ring_custom }}</div>
+                                        <div><span class="font-medium">Jumlah Ring:</span> {{ $item->jumlah_ring_custom }} buah</div>
                                     @endif
                                     @if ($item->pakai_tali_custom)
-                                        <div>Pakai Tali: {{ $item->pakai_tali_custom }}</div>
+                                        <div><span class="font-medium">Tali:</span> 
+                                            @if($item->pakai_tali_custom == 'ya' || $item->pakai_tali_custom == '1' || $item->pakai_tali_custom == 1)
+                                                Ya, perlu tali
+                                            @elseif($item->pakai_tali_custom == 'tidak' || $item->pakai_tali_custom == '0' || $item->pakai_tali_custom == 0)
+                                                Tidak
+                                            @else
+                                                {{ $item->pakai_tali_custom }}
+                                            @endif
+                                        </div>
                                     @endif
                                     @if ($item->catatan_custom)
-                                        <div>Catatan: {{ $item->catatan_custom }}</div>
+                                        <div><span class="font-medium">Catatan:</span> {{ $item->catatan_custom }}</div>
                                     @endif
                                 </div>
                             @else

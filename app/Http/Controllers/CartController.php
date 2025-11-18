@@ -148,6 +148,7 @@ class CartController extends Controller
         $validated = $request->validate([
             'harga_custom' => 'required|numeric',
             'kebutuhan_custom' => 'nullable|string',
+            'bahan_custom' => 'nullable|string',
             'ukuran_custom' => 'nullable|string',
             'warna_custom' => 'nullable|string',
             'jumlah_ring_custom' => 'nullable|string',
@@ -162,6 +163,7 @@ class CartController extends Controller
         $cart->quantity = $validated['quantity']; // <-- GANTI dari 1 menjadi dari form
         $cart->harga_custom = $validated['harga_custom'];
         $cart->kebutuhan_custom = $validated['kebutuhan_custom'];
+        $cart->bahan_custom = $validated['bahan_custom'] ?? null;
         $cart->ukuran_custom = $validated['ukuran_custom'];
         $cart->warna_custom = $validated['warna_custom'];
         $cart->jumlah_ring_custom = $validated['jumlah_ring_custom'];

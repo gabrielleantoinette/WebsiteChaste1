@@ -20,6 +20,7 @@
       @csrf
       <input type="hidden" name="harga_custom" id="hargaCustomInput" value="0">
       <input type="hidden" name="kebutuhan_custom" id="kebutuhanCustomInput">
+      <input type="hidden" name="bahan_custom" id="bahanCustomInput">
       <input type="hidden" name="ukuran_custom" id="ukuranCustomInput">
       <input type="hidden" name="warna_custom" id="warnaCustomInput">
       <input type="hidden" name="jumlah_ring_custom" id="jumlahRingCustomInput">
@@ -301,6 +302,7 @@ const rekomendasiMap = @json($rekomendasiMap);
 function updateHiddenInputs() {
   // Ambil data dari form
   const kebutuhan = kebutuhanSelect.options[kebutuhanSelect.selectedIndex]?.text || '';
+  const bahan = bahanSelect.options[bahanSelect.selectedIndex]?.text || '';
   const panjang = parseFloat(panjangInput.value) || 0;
   const lebar = parseFloat(lebarInput.value) || 0;
   const tinggi = parseFloat(tinggiInput.value) || 0;
@@ -312,6 +314,7 @@ function updateHiddenInputs() {
 
   // Isi ke hidden inputs
   document.getElementById('kebutuhanCustomInput').value = kebutuhan;
+  document.getElementById('bahanCustomInput').value = bahan;
   document.getElementById('ukuranCustomInput').value = ukuranText;
   document.getElementById('warnaCustomInput').value = warna;
   document.getElementById('jumlahRingCustomInput').value = jumlahRing;

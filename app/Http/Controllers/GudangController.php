@@ -40,7 +40,12 @@ class GudangController extends Controller
                 'dinvoice.quantity',
                 'dinvoice.subtotal',
                 'dinvoice.kebutuhan_custom',
-                'dinvoice.warna_custom'
+                'dinvoice.warna_custom',
+                'dinvoice.bahan_custom',
+                'dinvoice.ukuran_custom',
+                'dinvoice.jumlah_ring_custom',
+                'dinvoice.pakai_tali_custom',
+                'dinvoice.catatan_custom'
             )
             ->where('dinvoice.hinvoice_id', $invoice->id)
             ->get();

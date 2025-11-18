@@ -212,6 +212,13 @@
                                                 <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2 text-xs">
                                                     <div class="font-semibold text-blue-900 mb-2 text-sm">Detail Custom Terpal:</div>
                                                     
+                                                    @if($detail->bahan_custom)
+                                                    <div class="flex items-start gap-2">
+                                                        <span class="font-medium text-gray-700 min-w-[100px]">Bahan:</span>
+                                                        <span class="text-gray-800 flex-1 font-semibold">{{ $detail->bahan_custom }}</span>
+                                                    </div>
+                                                    @endif
+                                                    
                                                     @if($detail->kebutuhan_custom)
                                                     <div class="flex items-start gap-2">
                                                         <span class="font-medium text-gray-700 min-w-[100px]">Kebutuhan:</span>
