@@ -194,25 +194,83 @@
                                                  alt="{{ $detail->product->name }}" 
                                                  class="w-16 h-16 object-cover rounded-lg border border-gray-200">
                                             @endif
-                                            <div>
-                                                <p class="font-medium text-gray-900">{{ $detail->product->name ?? '-' }}</p>
+                                            <div class="flex-1">
+                                                <p class="font-medium text-gray-900">
+                                                    @if($detail->product && $detail->product->name)
+                                                        {{ $detail->product->name }}
+                                                    @elseif($detail->kebutuhan_custom)
+                                                        <span class="text-blue-600">Custom Terpal</span>
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </p>
                                                 @if($detail->product && $detail->product->description)
                                                 <p class="text-xs text-gray-500 mt-1 line-clamp-1">{{ Str::limit($detail->product->description, 50) }}</p>
+                                                @endif
+                                                {{-- Detail Custom Terpal --}}
+                                                @if($detail->kebutuhan_custom && !$detail->product)
+                                                <div class="mt-2 space-y-1 text-xs text-gray-600">
+                                                    @if($detail->kebutuhan_custom)
+                                                    <div><span class="font-medium">Kebutuhan:</span> {{ $detail->kebutuhan_custom }}</div>
+                                                    @endif
+                                                    @if($detail->catatan_custom)
+                                                    <div><span class="font-medium">Catatan:</span> {{ $detail->catatan_custom }}</div>
+                                                    @endif
+                                                    @if($detail->jumlah_ring_custom)
+                                                    <div><span class="font-medium">Jumlah Ring:</span> {{ $detail->jumlah_ring_custom }} buah</div>
+                                                    @endif
+                                                    @if($detail->pakai_tali_custom)
+                                                    <div><span class="font-medium">Tali:</span> {{ $detail->pakai_tali_custom == 'ya' ? 'Ya' : ($detail->pakai_tali_custom == 'tidak' ? 'Tidak' : $detail->pakai_tali_custom) }}</div>
+                                                    @endif
+                                                </div>
                                                 @endif
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 text-gray-600">{{ $detail->variant->color ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-gray-600">
+                                        @if($detail->variant && $detail->variant->color)
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                {{ $detail->variant->color }}
+                                            </span>
+                                        @elseif($detail->warna_custom)
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{ $detail->warna_custom }}
+                                            </span>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3 text-gray-600">
                                         @php
                                             $sizeText = '-';
-                                            if (!empty($detail->kebutuhan_custom) && preg_match('/\((\d+)x(\d+)\)/', $detail->kebutuhan_custom, $m)) {
-                                                $sizeText = $m[1] . 'x' . $m[2];
-                                            } elseif($detail->selected_size) {
+                                            // Prioritas 1: Jika ada ukuran_custom langsung
+                                            if (!empty($detail->ukuran_custom)) {
+                                                $sizeText = $detail->ukuran_custom;
+                                            }
+                                            // Prioritas 2: Ekstrak dari kebutuhan_custom
+                                            elseif (!empty($detail->kebutuhan_custom)) {
+                                                // Coba format (2x3) atau (2 x 3)
+                                                if (preg_match('/\(?\s*(\d+)\s*[xX×]\s*(\d+)\s*\)?/', $detail->kebutuhan_custom, $matches)) {
+                                                    $sizeText = $matches[1] . 'x' . $matches[2];
+                                                } 
+                                                // Coba format "ukuran: 2x3" atau "ukuran 2x3"
+                                                elseif (preg_match('/ukuran\s*:?\s*(\d+)\s*[xX×]\s*(\d+)/i', $detail->kebutuhan_custom, $matches)) {
+                                                    $sizeText = $matches[1] . 'x' . $matches[2];
+                                                }
+                                                // Coba cari pola angka x angka di mana saja
+                                                elseif (preg_match('/(\d+)\s*[xX×]\s*(\d+)/', $detail->kebutuhan_custom, $matches)) {
+                                                    $sizeText = $matches[1] . 'x' . $matches[2];
+                                                }
+                                                else {
+                                                    $sizeText = 'Custom';
+                                                }
+                                            }
+                                            // Prioritas 3: Untuk produk regular
+                                            elseif($detail->selected_size) {
                                                 $sizeText = $detail->selected_size;
                                             }
                                         @endphp
-                                        {{ $sizeText }}
+                                        <span class="font-medium">{{ $sizeText }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-right text-gray-900">Rp {{ number_format($detail->price, 0, ',', '.') }}</td>
                                     <td class="px-4 py-3 text-center text-gray-900">{{ $detail->quantity }}</td>

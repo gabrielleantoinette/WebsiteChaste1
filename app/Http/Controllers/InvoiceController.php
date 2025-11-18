@@ -580,6 +580,10 @@ class InvoiceController extends Controller
                             'subtotal' => $cart->harga_custom * $cart->quantity,
                             'kebutuhan_custom' => $cart->kebutuhan_custom,
                             'warna_custom' => $cart->warna_custom,
+                            'ukuran_custom' => $cart->ukuran_custom ?? null,
+                            'jumlah_ring_custom' => $cart->jumlah_ring_custom ?? null,
+                            'pakai_tali_custom' => $cart->pakai_tali_custom ?? null,
+                            'catatan_custom' => $cart->catatan_custom ?? null,
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
@@ -634,6 +638,10 @@ class InvoiceController extends Controller
                         'subtotal' => $cart->harga_custom * $cart->quantity,
                         'kebutuhan_custom' => $cart->kebutuhan_custom,
                         'warna_custom' => $cart->warna_custom,
+                        'ukuran_custom' => $cart->ukuran_custom ?? null,
+                        'jumlah_ring_custom' => $cart->jumlah_ring_custom ?? null,
+                        'pakai_tali_custom' => $cart->pakai_tali_custom ?? null,
+                        'catatan_custom' => $cart->catatan_custom ?? null,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
