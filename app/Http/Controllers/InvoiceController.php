@@ -1111,14 +1111,58 @@ class InvoiceController extends Controller
             'signature' => 'nullable|image|max:2048',
         ]);
 
-        $invoice = HInvoice::findOrFail($id); // Pakai model kamu
+        $invoice = HInvoice::findOrFail($id);
 
         if ($request->hasFile('photo')) {
-            $invoice->delivery_proof_photo = $request->file('photo')->store('delivery_proofs', 'public');
+            $file = $request->file('photo');
+            
+            // Buat nama file yang unik dengan invoice code, timestamp, dan random string
+            $originalName = $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $timestamp = now()->format('YmdHis');
+            $randomString = \Str::random(10);
+            $filename = 'delivery_proof_' . $invoice->code . '_' . $timestamp . '_' . $randomString . '_' . \Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $extension;
+            
+            $path = $file->storeAs('delivery_proofs', $filename, 'public');
+            $invoice->delivery_proof_photo = $path;
+            
+            // Log untuk debugging
+            \Log::info('Delivery proof photo uploaded', [
+                'original_name' => $originalName,
+                'unique_file_name' => $filename,
+                'stored_path' => $path,
+                'file_size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'invoice_id' => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'timestamp' => $timestamp
+            ]);
         }
 
         if ($request->hasFile('signature')) {
-            $invoice->delivery_signature = $request->file('signature')->store('delivery_signatures', 'public');
+            $file = $request->file('signature');
+            
+            // Buat nama file yang unik dengan invoice code, timestamp, dan random string
+            $originalName = $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $timestamp = now()->format('YmdHis');
+            $randomString = \Str::random(10);
+            $filename = 'delivery_signature_' . $invoice->code . '_' . $timestamp . '_' . $randomString . '_' . \Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $extension;
+            
+            $path = $file->storeAs('delivery_signatures', $filename, 'public');
+            $invoice->delivery_signature = $path;
+            
+            // Log untuk debugging
+            \Log::info('Delivery signature uploaded', [
+                'original_name' => $originalName,
+                'unique_file_name' => $filename,
+                'stored_path' => $path,
+                'file_size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'invoice_id' => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'timestamp' => $timestamp
+            ]);
         }
 
         $invoice->save();

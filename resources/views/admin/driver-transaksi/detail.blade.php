@@ -197,14 +197,53 @@
                     <h3 class="text-md font-semibold mb-2">Bukti yang Sudah Diunggah:</h3>
                     @if ($invoice->delivery_proof_photo)
                         <div class="mb-4">
-                            <p class="font-medium">Foto:</p>
-                            <img src="{{ asset('storage/' . $invoice->delivery_proof_photo) }}" alt="Foto Bukti Kirim" class="w-64 border rounded">
+                            <p class="font-medium mb-2">Foto:</p>
+                            @php
+                                $proofPath = $invoice->delivery_proof_photo;
+                                $imageUrl = null;
+                                
+                                if ($proofPath) {
+                                    // Bersihkan path dari karakter yang tidak valid
+                                    $cleanPath = ltrim($proofPath, '/');
+                                    
+                                    // Gunakan format yang sama seperti produk: /public/storage/{path}
+                                    // Ini akan menghasilkan URL seperti: https://domain.com/public/storage/delivery_proofs/...
+                                    $imageUrl = url('/public/storage/' . $cleanPath);
+                                }
+                                
+                                // Jika masih null, set ke placeholder
+                                if (!$imageUrl) {
+                                    $imageUrl = asset('images/gulungan-terpal.png');
+                                }
+                            @endphp
+                            <a href="{{ $imageUrl }}" target="_blank" class="inline-block">
+                                <img src="{{ $imageUrl }}" alt="Foto Bukti Kirim" class="w-64 h-64 object-cover border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                            </a>
                         </div>
                     @endif
                     @if ($invoice->delivery_signature)
                         <div>
-                            <p class="font-medium">Tanda Tangan:</p>
-                            <img src="{{ asset('storage/' . $invoice->delivery_signature) }}" alt="Tanda Tangan" class="w-64 border rounded">
+                            <p class="font-medium mb-2">Tanda Tangan:</p>
+                            @php
+                                $signaturePath = $invoice->delivery_signature;
+                                $signatureUrl = null;
+                                
+                                if ($signaturePath) {
+                                    // Bersihkan path dari karakter yang tidak valid
+                                    $cleanPath = ltrim($signaturePath, '/');
+                                    
+                                    // Gunakan format yang sama seperti produk: /public/storage/{path}
+                                    $signatureUrl = url('/public/storage/' . $cleanPath);
+                                }
+                                
+                                // Jika masih null, set ke placeholder
+                                if (!$signatureUrl) {
+                                    $signatureUrl = asset('images/gulungan-terpal.png');
+                                }
+                            @endphp
+                            <a href="{{ $signatureUrl }}" target="_blank" class="inline-block">
+                                <img src="{{ $signatureUrl }}" alt="Tanda Tangan" class="w-64 h-64 object-cover border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                            </a>
                         </div>
                     @endif
                 </div>
