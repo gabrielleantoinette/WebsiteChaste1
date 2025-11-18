@@ -72,6 +72,7 @@
                                 <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold
                                     @if(strtolower($trx->status) == 'dikemas') bg-teal-100 text-teal-700
                                     @elseif(strtolower($trx->status) == 'menunggu konfirmasi pembayaran') bg-yellow-100 text-yellow-700
+                                    @elseif(strtolower($trx->status) == 'pembayaran ditolak') bg-red-100 text-red-700
                                     @elseif(strtolower($trx->status) == 'selesai') bg-green-100 text-green-700
                                     @else bg-gray-200 text-gray-700 @endif">
                                     {{ ucfirst($trx->status) }}

@@ -63,6 +63,7 @@
                                         'dikemas' => 'bg-teal-100 text-teal-700 border-teal-200',
                                         'dibayar' => 'bg-teal-100 text-teal-700 border-teal-200',
                                         'menunggu konfirmasi pembayaran' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                                        'pembayaran ditolak' => 'bg-red-100 text-red-700 border-red-200',
                                         'dikirim' => 'bg-blue-100 text-blue-700 border-blue-200',
                                         'sampai' => 'bg-blue-100 text-blue-700 border-blue-200',
                                         'diterima' => 'bg-green-100 text-green-700 border-green-200',

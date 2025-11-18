@@ -95,6 +95,42 @@ class KeuanganController extends Controller
         return redirect()->back()->with('success', 'Status tidak valid atau sudah diproses.');
     }
 
+    public function tolak($id)
+    {
+        $invoice = \App\Models\HInvoice::with('customer')->findOrFail($id);
+        if ($invoice->status === 'Menunggu Konfirmasi Pembayaran') {
+            $invoice->status = 'Pembayaran Ditolak';
+            $invoice->is_paid = 0;
+            $invoice->save();
+            
+            // Kirim notifikasi ke customer bahwa pembayaran ditolak
+            $notificationService = app(NotificationService::class);
+            $notificationService->sendToCustomer(
+                'payment_rejected',
+                'Pembayaran Ditolak',
+                "Pembayaran untuk pesanan {$invoice->code} telah ditolak. Silakan periksa bukti transfer Anda atau hubungi customer service untuk informasi lebih lanjut.",
+                $invoice->customer_id,
+                [
+                    'data_type' => 'order',
+                    'data_id' => $invoice->id,
+                    'action_url' => "/orders/{$invoice->id}",
+                    'priority' => 'high'
+                ]
+            );
+            
+            // Kirim notifikasi ke owner tentang action keuangan
+            $notificationService->notifyFinanceAction([
+                'message' => "Keuangan telah menolak pembayaran untuk pesanan {$invoice->code} sebesar Rp " . number_format($invoice->grand_total),
+                'action_id' => $invoice->id,
+                'action_url' => "/admin/keuangan/detail/{$invoice->id}",
+                'priority' => 'high'
+            ]);
+            
+            return redirect()->back()->with('success', 'Pembayaran ditolak & customer telah diberitahu!');
+        }
+        return redirect()->back()->with('error', 'Status tidak valid atau sudah diproses.');
+    }
+
     public function create()
     {
         return view('admin.keuangan.create');

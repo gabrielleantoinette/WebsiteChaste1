@@ -38,6 +38,7 @@
             $statusColors = [
                 'Menunggu Pembayaran' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
                 'Menunggu Konfirmasi Pembayaran' => 'bg-orange-100 text-orange-800 border-orange-200',
+                'Pembayaran Ditolak' => 'bg-red-100 text-red-800 border-red-200',
                 'Dikemas' => 'bg-blue-100 text-blue-800 border-blue-200',
                 'Dikirim' => 'bg-purple-100 text-purple-800 border-purple-200',
                 'Dikirim ke Agen' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
