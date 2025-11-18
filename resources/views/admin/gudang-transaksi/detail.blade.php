@@ -132,14 +132,23 @@
                                     @php
                                         $sizeText = '-';
                                         // Untuk produk custom, coba ekstrak ukuran dari kebutuhan_custom
-                                        if (!empty($item->kebutuhan_custom) && preg_match('/\((\d+)x(\d+)\)/', $item->kebutuhan_custom, $matches)) {
-                                            $sizeText = $matches[1] . 'x' . $matches[2];
+                                        // Cek berbagai format: (2x3), 2x3, 2 x 3, dll
+                                        if (!empty($item->kebutuhan_custom)) {
+                                            // Coba format (2x3) atau (2 x 3)
+                                            if (preg_match('/\(?\s*(\d+)\s*[xX×]\s*(\d+)\s*\)?/', $item->kebutuhan_custom, $matches)) {
+                                                $sizeText = $matches[1] . 'x' . $matches[2];
+                                            } 
+                                            // Coba format "ukuran: 2x3" atau "ukuran 2x3"
+                                            elseif (preg_match('/ukuran\s*:?\s*(\d+)\s*[xX×]\s*(\d+)/i', $item->kebutuhan_custom, $matches)) {
+                                                $sizeText = $matches[1] . 'x' . $matches[2];
+                                            }
+                                            // Jika tidak ada format ukuran yang jelas, tampilkan Custom
+                                            else {
+                                                $sizeText = 'Custom';
+                                            }
                                         } elseif (!empty($item->selected_size)) {
                                             // Untuk produk regular, gunakan selected_size yang dipilih customer
                                             $sizeText = $item->selected_size;
-                                        } elseif (!empty($item->kebutuhan_custom)) {
-                                            // Jika ada kebutuhan_custom tapi tidak ada format ukuran, tampilkan Custom
-                                            $sizeText = 'Custom';
                                         }
                                     @endphp
                                     <span class="text-gray-700 font-medium">{{ $sizeText }}</span>

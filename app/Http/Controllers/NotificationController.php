@@ -26,12 +26,37 @@ class NotificationController extends Controller
             return redirect('/login');
         }
 
-        // Handle both array and object user data
-        $recipientType = is_array($user) ? 'customer' : ($user instanceof \App\Models\Employee ? 'employee' : 'customer');
-        $recipientId = is_array($user) ? $user['id'] : $user->id;
+        // Untuk admin, keuangan, owner, gudang, dan driver, ambil semua notifikasi role mereka
+        if (is_array($user) && isset($user['role']) && in_array($user['role'], ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
+            $role = $user['role'];
+            $notifications = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
+                ->orderBy('created_at', 'desc')
+                ->limit(50)
+                ->get();
+            $unreadCount = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
+                ->where('is_read', false)
+                ->count();
+        } elseif ($user instanceof \App\Models\Employee && in_array($user->role, ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
+            $role = $user->role;
+            $notifications = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
+                ->orderBy('created_at', 'desc')
+                ->limit(50)
+                ->get();
+            $unreadCount = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
+                ->where('is_read', false)
+                ->count();
+        } else {
+            // Handle both array and object user data untuk customer
+            $recipientType = is_array($user) ? 'customer' : ($user instanceof \App\Models\Employee ? 'employee' : 'customer');
+            $recipientId = is_array($user) ? $user['id'] : $user->id;
 
-        $notifications = $this->notificationService->getNotificationsForUser($recipientType, $recipientId, 50);
-        $unreadCount = $this->notificationService->getUnreadCount($recipientType, $recipientId);
+            $notifications = $this->notificationService->getNotificationsForUser($recipientType, $recipientId, 50);
+            $unreadCount = $this->notificationService->getUnreadCount($recipientType, $recipientId);
+        }
 
         return view('notifications.index', compact('notifications', 'unreadCount'));
     }
@@ -47,12 +72,39 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // Handle both array and object user data
-        $recipientType = is_array($user) ? 'customer' : ($user instanceof \App\Models\Employee ? 'employee' : 'customer');
-        $recipientId = is_array($user) ? $user['id'] : $user->id;
+        // Untuk admin, keuangan, owner, gudang, dan driver, ambil semua notifikasi role mereka
+        if (is_array($user) && isset($user['role']) && in_array($user['role'], ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
+            $role = $user['role'];
+            $notifications = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
+                ->where('is_read', false)
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get();
+            $unreadCount = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
+                ->where('is_read', false)
+                ->count();
+        } elseif ($user instanceof \App\Models\Employee && in_array($user->role, ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
+            $role = $user->role;
+            $notifications = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
+                ->where('is_read', false)
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get();
+            $unreadCount = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
+                ->where('is_read', false)
+                ->count();
+        } else {
+            // Handle both array and object user data untuk customer
+            $recipientType = is_array($user) ? 'customer' : ($user instanceof \App\Models\Employee ? 'employee' : 'customer');
+            $recipientId = is_array($user) ? $user['id'] : $user->id;
 
-        $notifications = $this->notificationService->getUnreadNotificationsForUser($recipientType, $recipientId);
-        $unreadCount = $this->notificationService->getUnreadCount($recipientType, $recipientId);
+            $notifications = $this->notificationService->getUnreadNotificationsForUser($recipientType, $recipientId);
+            $unreadCount = $this->notificationService->getUnreadCount($recipientType, $recipientId);
+        }
 
         return response()->json([
             'notifications' => $notifications,
@@ -100,17 +152,24 @@ class NotificationController extends Controller
                 'is_read' => $notification->is_read
             ]);
 
-                    // Untuk admin dan keuangan, kita perlu mengecek berdasarkan role, bukan hanya recipient_id
-        if ($user instanceof \App\Models\Employee && ($user->role === 'admin' || $user->role === 'keuangan')) {
-            \Log::info('User is ' . $user->role . ', checking permissions');
-            // Admin dan keuangan bisa menandai notifikasi untuk role mereka masing-masing
-            if ($notification->recipient_type === 'employee' && $notification->recipient_role === $user->role) {
-                \Log::info($user->role . ' can mark this notification as read');
+                    // Untuk admin, keuangan, owner, gudang, dan driver, kita perlu mengecek berdasarkan role, bukan hanya recipient_id
+        $userRole = null;
+        if (is_array($user) && isset($user['role'])) {
+            $userRole = $user['role'];
+        } elseif ($user instanceof \App\Models\Employee) {
+            $userRole = $user->role;
+        }
+        
+        if ($userRole && in_array($userRole, ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
+            \Log::info('User is ' . $userRole . ', checking permissions');
+            // Employee dengan role tertentu bisa menandai notifikasi untuk role mereka masing-masing
+            if ($notification->recipient_type === 'employee' && $notification->recipient_role === $userRole) {
+                \Log::info($userRole . ' can mark this notification as read');
                 $result = $this->notificationService->markAsRead($id);
                 \Log::info('Mark as read result:', ['result' => $result]);
                 return response()->json(['success' => true]);
             } else {
-                \Log::error($user->role . ' cannot mark this notification - wrong recipient type or role', [
+                \Log::error($userRole . ' cannot mark this notification - wrong recipient type or role', [
                     'recipient_type' => $notification->recipient_type,
                     'recipient_role' => $notification->recipient_role
                 ]);
@@ -264,15 +323,27 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         
-        // Untuk admin, keuangan, dan owner, ambil semua notifikasi role mereka
-        if ($user instanceof \App\Models\Employee && in_array($user->role, ['admin', 'keuangan', 'owner'])) {
+        // Untuk admin, keuangan, owner, gudang, dan driver, ambil semua notifikasi role mereka
+        if (is_array($user) && isset($user['role']) && in_array($user['role'], ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
+            $role = $user['role'];
             $notifications = Notification::where('recipient_type', 'employee')
-                ->where('recipient_role', $user->role)
+                ->where('recipient_role', $role)
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get();
             $unreadCount = Notification::where('recipient_type', 'employee')
-                ->where('recipient_role', $user->role)
+                ->where('recipient_role', $role)
+                ->where('is_read', false)
+                ->count();
+        } elseif ($user instanceof \App\Models\Employee && in_array($user->role, ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
+            $role = $user->role;
+            $notifications = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+            $unreadCount = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
                 ->where('is_read', false)
                 ->count();
         } else {
