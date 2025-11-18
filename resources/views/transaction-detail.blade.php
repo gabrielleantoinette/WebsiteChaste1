@@ -209,18 +209,57 @@
                                                 @endif
                                                 {{-- Detail Custom Terpal --}}
                                                 @if($detail->kebutuhan_custom && !$detail->product)
-                                                <div class="mt-2 space-y-1 text-xs text-gray-600">
+                                                <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2 text-xs">
+                                                    <div class="font-semibold text-blue-900 mb-2 text-sm">Detail Custom Terpal:</div>
+                                                    
                                                     @if($detail->kebutuhan_custom)
-                                                    <div><span class="font-medium">Kebutuhan:</span> {{ $detail->kebutuhan_custom }}</div>
+                                                    <div class="flex items-start gap-2">
+                                                        <span class="font-medium text-gray-700 min-w-[100px]">Kebutuhan:</span>
+                                                        <span class="text-gray-800 flex-1">{{ $detail->kebutuhan_custom }}</span>
+                                                    </div>
                                                     @endif
-                                                    @if($detail->catatan_custom)
-                                                    <div><span class="font-medium">Catatan:</span> {{ $detail->catatan_custom }}</div>
+                                                    
+                                                    @if($detail->ukuran_custom)
+                                                    <div class="flex items-start gap-2">
+                                                        <span class="font-medium text-gray-700 min-w-[100px]">Ukuran:</span>
+                                                        <span class="text-gray-800 flex-1 font-semibold">{{ $detail->ukuran_custom }}</span>
+                                                    </div>
                                                     @endif
+                                                    
+                                                    @if($detail->warna_custom)
+                                                    <div class="flex items-start gap-2">
+                                                        <span class="font-medium text-gray-700 min-w-[100px]">Warna:</span>
+                                                        <span class="text-gray-800 flex-1">{{ $detail->warna_custom }}</span>
+                                                    </div>
+                                                    @endif
+                                                    
                                                     @if($detail->jumlah_ring_custom)
-                                                    <div><span class="font-medium">Jumlah Ring:</span> {{ $detail->jumlah_ring_custom }} buah</div>
+                                                    <div class="flex items-start gap-2">
+                                                        <span class="font-medium text-gray-700 min-w-[100px]">Jumlah Ring:</span>
+                                                        <span class="text-gray-800 flex-1">{{ $detail->jumlah_ring_custom }} buah</span>
+                                                    </div>
                                                     @endif
+                                                    
                                                     @if($detail->pakai_tali_custom)
-                                                    <div><span class="font-medium">Tali:</span> {{ $detail->pakai_tali_custom == 'ya' ? 'Ya' : ($detail->pakai_tali_custom == 'tidak' ? 'Tidak' : $detail->pakai_tali_custom) }}</div>
+                                                    <div class="flex items-start gap-2">
+                                                        <span class="font-medium text-gray-700 min-w-[100px]">Tali:</span>
+                                                        <span class="text-gray-800 flex-1">
+                                                            @if($detail->pakai_tali_custom == 'ya' || $detail->pakai_tali_custom == '1' || $detail->pakai_tali_custom == 1)
+                                                                Ya, perlu tali
+                                                            @elseif($detail->pakai_tali_custom == 'tidak' || $detail->pakai_tali_custom == '0' || $detail->pakai_tali_custom == 0)
+                                                                Tidak
+                                                            @else
+                                                                {{ $detail->pakai_tali_custom }}
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                    @endif
+                                                    
+                                                    @if($detail->catatan_custom)
+                                                    <div class="flex items-start gap-2">
+                                                        <span class="font-medium text-gray-700 min-w-[100px]">Catatan:</span>
+                                                        <span class="text-gray-800 flex-1">{{ $detail->catatan_custom }}</span>
+                                                    </div>
                                                     @endif
                                                 </div>
                                                 @endif
@@ -251,15 +290,15 @@
                                             elseif (!empty($detail->kebutuhan_custom)) {
                                                 // Coba format (2x3) atau (2 x 3)
                                                 if (preg_match('/\(?\s*(\d+)\s*[xX×]\s*(\d+)\s*\)?/', $detail->kebutuhan_custom, $matches)) {
-                                                    $sizeText = $matches[1] . 'x' . $matches[2];
+                                                    $sizeText = $matches[1] . 'x' . $matches[2] . ' m';
                                                 } 
                                                 // Coba format "ukuran: 2x3" atau "ukuran 2x3"
                                                 elseif (preg_match('/ukuran\s*:?\s*(\d+)\s*[xX×]\s*(\d+)/i', $detail->kebutuhan_custom, $matches)) {
-                                                    $sizeText = $matches[1] . 'x' . $matches[2];
+                                                    $sizeText = $matches[1] . 'x' . $matches[2] . ' m';
                                                 }
                                                 // Coba cari pola angka x angka di mana saja
                                                 elseif (preg_match('/(\d+)\s*[xX×]\s*(\d+)/', $detail->kebutuhan_custom, $matches)) {
-                                                    $sizeText = $matches[1] . 'x' . $matches[2];
+                                                    $sizeText = $matches[1] . 'x' . $matches[2] . ' m';
                                                 }
                                                 else {
                                                     $sizeText = 'Custom';
