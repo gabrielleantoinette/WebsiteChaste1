@@ -131,10 +131,14 @@
                                 <td class="px-4 py-2">
                                     @php
                                         $sizeText = '-';
-                                        // Untuk produk custom, coba ekstrak ukuran dari kebutuhan_custom
-                                        // Cek berbagai format: (2x3), 2x3, 2 x 3, dll
-                                        if (!empty($item->kebutuhan_custom)) {
-                                            // Coba format (2x3) atau (2 x 3)
+                                        
+                                        // Prioritas 1: Jika ada ukuran_custom langsung dari cart/database
+                                        if (!empty($item->ukuran_custom)) {
+                                            $sizeText = $item->ukuran_custom;
+                                        }
+                                        // Prioritas 2: Untuk produk custom, coba ekstrak ukuran dari kebutuhan_custom
+                                        elseif (!empty($item->kebutuhan_custom)) {
+                                            // Coba format (2x3) atau (2 x 3) di awal atau akhir string
                                             if (preg_match('/\(?\s*(\d+)\s*[xX×]\s*(\d+)\s*\)?/', $item->kebutuhan_custom, $matches)) {
                                                 $sizeText = $matches[1] . 'x' . $matches[2];
                                             } 
@@ -142,12 +146,17 @@
                                             elseif (preg_match('/ukuran\s*:?\s*(\d+)\s*[xX×]\s*(\d+)/i', $item->kebutuhan_custom, $matches)) {
                                                 $sizeText = $matches[1] . 'x' . $matches[2];
                                             }
+                                            // Coba cari pola angka x angka di mana saja dalam string
+                                            elseif (preg_match('/(\d+)\s*[xX×]\s*(\d+)/', $item->kebutuhan_custom, $matches)) {
+                                                $sizeText = $matches[1] . 'x' . $matches[2];
+                                            }
                                             // Jika tidak ada format ukuran yang jelas, tampilkan Custom
                                             else {
                                                 $sizeText = 'Custom';
                                             }
-                                        } elseif (!empty($item->selected_size)) {
-                                            // Untuk produk regular, gunakan selected_size yang dipilih customer
+                                        } 
+                                        // Prioritas 3: Untuk produk regular, gunakan selected_size yang dipilih customer
+                                        elseif (!empty($item->selected_size)) {
                                             $sizeText = $item->selected_size;
                                         }
                                     @endphp

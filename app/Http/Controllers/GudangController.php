@@ -54,6 +54,7 @@ class GudangController extends Controller
                     'cart.*',
                     'products.name as product_name',
                     'cart.selected_size as selected_size', // Ukuran yang dipilih customer
+                    'cart.ukuran_custom as ukuran_custom', // Ukuran custom dari cart
                     'product_variants.color as variant_color'
                 )
                 ->where('cart.user_id', $invoice->customer_id)

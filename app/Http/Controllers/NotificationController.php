@@ -299,9 +299,17 @@ class NotificationController extends Controller
             return response()->json(['count' => 0]);
         }
 
-        if ($user instanceof \App\Models\Employee && in_array($user->role, ['admin', 'keuangan', 'owner'])) {
+        // Untuk admin, keuangan, owner, gudang, dan driver, ambil semua notifikasi role mereka
+        if (is_array($user) && isset($user['role']) && in_array($user['role'], ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
+            $role = $user['role'];
             $count = Notification::where('recipient_type', 'employee')
-                ->where('recipient_role', $user->role)
+                ->where('recipient_role', $role)
+                ->where('is_read', false)
+                ->count();
+        } elseif ($user instanceof \App\Models\Employee && in_array($user->role, ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
+            $role = $user->role;
+            $count = Notification::where('recipient_type', 'employee')
+                ->where('recipient_role', $role)
                 ->where('is_read', false)
                 ->count();
         } else {
