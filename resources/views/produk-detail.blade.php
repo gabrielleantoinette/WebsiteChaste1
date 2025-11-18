@@ -53,7 +53,75 @@
                 <p class="text-sm text-yellow-600 bg-yellow-50 px-3 py-2 rounded-lg border border-pink-200">
                      <strong>Ambil banyak untuk harga lebih murah!</strong>
                 </p>
-                <p class="text-gray-600">{{ $product->description }}</p>
+                
+                <!-- Deskripsi Produk (Collapsible) -->
+                @if($product->description)
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <button onclick="toggleDescription()" class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left">
+                        <span class="font-semibold text-gray-800 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Deskripsi Produk
+                        </span>
+                        <svg id="descriptionIcon" class="w-5 h-5 text-gray-600 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="descriptionContent" class="hidden p-4 bg-white border-t border-gray-200">
+                        <p class="text-gray-600 leading-relaxed whitespace-pre-line">{{ $product->description }}</p>
+                    </div>
+                </div>
+                @endif
+                
+                <!-- Tata Cara Menawar Harga (Collapsible) -->
+                @if($product->min_buying_stock && $product->min_buying_stock > 0)
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <button onclick="toggleNegotiationGuide()" class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left">
+                        <span class="font-semibold text-gray-800 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Tata Cara Menawar Harga
+                        </span>
+                        <svg id="negotiationIcon" class="w-5 h-5 text-gray-600 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="negotiationContent" class="hidden p-4 bg-white border-t border-gray-200">
+                        <div class="space-y-3 text-sm text-gray-700">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <p class="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Tips Negosiasi
+                                </p>
+                                <p class="text-blue-800">Tawar 60-80% dari harga normal untuk hasil terbaik</p>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="font-semibold text-gray-800">Cara Menawar:</p>
+                                <ol class="list-decimal list-inside space-y-1 text-gray-600 ml-2">
+                                    <li>Pilih ukuran, warna, dan jumlah produk yang diinginkan</li>
+                                    <li>Pastikan jumlah minimal {{ $product->min_buying_stock }} pcs untuk bisa menawar</li>
+                                    <li>Klik tombol "Tawar Harga" di bawah</li>
+                                    <li>Masukkan harga tawaran Anda (harga per pcs/unit)</li>
+                                    <li>Tunggu konfirmasi dari penjual</li>
+                                    <li>Jika deal, harga akan dihitung: <strong>Harga Tawar × Jumlah</strong></li>
+                                </ol>
+                            </div>
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
+                                <p class="text-yellow-800 text-xs font-medium flex items-start gap-2">
+                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    </svg>
+                                    <span><strong>Penting:</strong> Tawar menawar adalah harga per pcs (per unit), bukan subtotal. Total harga akan dihitung berdasarkan harga tawar × quantity.</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
 
                 <!-- Size, Variant & Quantity -->
                 <div class="space-y-4">
@@ -255,6 +323,25 @@
 
     <script>
         const minBuyingStock = {{ $product->min_buying_stock ?? 0 }};
+        
+        // Toggle functions for collapsible sections
+        function toggleDescription() {
+            const content = document.getElementById('descriptionContent');
+            const icon = document.getElementById('descriptionIcon');
+            if (content && icon) {
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            }
+        }
+        
+        function toggleNegotiationGuide() {
+            const content = document.getElementById('negotiationContent');
+            const icon = document.getElementById('negotiationIcon');
+            if (content && icon) {
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            }
+        }
         
         // Initialize stock display on page load
         document.addEventListener('DOMContentLoaded', function() {
