@@ -139,15 +139,18 @@
                 </div>
                 
                 {{-- Tombol Download Invoice --}}
-                <div class="mt-6 pt-6 border-t border-gray-200">
+                <div class="mt-6 pt-6 border-t border-gray-200 flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex-1">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-1">Download Invoice</h3>
+                        <p class="text-xs text-gray-500">Unduh invoice dalam format PDF untuk keperluan dokumentasi</p>
+                    </div>
                     <a href="{{ route('invoice.download', $transaction->id) }}" 
-                       class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <span>Download Invoice PDF</span>
+                        <span class="text-base">Download Invoice PDF</span>
                     </a>
-                    <p class="text-xs text-gray-500 mt-2">Unduh invoice dalam format PDF untuk keperluan dokumentasi</p>
                 </div>
             </div>
         </div>
@@ -228,61 +231,61 @@
                                                         </svg>
                                                         <div class="font-semibold text-blue-900 text-sm">Detail Custom Terpal</div>
                                                     </div>
-                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                                                         @if($detail->bahan_custom)
-                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
-                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Bahan:</span>
-                                                            <span class="text-gray-900 font-medium flex-1">{{ $detail->bahan_custom }}</span>
+                                                        <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                                                            <div class="font-semibold text-gray-600 mb-1 text-xs uppercase tracking-wide">Bahan</div>
+                                                            <div class="text-gray-900 font-medium break-words">{{ $detail->bahan_custom }}</div>
                                                         </div>
                                                         @endif
                                                         
                                                         @if($detail->kebutuhan_custom)
-                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
-                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Kebutuhan:</span>
-                                                            <span class="text-gray-900 flex-1">{{ $detail->kebutuhan_custom }}</span>
+                                                        <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                                                            <div class="font-semibold text-gray-600 mb-1 text-xs uppercase tracking-wide">Kebutuhan</div>
+                                                            <div class="text-gray-900 break-words">{{ $detail->kebutuhan_custom }}</div>
                                                         </div>
                                                         @endif
                                                         
                                                         @if($detail->ukuran_custom)
-                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
-                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Ukuran:</span>
-                                                            <span class="text-gray-900 font-semibold flex-1">{{ $detail->ukuran_custom }}</span>
+                                                        <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                                                            <div class="font-semibold text-gray-600 mb-1 text-xs uppercase tracking-wide">Ukuran</div>
+                                                            <div class="text-gray-900 font-semibold break-words">{{ $detail->ukuran_custom }}</div>
                                                         </div>
                                                         @endif
                                                         
                                                         @if($detail->warna_custom)
-                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
-                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Warna:</span>
-                                                            <span class="text-gray-900 flex-1">{{ $detail->warna_custom }}</span>
+                                                        <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                                                            <div class="font-semibold text-gray-600 mb-1 text-xs uppercase tracking-wide">Warna</div>
+                                                            <div class="text-gray-900 break-words">{{ $detail->warna_custom }}</div>
                                                         </div>
                                                         @endif
                                                         
                                                         @if($detail->jumlah_ring_custom)
-                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
-                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Jumlah Ring:</span>
-                                                            <span class="text-gray-900 flex-1">{{ $detail->jumlah_ring_custom }} buah</span>
+                                                        <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                                                            <div class="font-semibold text-gray-600 mb-1 text-xs uppercase tracking-wide">Jumlah Ring</div>
+                                                            <div class="text-gray-900 break-words">{{ $detail->jumlah_ring_custom }} buah</div>
                                                         </div>
                                                         @endif
                                                         
                                                         @if($detail->pakai_tali_custom)
-                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100">
-                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Tali:</span>
-                                                            <span class="text-gray-900 flex-1">
+                                                        <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                                                            <div class="font-semibold text-gray-600 mb-1 text-xs uppercase tracking-wide">Tali</div>
+                                                            <div class="text-gray-900">
                                                                 @if($detail->pakai_tali_custom == 'ya' || $detail->pakai_tali_custom == '1' || $detail->pakai_tali_custom == 1)
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Ya, perlu tali</span>
+                                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800">Ya, perlu tali</span>
                                                                 @elseif($detail->pakai_tali_custom == 'tidak' || $detail->pakai_tali_custom == '0' || $detail->pakai_tali_custom == 0)
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">Tidak</span>
+                                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">Tidak</span>
                                                                 @else
-                                                                    {{ $detail->pakai_tali_custom }}
+                                                                    <span class="break-words">{{ $detail->pakai_tali_custom }}</span>
                                                                 @endif
-                                                            </span>
+                                                            </div>
                                                         </div>
                                                         @endif
                                                         
                                                         @if($detail->catatan_custom)
-                                                        <div class="flex items-start gap-2 bg-white p-2 rounded border border-blue-100 md:col-span-2">
-                                                            <span class="font-semibold text-gray-600 min-w-[90px]">Catatan:</span>
-                                                            <span class="text-gray-900 flex-1">{{ $detail->catatan_custom }}</span>
+                                                        <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm md:col-span-2">
+                                                            <div class="font-semibold text-gray-600 mb-1 text-xs uppercase tracking-wide">Catatan</div>
+                                                            <div class="text-gray-900 break-words whitespace-pre-wrap">{{ $detail->catatan_custom }}</div>
                                                         </div>
                                                         @endif
                                                     </div>
@@ -478,16 +481,22 @@
             </div>
             
             <script>
-                function showCancelModal() {
-                    document.getElementById('cancelModal').classList.remove('hidden');
-                }
-                function hideCancelModal() {
-                    document.getElementById('cancelModal').classList.add('hidden');
-                }
-                // Close modal when clicking outside
-                document.getElementById('cancelModal')?.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        hideCancelModal();
+                // Close modal when clicking outside - wait for DOM to be ready
+                document.addEventListener('DOMContentLoaded', function() {
+                    const cancelModal = document.getElementById('cancelModal');
+                    if (cancelModal) {
+                        cancelModal.addEventListener('click', function(e) {
+                            if (e.target === this) {
+                                hideCancelModal();
+                            }
+                        });
+                        
+                        // Close modal with Escape key
+                        document.addEventListener('keydown', function(e) {
+                            if (e.key === 'Escape' && !cancelModal.classList.contains('hidden')) {
+                                hideCancelModal();
+                            }
+                        });
                     }
                 });
             </script>
@@ -649,6 +658,23 @@
     </div>
 
     <script>
+        // Global functions for cancel modal
+        function showCancelModal() {
+            const modal = document.getElementById('cancelModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+        }
+        
+        function hideCancelModal() {
+            const modal = document.getElementById('cancelModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             const stars = document.querySelectorAll('.star');
             const starsFilled = document.querySelectorAll('.star-filled');
