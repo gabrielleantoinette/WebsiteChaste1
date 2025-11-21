@@ -135,7 +135,18 @@
             <div class="flex flex-col lg:flex-row gap-8 lg:gap-10">
                 <!-- Sidebar Filter -->
                 <aside class="w-full lg:w-1/4 space-y-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <form method="GET" action="{{ route('produk') }}" class="space-y-8">
+                    <form method="GET" action="{{ route('produk') }}" class="space-y-8" id="filterForm">
+                        {{-- Preserve search parameter --}}
+                        @if(request('search'))
+                            <input type="hidden" name="search" value="{{ request('search') }}">
+                        @endif
+                        {{-- Preserve sort parameters --}}
+                        @if(request('sort'))
+                            <input type="hidden" name="sort" value="{{ request('sort') }}">
+                        @endif
+                        @if(request('order'))
+                            <input type="hidden" name="order" value="{{ request('order') }}">
+                        @endif
                         {{-- Kategori --}}
                         <div>
                             <h3 class="text-lg font-bold text-teal-700 mb-4 border-b pb-2">Kategori</h3>
@@ -354,11 +365,23 @@
                     const urlParams = new URLSearchParams(window.location.search);
                     for (let [key, value] of urlParams) {
                         if (key !== 'sort' && key !== 'order') {
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = key;
-                            input.value = value;
-                            form.appendChild(input);
+                            // Handle array parameters (kategori[], ukuran[], warna[])
+                            if (key.endsWith('[]')) {
+                                const values = urlParams.getAll(key);
+                                values.forEach(val => {
+                                    const input = document.createElement('input');
+                                    input.type = 'hidden';
+                                    input.name = key;
+                                    input.value = val;
+                                    form.appendChild(input);
+                                });
+                            } else {
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = key;
+                                input.value = value;
+                                form.appendChild(input);
+                            }
                         }
                     }
                     
@@ -381,6 +404,38 @@
                     document.body.appendChild(form);
                     form.submit();
                 });
+            }
+            
+            // Improve filter form UX - add loading state on submit
+            const filterForm = document.getElementById('filterForm');
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<span class="flex items-center justify-center gap-2"><svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Memproses...</span>';
+                    }
+                });
+            }
+            
+            // Validate price range inputs
+            const hargaMinInput = document.querySelector('input[name="harga_min"]');
+            const hargaMaxInput = document.querySelector('input[name="harga_max"]');
+            
+            if (hargaMinInput && hargaMaxInput) {
+                function validatePriceRange() {
+                    const min = parseFloat(hargaMinInput.value) || 0;
+                    const max = parseFloat(hargaMaxInput.value) || 0;
+                    
+                    if (min > 0 && max > 0 && min > max) {
+                        hargaMaxInput.setCustomValidity('Harga maksimum harus lebih besar dari harga minimum');
+                    } else {
+                        hargaMaxInput.setCustomValidity('');
+                    }
+                }
+                
+                hargaMinInput.addEventListener('input', validatePriceRange);
+                hargaMaxInput.addEventListener('input', validatePriceRange);
             }
         });
     </script>

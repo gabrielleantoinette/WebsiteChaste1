@@ -112,18 +112,62 @@ class CustomerController extends Controller
             $products->whereIn('category_id', $kategoriIds);
         }
 
-        // Filter ukuran
-        if ($request->has('ukuran')) {
-            $products->whereIn('size', $request->input('ukuran'));
+        // Filter ukuran - filter berdasarkan size_prices atau kolom size
+        if ($request->has('ukuran') && !empty($request->input('ukuran'))) {
+            $ukuranFilter = $request->input('ukuran');
+            $products->where(function($query) use ($ukuranFilter) {
+                $first = true;
+                foreach ($ukuranFilter as $ukuran) {
+                    if ($first) {
+                        // Filter berdasarkan kolom size jika ada
+                        $query->where(function($q) use ($ukuran) {
+                            $q->where('size', $ukuran)
+                              ->orWhereRaw("JSON_EXTRACT(size_prices, ?) IS NOT NULL AND JSON_EXTRACT(size_prices, ?) > 0", ["$.{$ukuran}", "$.{$ukuran}"]);
+                        });
+                        $first = false;
+                    } else {
+                        // Atau filter berdasarkan size_prices JSON yang memiliki ukuran tersebut
+                        $query->orWhere(function($q) use ($ukuran) {
+                            $q->where('size', $ukuran)
+                              ->orWhereRaw("JSON_EXTRACT(size_prices, ?) IS NOT NULL AND JSON_EXTRACT(size_prices, ?) > 0", ["$.{$ukuran}", "$.{$ukuran}"]);
+                        });
+                    }
+                }
+            });
         }
 
-        // Filter harga
+        // Filter harga - filter berdasarkan base price dan size_prices
+        // Pre-filter di query builder, filter lebih akurat dilakukan setelah transform
         if ($request->filled('harga_min')) {
-            $products->where('price', '>=', $request->harga_min);
+            $hargaMin = $request->harga_min;
+            // Filter produk yang memiliki setidaknya satu harga (base price atau size_prices) >= harga_min
+            // Ini akan di-filter lebih akurat setelah transform berdasarkan price range
+            $products->where(function($query) use ($hargaMin) {
+                // Cek base price (harga untuk ukuran 2x3)
+                $query->where('price', '>=', $hargaMin);
+                
+                // Atau cek jika ada size_prices yang >= harga_min
+                $sizes = ['2x3', '3x4', '4x6', '6x8'];
+                foreach ($sizes as $size) {
+                    $query->orWhereRaw("JSON_EXTRACT(size_prices, ?) >= ?", ["$.{$size}", $hargaMin]);
+                }
+            });
         }
 
         if ($request->filled('harga_max')) {
-            $products->where('price', '<=', $request->harga_max);
+            $hargaMax = $request->harga_max;
+            // Filter produk yang memiliki setidaknya satu harga (base price atau size_prices) <= harga_max
+            // Ini akan di-filter lebih akurat setelah transform berdasarkan price range
+            $products->where(function($query) use ($hargaMax) {
+                // Cek base price (harga untuk ukuran 2x3)
+                $query->where('price', '<=', $hargaMax);
+                
+                // Atau cek jika ada size_prices yang <= harga_max
+                $sizes = ['2x3', '3x4', '4x6', '6x8'];
+                foreach ($sizes as $size) {
+                    $query->orWhereRaw("JSON_EXTRACT(size_prices, ?) <= ?", ["$.{$size}", $hargaMax]);
+                }
+            });
         }
 
         // Filter warna berdasarkan product variants
@@ -163,8 +207,11 @@ class CustomerController extends Controller
 
         $products = $products->paginate(9)->withQueryString();
 
-        // Add price range to each product
-        $products->getCollection()->transform(function ($product) {
+        // Add price range to each product and apply accurate price filter
+        $hargaMin = $request->filled('harga_min') ? $request->harga_min : null;
+        $hargaMax = $request->filled('harga_max') ? $request->harga_max : null;
+        
+        $products->getCollection()->transform(function ($product) use ($hargaMin, $hargaMax) {
             $sizes = ['2x3', '3x4', '4x6', '6x8'];
             
             $prices = collect($sizes)->map(function ($size) use ($product) {
@@ -175,8 +222,32 @@ class CustomerController extends Controller
             $maxPrice = $prices->max();
             $product->price_range = $minPrice == $maxPrice ? number_format($minPrice, 0, ',', '.') : number_format($minPrice, 0, ',', '.') . ' - ' . number_format($maxPrice, 0, ',', '.');
             
+            // Store min and max price for filtering
+            $product->min_price_calculated = $minPrice;
+            $product->max_price_calculated = $maxPrice;
+            
             return $product;
         });
+        
+        // Apply accurate price filter after calculating price ranges
+        if ($hargaMin !== null || $hargaMax !== null) {
+            $filtered = $products->getCollection()->filter(function ($product) use ($hargaMin, $hargaMax) {
+                $minPrice = $product->min_price_calculated;
+                $maxPrice = $product->max_price_calculated;
+                
+                // Product matches if its price range overlaps with filter range
+                if ($hargaMin !== null && $maxPrice < $hargaMin) {
+                    return false;
+                }
+                if ($hargaMax !== null && $minPrice > $hargaMax) {
+                    return false;
+                }
+                return true;
+            });
+            
+            // Replace collection with filtered results
+            $products->setCollection($filtered);
+        }
 
         return view('produk', compact('products'));
     }
