@@ -27,21 +27,12 @@
             @if($cartItems->isEmpty())
                 {{-- Empty Cart State --}}
                 <div class="flex flex-col items-center justify-center py-16 px-4 min-h-[60vh]">
-                    <div class="relative mb-8">
-                        {{-- Watermark/Icon Keranjang Kosong --}}
-                        <div class="relative w-64 h-64 flex items-center justify-center">
-                            {{-- Background circle dengan opacity --}}
-                            <div class="absolute inset-0 rounded-full bg-gray-100 opacity-30"></div>
-                            
-                            {{-- Icon keranjang --}}
-                            <svg class="relative w-32 h-32 text-gray-300 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <div class="mb-8">
+                        {{-- Icon Keranjang Kosong --}}
+                        <div class="flex items-center justify-center">
+                            <svg class="w-32 h-32 text-gray-300 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
-                            
-                            {{-- Watermark text overlay --}}
-                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <span class="text-7xl font-extrabold text-gray-200 opacity-40 select-none" style="transform: rotate(-15deg);">KOSONG</span>
-                            </div>
                         </div>
                     </div>
                     
