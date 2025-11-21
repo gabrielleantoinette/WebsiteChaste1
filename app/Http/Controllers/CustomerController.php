@@ -112,24 +112,27 @@ class CustomerController extends Controller
             $products->whereIn('category_id', $kategoriIds);
         }
 
-        // Filter ukuran - filter berdasarkan size_prices atau kolom size
+        // Filter ukuran - filter berdasarkan kolom size (string seperti "2x3, 3x4, 4x6, 6x8")
+        // atau size_prices JSON yang memiliki ukuran tersebut
         if ($request->has('ukuran') && !empty($request->input('ukuran'))) {
             $ukuranFilter = $request->input('ukuran');
             $products->where(function($query) use ($ukuranFilter) {
                 $first = true;
                 foreach ($ukuranFilter as $ukuran) {
+                    $jsonPath = '$.' . $ukuran;
                     if ($first) {
-                        // Filter berdasarkan kolom size jika ada
-                        $query->where(function($q) use ($ukuran) {
-                            $q->where('size', $ukuran)
-                              ->orWhereRaw("JSON_EXTRACT(size_prices, ?) IS NOT NULL AND JSON_EXTRACT(size_prices, ?) > 0", ["$.{$ukuran}", "$.{$ukuran}"]);
+                        $query->where(function($q) use ($ukuran, $jsonPath) {
+                            // Cek di kolom size menggunakan LIKE (karena berisi string comma-separated seperti "2x3, 3x4, 4x6, 6x8")
+                            $q->where('size', 'LIKE', "%{$ukuran}%")
+                              // Atau cek di size_prices JSON yang memiliki key untuk ukuran ini
+                              ->orWhereRaw("JSON_EXTRACT(size_prices, ?) IS NOT NULL AND JSON_EXTRACT(size_prices, ?) > 0", [$jsonPath, $jsonPath]);
                         });
                         $first = false;
                     } else {
-                        // Atau filter berdasarkan size_prices JSON yang memiliki ukuran tersebut
-                        $query->orWhere(function($q) use ($ukuran) {
-                            $q->where('size', $ukuran)
-                              ->orWhereRaw("JSON_EXTRACT(size_prices, ?) IS NOT NULL AND JSON_EXTRACT(size_prices, ?) > 0", ["$.{$ukuran}", "$.{$ukuran}"]);
+                        // Untuk multiple ukuran, gunakan OR (artinya produk yang memiliki salah satu ukuran)
+                        $query->orWhere(function($q) use ($ukuran, $jsonPath) {
+                            $q->where('size', 'LIKE', "%{$ukuran}%")
+                              ->orWhereRaw("JSON_EXTRACT(size_prices, ?) IS NOT NULL AND JSON_EXTRACT(size_prices, ?) > 0", [$jsonPath, $jsonPath]);
                         });
                     }
                 }

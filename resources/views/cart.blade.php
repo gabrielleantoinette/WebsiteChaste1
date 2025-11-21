@@ -24,6 +24,41 @@
             <br>
             <h2 class="text-2xl font-bold mb-6">Keranjang Belanja</h2>
 
+            @if($cartItems->isEmpty())
+                {{-- Empty Cart State --}}
+                <div class="flex flex-col items-center justify-center py-16 px-4 min-h-[60vh]">
+                    <div class="relative mb-8">
+                        {{-- Watermark/Icon Keranjang Kosong --}}
+                        <div class="relative w-64 h-64 flex items-center justify-center">
+                            {{-- Background circle dengan opacity --}}
+                            <div class="absolute inset-0 rounded-full bg-gray-100 opacity-30"></div>
+                            
+                            {{-- Icon keranjang --}}
+                            <svg class="relative w-32 h-32 text-gray-300 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            
+                            {{-- Watermark text overlay --}}
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span class="text-7xl font-extrabold text-gray-200 opacity-40 select-none" style="transform: rotate(-15deg);">KOSONG</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-3xl font-bold text-gray-800 mb-3">Keranjang Belanja Anda Kosong</h3>
+                    <p class="text-gray-500 text-center mb-8 max-w-md text-lg">
+                        Belum ada produk di keranjang belanja Anda. Mulai berbelanja dan tambahkan produk favorit Anda ke keranjang!
+                    </p>
+                    
+                    <a href="{{ route('produk') }}" 
+                       class="inline-flex items-center gap-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        Mulai Berbelanja
+                    </a>
+                </div>
+            @else
             <form action="{{ route('checkout') }}" method="GET" class="space-y-6">
                 @csrf
                 <div class="flex items-center mb-4">
@@ -170,6 +205,7 @@
                     </button>
                 </div>
             </form>
+            @endif
         </div>
     </section>
 
@@ -179,6 +215,7 @@
     <script>
         // Data harga untuk setiap item
         const itemPrices = {
+            @if($cartItems->isNotEmpty())
             @foreach ($cartItems as $item)
                 {{ $item->id }}: {
                     price: @if ($item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi'))
@@ -200,6 +237,7 @@
                     maxStock: {{ $item->variant && $item->variant->stock ? $item->variant->stock : 999 }}
                 },
             @endforeach
+            @endif
         };
 
         // Function untuk increment quantity
@@ -320,6 +358,14 @@
         }
 
         function updateTotal() {
+            // Cek apakah elemen total ada (hanya ada jika cart tidak kosong)
+            const totalHargaEl = document.getElementById('totalHarga');
+            const totalDetailEl = document.getElementById('totalDetail');
+            
+            if (!totalHargaEl || !totalDetailEl) {
+                return; // Cart kosong, tidak perlu update total
+            }
+            
             let total = 0;
             let selectedItems = [];
             let checkboxes = document.querySelectorAll('.item-checkbox:checked');
@@ -348,26 +394,28 @@
             });
 
             // Update total harga
-            document.getElementById('totalHarga').textContent = `Rp ${total.toLocaleString('id-ID')}`;
+            totalHargaEl.textContent = `Rp ${total.toLocaleString('id-ID')}`;
             
             // Update detail
-            const totalDetail = document.getElementById('totalDetail');
             if (selectedItems.length === 0) {
-                totalDetail.textContent = 'Pilih item untuk melihat total';
+                totalDetailEl.textContent = 'Pilih item untuk melihat total';
             } else {
                 let detailText = selectedItems.map(item => 
                     `${item.name} (${item.color}, ${item.size}) - ${item.quantity} pcs × ${item.price} = Rp ${item.total.toLocaleString('id-ID')}`
                 ).join('\n');
-                totalDetail.innerHTML = detailText.replace(/\n/g, '<br>');
+                totalDetailEl.innerHTML = detailText.replace(/\n/g, '<br>');
             }
         }
 
-        // Event listener untuk select all
-        document.getElementById('selectAll').addEventListener('change', function() {
-            let checkboxes = document.querySelectorAll('.item-checkbox');
-            checkboxes.forEach(cb => cb.checked = this.checked);
-            updateTotal();
-        });
+        // Event listener untuk select all (jika ada)
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                let checkboxes = document.querySelectorAll('.item-checkbox');
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                updateTotal();
+            });
+        }
 
         // Event listener untuk setiap checkbox item
         document.querySelectorAll('.item-checkbox').forEach(checkbox => {
@@ -379,8 +427,10 @@
             updateTotal();
         });
 
-        // Handle form submission untuk memastikan checkbox terpilih dikirim
-        document.querySelector('form').addEventListener('submit', function(e) {
+        // Handle form submission untuk memastikan checkbox terpilih dikirim (jika form ada)
+        const checkoutForm = document.querySelector('form[action="{{ route("checkout") }}"]');
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', function(e) {
             let checkedBoxes = document.querySelectorAll('.item-checkbox:checked');
             if (checkedBoxes.length === 0) {
                 e.preventDefault();
@@ -398,10 +448,11 @@
                 url.searchParams.append('selected_items[]', itemId);
             });
             
-            // Redirect ke URL yang sudah dibangun
-            window.location.href = url.toString();
-            e.preventDefault();
-        });
+                // Redirect ke URL yang sudah dibangun
+                window.location.href = url.toString();
+                e.preventDefault();
+            });
+        }
     </script>
 
 </body>
