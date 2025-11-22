@@ -82,8 +82,8 @@
                 </div>
                 <select name="status" id="status" onchange="this.form.submit()" class="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white shadow-sm w-full sm:w-auto text-sm">
                     <option value="">Semua Status</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Tidak Aktif</option>
                 </select>
             </div>
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">

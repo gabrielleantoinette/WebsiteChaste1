@@ -86,11 +86,15 @@ class CustomerController extends Controller
             'gender' => 'nullable|string|max:255',
             'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'password' => 'nullable|string|max:255',
+            'active' => 'nullable|string',
         ]);
 
         $customer->fill($validated);
         if ($request->filled('password')) {
             $customer->password = $request->password;
+        }
+        if ($request->has('active')) {
+            $customer->active = $request->active === 'true' || $request->active === true;
         }
         if ($request->hasFile('profile_picture')) {
             $profile_picture = $request->file('profile_picture')->store('photos', 'public');
