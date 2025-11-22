@@ -73,7 +73,7 @@ class CartController extends Controller
             
             if ($negotiatedPrice) {
                 $cart->harga_custom = $negotiatedPrice;
-                $cart->kebutuhan_custom = "Hasil negosiasi - Harga final: Rp " . number_format($negotiatedPrice, 0, ',', '.');
+                $cart->kebutuhan_custom = "Hasil negosiasi - Original Qty: {$quantity} - Harga final: Rp " . number_format($negotiatedPrice, 0, ',', '.');
             }
             
             $cart->save();
@@ -186,15 +186,22 @@ class CartController extends Controller
             }
 
             $quantity = $request->input('quantity', 1);
-            $originalQuantity = $cart->quantity;
             
             $isNegotiated = $cart->harga_custom && $cart->kebutuhan_custom && str_contains($cart->kebutuhan_custom, 'Hasil negosiasi');
             
-            if ($isNegotiated && $quantity < $originalQuantity) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Quantity barang hasil negosiasi tidak dapat dikurangi. Harga negosiasi berlaku untuk quantity yang sudah disepakati.'
-                ], 400);
+            if ($isNegotiated) {
+                // Extract original quantity from kebutuhan_custom
+                $originalQuantity = $cart->quantity;
+                if (preg_match('/Original Qty: (\d+)/', $cart->kebutuhan_custom, $matches)) {
+                    $originalQuantity = (int)$matches[1];
+                }
+                
+                if ($quantity < $originalQuantity) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Quantity barang hasil negosiasi tidak dapat dikurangi. Harga negosiasi berlaku untuk quantity yang sudah disepakati.'
+                    ], 400);
+                }
             }
             
             if ($quantity < 1) {
