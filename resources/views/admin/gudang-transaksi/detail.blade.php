@@ -566,20 +566,56 @@ document.addEventListener('DOMContentLoaded', function() {
                 deleteBtn.disabled = true;
                 deleteBtn.textContent = '...';
                 
-                fetch(`/admin/gudang-transaksi/delete-photo/${invoiceIdBtn}/${photoIndex}`, {
+                const deleteUrl = `{{ url('/admin/gudang-transaksi/delete-photo') }}/${invoiceIdBtn}/${photoIndex}`;
+                console.log('Delete URL:', deleteUrl);
+                
+                fetch(deleteUrl, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => {
-                            throw new Error(err.message || 'Hapus gagal');
-                        });
+                .then(async response => {
+                    console.log('Delete response status:', response.status);
+                    
+                    const contentType = response.headers.get("content-type");
+                    let responseText;
+                    
+                    try {
+                        responseText = await response.text();
+                        console.log('Delete response text:', responseText);
+                    } catch (e) {
+                        console.error('Error reading delete response text:', e);
                     }
-                    return response.json();
+                    
+                    if (!response.ok) {
+                        if (contentType && contentType.includes("application/json")) {
+                            try {
+                                const errorData = JSON.parse(responseText);
+                                console.error('Delete error data:', errorData);
+                                throw new Error(errorData.message || errorData.error || 'Hapus gagal');
+                            } catch (e) {
+                                console.error('Error parsing delete error JSON:', e);
+                                throw new Error(`Hapus gagal: ${response.status} ${response.statusText}. Response: ${responseText ? responseText.substring(0, 200) : 'No response'}`);
+                            }
+                        } else {
+                            throw new Error(`Hapus gagal: ${response.status} ${response.statusText}. Response: ${responseText ? responseText.substring(0, 200) : 'No response'}`);
+                        }
+                    }
+                    
+                    if (contentType && contentType.includes("application/json")) {
+                        try {
+                            return JSON.parse(responseText);
+                        } catch (e) {
+                            console.error('Error parsing delete success JSON:', e);
+                            throw new Error('Response tidak valid: ' + responseText.substring(0, 200));
+                        }
+                    } else {
+                        throw new Error('Response tidak valid. Content-Type: ' + contentType + '. Response: ' + responseText.substring(0, 200));
+                    }
                 })
                 .then(data => {
                     if (data.success) {

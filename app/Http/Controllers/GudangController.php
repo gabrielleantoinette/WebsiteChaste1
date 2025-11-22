@@ -332,49 +332,98 @@ class GudangController extends Controller
 
     public function deleteQualityPhoto(Request $request, $id, $photoIndex)
     {
-        $invoice = HInvoice::findOrFail($id);
-        $user = Session::get('user');
-        
-        if (!$invoice->quality_proof_photo) {
+        try {
+            \Log::info('Delete quality photo request received', [
+                'invoice_id' => $id,
+                'photo_index' => $photoIndex,
+                'method' => $request->method(),
+                'url' => $request->fullUrl()
+            ]);
+            
+            $invoice = HInvoice::findOrFail($id);
+            $user = Session::get('user');
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User tidak terautentikasi'
+                ], 401);
+            }
+            
+            if (!$invoice->quality_proof_photo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada foto untuk dihapus'
+                ], 404);
+            }
+            
+            $photos = json_decode($invoice->quality_proof_photo, true);
+            if (!is_array($photos)) {
+                $photos = [$invoice->quality_proof_photo];
+            }
+            
+            if (!isset($photos[$photoIndex])) {
+                \Log::warning('Photo index not found', [
+                    'invoice_id' => $id,
+                    'photo_index' => $photoIndex,
+                    'total_photos' => count($photos)
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Foto tidak ditemukan'
+                ], 404);
+            }
+            
+            $photoToDelete = $photos[$photoIndex];
+            
+            if (Storage::disk('public')->exists($photoToDelete)) {
+                $deleted = Storage::disk('public')->delete($photoToDelete);
+                \Log::info('Photo file deleted', [
+                    'invoice_id' => $id,
+                    'path' => $photoToDelete,
+                    'deleted' => $deleted
+                ]);
+            } else {
+                \Log::warning('Photo file not found for deletion', [
+                    'invoice_id' => $id,
+                    'path' => $photoToDelete
+                ]);
+            }
+            
+            unset($photos[$photoIndex]);
+            $photos = array_values($photos);
+            
+            if (empty($photos)) {
+                $invoice->quality_proof_photo = null;
+            } else {
+                $invoice->quality_proof_photo = json_encode($photos);
+            }
+            $invoice->save();
+            
+            \Log::info('Quality photo deleted successfully', [
+                'invoice_id' => $id,
+                'photo_index' => $photoIndex,
+                'remaining_photos' => count($photos)
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Foto berhasil dihapus',
+                'total_photos' => count($photos)
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting quality proof photo', [
+                'invoice_id' => $id,
+                'photo_index' => $photoIndex,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Tidak ada foto untuk dihapus'
-            ], 404);
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-        
-        $photos = json_decode($invoice->quality_proof_photo, true);
-        if (!is_array($photos)) {
-            $photos = [$invoice->quality_proof_photo];
-        }
-        
-        if (!isset($photos[$photoIndex])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Foto tidak ditemukan'
-            ], 404);
-        }
-        
-        $photoToDelete = $photos[$photoIndex];
-        
-        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($photoToDelete)) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($photoToDelete);
-        }
-        
-        unset($photos[$photoIndex]);
-        $photos = array_values($photos);
-        
-        if (empty($photos)) {
-            $invoice->quality_proof_photo = null;
-        } else {
-            $invoice->quality_proof_photo = json_encode($photos);
-        }
-        $invoice->save();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Foto berhasil dihapus',
-            'total_photos' => count($photos)
-        ]);
     }
 
     public function finalizeGudang(Request $request, $id)
