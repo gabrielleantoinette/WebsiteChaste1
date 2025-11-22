@@ -187,7 +187,7 @@ class InvoiceController extends Controller
 
     public function detail($id)
     {
-        $invoice = HInvoice::find($id);
+        $invoice = HInvoice::with(['details.product', 'details.variant', 'customer', 'employee', 'driver', 'gudang'])->findOrFail($id);
         return view('admin.invoices.detail', compact('invoice'));
     }
 

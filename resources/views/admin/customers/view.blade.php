@@ -31,7 +31,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="text-xs sm:text-sm font-medium text-gray-600">Total Pembeli</p>
-                    <p class="text-xl sm:text-2xl font-bold text-gray-900 truncate">{{ $customers->count() }}</p>
+                    <p class="text-xl sm:text-2xl font-bold text-gray-900 truncate">{{ $totalCustomers ?? $customers->total() }}</p>
                 </div>
                 <div class="p-2 sm:p-3 bg-blue-100 rounded-lg flex-shrink-0 ml-2">
                     <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +45,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="text-xs sm:text-sm font-medium text-gray-600">Pembeli Aktif</p>
-                    <p class="text-xl sm:text-2xl font-bold text-emerald-600 truncate">{{ $customers->where('active', true)->count() }}</p>
+                    <p class="text-xl sm:text-2xl font-bold text-emerald-600 truncate">{{ $activeCustomers ?? $customers->where('active', true)->count() }}</p>
                 </div>
                 <div class="p-2 sm:p-3 bg-emerald-100 rounded-lg flex-shrink-0 ml-2">
                     <svg class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,8 +58,8 @@
         <div class="bg-white rounded-xl p-4 sm:p-5 lg:p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs sm:text-sm font-medium text-gray-600">Pembeli Baru</p>
-                    <p class="text-xl sm:text-2xl font-bold text-purple-600 truncate">{{ $customers->where('created_at', '>=', now()->subDays(30))->count() }}</p>
+                    <p class="text-xs sm:text-sm font-medium text-gray-600">Pembeli Baru (Hari Ini)</p>
+                    <p class="text-xl sm:text-2xl font-bold text-purple-600 truncate">{{ $newCustomers ?? 0 }}</p>
                 </div>
                 <div class="p-2 sm:p-3 bg-purple-100 rounded-lg flex-shrink-0 ml-2">
                     <svg class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,7 +129,7 @@
                 <tbody class="divide-y divide-gray-200">
                     @forelse ($customers as $customer)
                         <tr class="hover:bg-gray-50 transition-colors duration-200">
-                            <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $loop->iteration }}</td>
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ ($customers->currentPage() - 1) * $customers->perPage() + $loop->iteration }}</td>
                             <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
@@ -250,5 +250,19 @@
                 </div>
             @endforelse
         </div>
+
+        {{-- Pagination --}}
+        @if($customers->hasPages())
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 bg-gray-50">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                    <div class="text-xs sm:text-sm text-gray-600">
+                        Menampilkan {{ $customers->firstItem() ?? 0 }} sampai {{ $customers->lastItem() ?? 0 }} dari {{ $customers->total() }} pembeli
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        {{ $customers->links() }}
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 @endsection

@@ -76,7 +76,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="text-xs sm:text-sm font-medium text-gray-600">Total Penjualan</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 truncate">Rp {{ number_format($totalSales) }}</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 break-words">Rp {{ number_format($totalSales, 0, ',', '.') }}</p>
                 </div>
                 <div class="p-2 sm:p-3 bg-green-100 rounded-lg flex-shrink-0 ml-2">
                     <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

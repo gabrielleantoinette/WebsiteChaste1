@@ -16,10 +16,32 @@ use Carbon\Carbon;
 
 class CustomerController extends Controller
 {
-    public function view()
+    public function view(Request $request)
     {
-        $customers = Customer::all();
-        return view('admin.customers.view', compact('customers'));
+        $query = Customer::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status == 'active') {
+                $query->where('active', true);
+            } elseif ($request->status == 'inactive') {
+                $query->where('active', false);
+            }
+        }
+
+        $totalCustomers = Customer::count();
+        $activeCustomers = Customer::where('active', true)->count();
+        $newCustomers = Customer::whereDate('created_at', today())->count();
+
+        $customers = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+        return view('admin.customers.view', compact('customers', 'totalCustomers', 'activeCustomers', 'newCustomers'));
     }
 
     public function create()

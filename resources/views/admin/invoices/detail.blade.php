@@ -127,8 +127,24 @@
                     @foreach ($invoice->details as $detail)
                                 <tr class="hover:bg-gray-50 transition">
                                     <td class="px-4 py-3 text-gray-600">{{ $loop->iteration }}</td>
-                                    <td class="px-4 py-3 font-medium text-gray-900">{{ $detail->product->name }}</td>
-                                    <td class="px-4 py-3 text-gray-600">{{ $detail->variant->color ?? '-' }}</td>
+                                    <td class="px-4 py-3 font-medium text-gray-900">
+                                        @if($detail->product)
+                                            {{ $detail->product->name }}
+                                        @elseif($detail->kebutuhan_custom)
+                                            {{ $detail->kebutuhan_custom }}
+                                        @else
+                                            Produk Custom
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-600">
+                                        @if($detail->variant)
+                                            {{ $detail->variant->color }}
+                                        @elseif($detail->warna_custom)
+                                            {{ $detail->warna_custom }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3 text-gray-600">
                                 @php
                                     $sizeText = '-';
