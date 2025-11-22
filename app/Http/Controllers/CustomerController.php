@@ -585,7 +585,6 @@ class CustomerController extends Controller
     }
 
     public static function checkCustomerDebtStatus($customerId)
-    public static function checkCustomerDebtStatus($customerId)
     {
         $hutangInvoices = \App\Models\HInvoice::where('customer_id', $customerId)
             ->with(['payments' => function($q) {
