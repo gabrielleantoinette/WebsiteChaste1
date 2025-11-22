@@ -432,9 +432,9 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('_token', '{{ csrf_token() }}');
             
             uploadBtn.disabled = true;
-            uploadBtn.textContent = 'Mengupload...';
+            uploadBtn.textContent = 'Mengunggah...';
             if (uploadMessage) {
-                uploadMessage.innerHTML = '<p class="text-blue-500 text-xs">Sedang mengupload...</p>';
+                uploadMessage.innerHTML = '<p class="text-blue-500 text-xs">Sedang mengunggah...</p>';
             }
             
             const uploadUrl = `{{ url('/admin/gudang-transaksi/upload-photo') }}/${invoiceId}`;
@@ -527,13 +527,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 3000);
                 } else {
                     if (uploadMessage) {
-                        uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${data.message || 'Gagal mengupload foto'}</p>`;
+                        uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${data.message || 'Gagal mengunggah foto'}</p>`;
                     }
                 }
             })
             .catch(error => {
                 if (uploadMessage) {
-                    uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${error.message || 'Terjadi kesalahan saat mengupload'}</p>`;
+                    uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${error.message || 'Terjadi kesalahan saat mengunggah'}</p>`;
                 }
                 console.error('Upload Error:', error);
                 console.error('Error Details:', {
