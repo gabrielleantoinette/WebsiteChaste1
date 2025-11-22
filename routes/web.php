@@ -272,6 +272,9 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/', [GudangController::class, 'viewTransaksiGudang']);
         Route::get('/detail/{id}', [GudangController::class, 'detailTransaksiGudang']);
         Route::post('/assign-gudang/{id}', [GudangController::class, 'assignGudang']);
+        Route::post('/upload-photo/{id}', [GudangController::class, 'uploadQualityPhoto']);
+        Route::delete('/delete-photo/{id}/{photoIndex}', [GudangController::class, 'deleteQualityPhoto']);
+        Route::post('/finalize/{id}', [GudangController::class, 'finalizeGudang']);
     });
 
     // Work Orders Routes

@@ -193,6 +193,155 @@ class GudangController extends Controller
         return redirect()->back()->with('success', 'Berhasil menyiapkan barang dan upload foto bukti kualitas.');
     }
 
+    public function uploadQualityPhoto(Request $request, $id)
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048'
+        ], [
+            'photo.required' => 'Foto wajib diupload',
+            'photo.image' => 'File harus berupa gambar',
+            'photo.mimes' => 'Format file harus jpeg, png, atau jpg',
+            'photo.max' => 'Ukuran file maksimal 2MB'
+        ]);
+
+        $invoice = HInvoice::findOrFail($id);
+        $user = Session::get('user');
+        
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $originalName = $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $timestamp = now()->format('YmdHis');
+            $randomString = \Str::random(10);
+            $filename = 'quality_proof_' . $invoice->code . '_' . $timestamp . '_' . $randomString . '_' . \Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $extension;
+            
+            $path = $file->storeAs('quality_proofs', $filename, 'public');
+            
+            $existingPhotos = [];
+            if ($invoice->quality_proof_photo) {
+                $existingPhotos = json_decode($invoice->quality_proof_photo, true);
+                if (!is_array($existingPhotos)) {
+                    $existingPhotos = [$invoice->quality_proof_photo];
+                }
+            }
+            
+            $existingPhotos[] = $path;
+            $invoice->quality_proof_photo = json_encode($existingPhotos);
+            $invoice->save();
+            
+            $cleanPath = ltrim($path, '/');
+            $imageUrl = url('/public/storage/' . $cleanPath);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Foto berhasil diupload',
+                'path' => $path,
+                'url' => $imageUrl,
+                'total_photos' => count($existingPhotos)
+            ]);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengupload foto'
+        ], 400);
+    }
+
+    public function deleteQualityPhoto(Request $request, $id, $photoIndex)
+    {
+        $invoice = HInvoice::findOrFail($id);
+        $user = Session::get('user');
+        
+        if (!$invoice->quality_proof_photo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada foto untuk dihapus'
+            ], 404);
+        }
+        
+        $photos = json_decode($invoice->quality_proof_photo, true);
+        if (!is_array($photos)) {
+            $photos = [$invoice->quality_proof_photo];
+        }
+        
+        if (!isset($photos[$photoIndex])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Foto tidak ditemukan'
+            ], 404);
+        }
+        
+        $photoToDelete = $photos[$photoIndex];
+        
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($photoToDelete)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($photoToDelete);
+        }
+        
+        unset($photos[$photoIndex]);
+        $photos = array_values($photos);
+        
+        if (empty($photos)) {
+            $invoice->quality_proof_photo = null;
+        } else {
+            $invoice->quality_proof_photo = json_encode($photos);
+        }
+        $invoice->save();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Foto berhasil dihapus',
+            'total_photos' => count($photos)
+        ]);
+    }
+
+    public function finalizeGudang(Request $request, $id)
+    {
+        $invoice = HInvoice::findOrFail($id);
+        $user = Session::get('user');
+        
+        if (!$invoice->quality_proof_photo) {
+            return redirect()->back()->with('error', 'Minimal 1 foto bukti kualitas wajib diupload');
+        }
+        
+        $photos = json_decode($invoice->quality_proof_photo, true);
+        if (!is_array($photos)) {
+            $photos = [$invoice->quality_proof_photo];
+        }
+        
+        if (empty($photos)) {
+            return redirect()->back()->with('error', 'Minimal 1 foto bukti kualitas wajib diupload');
+        }
+        
+        $invoice->gudang_id = $user->id;
+        
+        if ($invoice->shipping_courier && $invoice->shipping_courier !== 'kurir') {
+            $invoice->status = 'dikirim_ke_agen';
+        } else {
+            $invoice->status = 'dikemas';
+        }
+        $invoice->save();
+        
+        $notificationService = app(NotificationService::class);
+        $notificationService->notifyOrderStatus(
+            $invoice->id,
+            $invoice->customer_id,
+            'processing',
+            [
+                'invoice_code' => $invoice->code,
+                'customer_name' => $invoice->customer->name
+            ]
+        );
+
+        $notificationService->notifyWarehouseAction([
+            'message' => "Gudang telah menyiapkan pesanan {$invoice->code} untuk customer {$invoice->customer->name}",
+            'action_id' => $invoice->id,
+            'action_url' => "/admin/gudang-transaksi/detail/{$invoice->id}",
+            'priority' => 'normal'
+        ]);
+
+        return redirect()->back()->with('success', 'Berhasil menyiapkan barang.');
+    }
+
     // Dashboard Gudang
     public function dashboardGudang()
     {
@@ -347,7 +496,6 @@ class GudangController extends Controller
         $bulan = $request->get('bulan', now()->format('Y-m'));
         $tahun = $request->get('tahun', now()->format('Y'));
         
- (sama seperti laporanStokHarian)
         switch ($periode) {
             case 'harian':
                 $startDate = $tanggal;

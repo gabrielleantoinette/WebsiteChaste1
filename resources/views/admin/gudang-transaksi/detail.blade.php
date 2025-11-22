@@ -48,22 +48,63 @@
             @if (!$invoice->gudang)
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                     <h3 class="text-sm sm:text-base font-semibold text-yellow-800 mb-1 sm:mb-2">Konfirmasi Kualitas Barang</h3>
-                    <p class="text-xs sm:text-sm text-yellow-700 mb-2 sm:mb-3">Upload foto bukti kualitas barang sebelum klik "Siapkan Barang". Bisa upload lebih dari 1 gambar.</p>
-                    <form action="{{ url('/admin/gudang-transaksi/assign-gudang/' . $invoice->id) }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        <div class="mb-3">
-                            <label for="quality_proof_photo" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Foto Bukti Kualitas Barang</label>
-                            <input type="file" id="quality_proof_photo" name="quality_proof_photo[]" accept="image/*" multiple class="block w-full text-xs sm:text-sm text-gray-500 file:mr-4 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" required>
-                            <p class="text-xs text-gray-500 mt-1">Pilih satu atau lebih gambar (format: jpeg, png, jpg - maks 2MB per gambar)</p>
-                            @error('quality_proof_photo')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                            @error('quality_proof_photo.*')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
+                    <p class="text-xs sm:text-sm text-yellow-700 mb-2 sm:mb-3">Unggah foto bukti kualitas barang satu per satu. Minimal 1 foto wajib diupload sebelum klik "Siapkan Barang".</p>
+                    
+                    <div class="mb-3">
+                        <label for="quality_proof_photo" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Unggah Foto Bukti Kualitas</label>
+                        <div class="flex gap-2">
+                            <input type="file" id="quality_proof_photo" accept="image/*" class="block flex-1 text-xs sm:text-sm text-gray-500 file:mr-4 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                            <button type="button" id="uploadBtn" class="bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-md transition whitespace-nowrap">
+                                Unggah
+                            </button>
                         </div>
-                        <div id="filePreview" class="mb-3 grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
-                        <button type="submit" class="w-full sm:w-auto text-center bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-md transition">
+                        <p class="text-xs text-gray-500 mt-1">Format: jpeg, png, jpg - maks 2MB per gambar</p>
+                        <div id="uploadMessage" class="mt-2"></div>
+                    </div>
+                    
+                    <div id="uploadedPhotos" class="mb-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        @if($invoice->quality_proof_photo)
+                            @php
+                                $photos = json_decode($invoice->quality_proof_photo, true);
+                                if (!is_array($photos)) {
+                                    $photos = [$invoice->quality_proof_photo];
+                                }
+                            @endphp
+                            @foreach($photos as $index => $proofPath)
+                                @php
+                                    $imageUrl = null;
+                                    if ($proofPath) {
+                                        $cleanPath = ltrim($proofPath, '/');
+                                        $imageUrl = url('/public/storage/' . $cleanPath);
+                                    }
+                                    if (!$imageUrl) {
+                                        $imageUrl = asset('images/gulungan-terpal.png');
+                                    }
+                                @endphp
+                                <div class="relative group uploaded-photo-item" data-index="{{ $index }}">
+                                    <a href="{{ $imageUrl }}" target="_blank" class="inline-block w-full">
+                                        <img src="{{ $imageUrl }}" 
+                                             alt="Foto {{ $index + 1 }}" 
+                                             class="w-full h-32 sm:h-40 object-cover rounded-lg border border-gray-200 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer"
+                                             onerror="this.onerror=null; this.src='{{ asset('images/gulungan-terpal.png') }}';">
+                                    </a>
+                                    <button type="button" class="delete-photo absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition" data-index="{{ $index }}" data-invoice-id="{{ $invoice->id }}">
+                                        ✕
+                                    </button>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
+                    
+                    @if(!$invoice->quality_proof_photo || count(json_decode($invoice->quality_proof_photo, true) ?? []) < 1)
+                        <div class="mb-3 text-xs text-yellow-700 bg-yellow-100 p-2 rounded">
+                            ⚠️ Minimal 1 foto harus diupload sebelum bisa menyiapkan barang
+                        </div>
+                    @endif
+                    
+                    <form action="{{ url('/admin/gudang-transaksi/finalize/' . $invoice->id) }}" method="POST" id="finalizeForm">
+                        @csrf
+                        <button type="submit" id="finalizeBtn" class="w-full sm:w-auto text-center bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-md transition {{ (!$invoice->quality_proof_photo || count(json_decode($invoice->quality_proof_photo, true) ?? []) < 1) ? 'opacity-50 cursor-not-allowed' : '' }}" {{ (!$invoice->quality_proof_photo || count(json_decode($invoice->quality_proof_photo, true) ?? []) < 1) ? 'disabled' : '' }}>
                             Siapkan Barang
                         </button>
                     </form>
@@ -348,35 +389,195 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('quality_proof_photo');
-    const filePreview = document.getElementById('filePreview');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadedPhotos = document.getElementById('uploadedPhotos');
+    const uploadMessage = document.getElementById('uploadMessage');
+    const finalizeBtn = document.getElementById('finalizeBtn');
     
-    if (fileInput && filePreview) {
-        fileInput.addEventListener('change', function(e) {
-            filePreview.innerHTML = '';
-            const files = e.target.files;
+    @if(!$invoice->gudang)
+    const invoiceId = {{ $invoice->id }};
+    
+    function updateFinalizeButton() {
+        if (!finalizeBtn || !uploadedPhotos) return;
+        
+        const photoCount = uploadedPhotos.querySelectorAll('.uploaded-photo-item').length;
+        const warningDiv = document.querySelector('.text-yellow-700.bg-yellow-100');
+        
+        if (photoCount >= 1) {
+            finalizeBtn.disabled = false;
+            finalizeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            if (warningDiv) {
+                warningDiv.style.display = 'none';
+            }
+        } else {
+            finalizeBtn.disabled = true;
+            finalizeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            if (warningDiv) {
+                warningDiv.style.display = 'block';
+            }
+        }
+    }
+    
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', function() {
+            if (!fileInput.files || fileInput.files.length === 0) {
+                if (uploadMessage) {
+                    uploadMessage.innerHTML = '<p class="text-red-500 text-xs">Pilih foto terlebih dahulu</p>';
+                }
+                return;
+            }
             
-            if (files.length > 0) {
-                Array.from(files).forEach((file, index) => {
-                    if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const div = document.createElement('div');
-                            div.className = 'relative group';
-                            div.innerHTML = `
-                                <img src="${e.target.result}" alt="Preview ${index + 1}" 
-                                     class="w-full h-24 sm:h-32 object-cover rounded-lg border border-gray-200">
-                                <div class="absolute top-1 right-1 bg-black/50 text-white text-xs px-1 py-0.5 rounded">
-                                    ${file.name.substring(0, 10)}...
-                                </div>
-                            `;
-                            filePreview.appendChild(div);
-                        };
-                        reader.readAsDataURL(file);
+            const formData = new FormData();
+            formData.append('photo', fileInput.files[0]);
+            formData.append('_token', '{{ csrf_token() }}');
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Mengupload...';
+            if (uploadMessage) {
+                uploadMessage.innerHTML = '<p class="text-blue-500 text-xs">Sedang mengupload...</p>';
+            }
+            
+            fetch(`/admin/gudang-transaksi/upload-photo/${invoiceId}`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Upload gagal');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    if (uploadMessage) {
+                        uploadMessage.innerHTML = '<p class="text-green-500 text-xs">✓ Foto berhasil diupload</p>';
                     }
+                    
+                    const photoDiv = document.createElement('div');
+                    photoDiv.className = 'relative group uploaded-photo-item';
+                    photoDiv.setAttribute('data-index', data.total_photos - 1);
+                    photoDiv.innerHTML = `
+                        <a href="${data.url}" target="_blank" class="inline-block w-full">
+                            <img src="${data.url}" 
+                                 alt="Foto ${data.total_photos}" 
+                                 class="w-full h-32 sm:h-40 object-cover rounded-lg border border-gray-200 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer"
+                                 onerror="this.onerror=null; this.src='{{ asset('images/gulungan-terpal.png') }}';">
+                        </a>
+                        <button type="button" class="delete-photo absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition" data-index="${data.total_photos - 1}" data-invoice-id="${invoiceId}">
+                            ✕
+                        </button>
+                    `;
+                    if (uploadedPhotos) {
+                        uploadedPhotos.appendChild(photoDiv);
+                    }
+                    
+                    fileInput.value = '';
+                    updateFinalizeButton();
+                    
+                    setTimeout(() => {
+                        if (uploadMessage) {
+                            uploadMessage.innerHTML = '';
+                        }
+                    }, 3000);
+                } else {
+                    if (uploadMessage) {
+                        uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${data.message || 'Gagal mengupload foto'}</p>`;
+                    }
+                }
+            })
+            .catch(error => {
+                if (uploadMessage) {
+                    uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${error.message || 'Terjadi kesalahan saat mengupload'}</p>`;
+                }
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload';
+            });
+        });
+    }
+    
+    if (uploadedPhotos) {
+        uploadedPhotos.addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-photo') || e.target.closest('.delete-photo')) {
+                const deleteBtn = e.target.classList.contains('delete-photo') ? e.target : e.target.closest('.delete-photo');
+                if (!deleteBtn) return;
+                
+                const photoIndex = deleteBtn.getAttribute('data-index');
+                const invoiceIdBtn = deleteBtn.getAttribute('data-invoice-id');
+                const photoItem = deleteBtn.closest('.uploaded-photo-item');
+                
+                if (!confirm('Yakin ingin menghapus foto ini?')) {
+                    return;
+                }
+                
+                deleteBtn.disabled = true;
+                deleteBtn.textContent = '...';
+                
+                fetch(`/admin/gudang-transaksi/delete-photo/${invoiceIdBtn}/${photoIndex}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.message || 'Hapus gagal');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        if (photoItem) {
+                            photoItem.remove();
+                        }
+                        updateFinalizeButton();
+                        
+                        if (data.total_photos === 0) {
+                            if (uploadMessage) {
+                                uploadMessage.innerHTML = '<p class="text-yellow-500 text-xs">⚠️ Minimal 1 foto harus diupload</p>';
+                            }
+                        } else {
+                            if (uploadMessage) {
+                                uploadMessage.innerHTML = '<p class="text-green-500 text-xs">✓ Foto berhasil dihapus</p>';
+                            }
+                            setTimeout(() => {
+                                if (uploadMessage) {
+                                    uploadMessage.innerHTML = '';
+                                }
+                            }, 3000);
+                        }
+                    } else {
+                        if (uploadMessage) {
+                            uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${data.message || 'Gagal menghapus foto'}</p>`;
+                        }
+                    }
+                })
+                .catch(error => {
+                    if (uploadMessage) {
+                        uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${error.message || 'Terjadi kesalahan saat menghapus'}</p>`;
+                    }
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    deleteBtn.disabled = false;
+                    deleteBtn.textContent = '✕';
                 });
             }
         });
     }
+    
+    updateFinalizeButton();
+    @endif
 });
 </script>
 @endpush
