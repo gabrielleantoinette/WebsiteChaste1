@@ -437,33 +437,60 @@ document.addEventListener('DOMContentLoaded', function() {
                 uploadMessage.innerHTML = '<p class="text-blue-500 text-xs">Sedang mengupload...</p>';
             }
             
-            fetch(`/admin/gudang-transaksi/upload-photo/${invoiceId}`, {
+            const uploadUrl = `{{ url('/admin/gudang-transaksi/upload-photo') }}/${invoiceId}`;
+            console.log('Upload URL:', uploadUrl);
+            console.log('FormData:', formData);
+            console.log('File:', fileInput.files[0]);
+            
+            fetch(uploadUrl, {
                 method: 'POST',
                 body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                credentials: 'same-origin'
             })
             .then(async response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                
                 const contentType = response.headers.get("content-type");
                 let errorData;
+                let responseText;
+                
+                try {
+                    responseText = await response.text();
+                    console.log('Response text:', responseText);
+                } catch (e) {
+                    console.error('Error reading response text:', e);
+                }
                 
                 if (!response.ok) {
                     if (contentType && contentType.includes("application/json")) {
-                        errorData = await response.json();
-                        throw new Error(errorData.message || errorData.error || 'Upload gagal');
+                        try {
+                            errorData = JSON.parse(responseText);
+                            console.error('Error data:', errorData);
+                            throw new Error(errorData.message || errorData.error || 'Upload gagal');
+                        } catch (e) {
+                            console.error('Error parsing JSON:', e);
+                            throw new Error(`Upload gagal: ${response.status} ${response.statusText}. Response: ${responseText.substring(0, 200)}`);
+                        }
                     } else {
-                        const text = await response.text();
-                        throw new Error(`Upload gagal: ${response.status} ${response.statusText}`);
+                        throw new Error(`Upload gagal: ${response.status} ${response.statusText}. Response: ${responseText ? responseText.substring(0, 200) : 'No response'}`);
                     }
                 }
                 
                 if (contentType && contentType.includes("application/json")) {
-                    return response.json();
+                    try {
+                        return JSON.parse(responseText);
+                    } catch (e) {
+                        console.error('Error parsing success JSON:', e);
+                        throw new Error('Response tidak valid: ' + responseText.substring(0, 200));
+                    }
                 } else {
-                    const text = await response.text();
-                    throw new Error('Response tidak valid');
+                    throw new Error('Response tidak valid. Content-Type: ' + contentType + '. Response: ' + responseText.substring(0, 200));
                 }
             })
             .then(data => {

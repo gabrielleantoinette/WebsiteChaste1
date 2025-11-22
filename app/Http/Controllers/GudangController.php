@@ -196,6 +196,14 @@ class GudangController extends Controller
 
     public function uploadQualityPhoto(Request $request, $id)
     {
+        \Log::info('Upload quality photo request received', [
+            'invoice_id' => $id,
+            'has_file' => $request->hasFile('photo'),
+            'all_files' => $request->allFiles(),
+            'method' => $request->method(),
+            'url' => $request->fullUrl()
+        ]);
+        
         try {
             $request->validate([
                 'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048'
@@ -206,8 +214,16 @@ class GudangController extends Controller
                 'photo.max' => 'Ukuran file maksimal 2MB'
             ]);
 
+            \Log::info('Validation passed', ['invoice_id' => $id]);
+
             $invoice = HInvoice::findOrFail($id);
             $user = Session::get('user');
+            
+            \Log::info('Invoice and user found', [
+                'invoice_id' => $invoice->id,
+                'invoice_code' => $invoice->code,
+                'user_id' => $user ? $user->id : null
+            ]);
             
             if (!$user) {
                 return response()->json([
