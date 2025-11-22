@@ -85,7 +85,7 @@
 
     {{-- Search dan Filter dengan Card --}}
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
-        <form method="GET" action="" class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <form method="GET" action="{{ route('custom-materials.view') }}" class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

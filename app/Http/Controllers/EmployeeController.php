@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class EmployeeController extends Controller
 {
@@ -34,7 +35,7 @@ class EmployeeController extends Controller
         $employee = new Employee();
         $employee->name = $name;
         $employee->email = $email;
-        $employee->password = $password;
+        $employee->password = Hash::make($password);
         $employee->active = $active;
         $employee->role = $role;
         $employee->phone = $phone;
@@ -60,7 +61,9 @@ class EmployeeController extends Controller
 
         $employee->name = $request->name;
         $employee->email = $request->email;
-        $employee->password = $request->password;
+        if ($request->filled('password')) {
+            $employee->password = Hash::make($request->password);
+        }
         $employee->role = $request->role;
         $employee->active = $request->active === "true" ? true : false;
 

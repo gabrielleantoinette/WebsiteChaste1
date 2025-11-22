@@ -15,4 +15,9 @@ class Categories extends Model
         'name',
         'is_active',
     ];
+
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'category_id');
+    }
 }

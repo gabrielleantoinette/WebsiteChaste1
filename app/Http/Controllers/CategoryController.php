@@ -8,9 +8,16 @@ use App\Models\Product;
 
 class CategoryController extends Controller
 {
-    public function view()
+    public function view(Request $request)
     {
-        $categories = Categories::all();
+        $query = Categories::withCount('products');
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'LIKE', "%{$search}%");
+        }
+        
+        $categories = $query->get();
         return view('admin.categories.view', compact('categories'));
     }
 
@@ -59,15 +66,23 @@ class CategoryController extends Controller
     }
     public function destroy($id)
     {
-        $category = Category::findOrFail($id);
-        
-        if ($category->products()->count() > 0) {
-            return redirect()->back()->with('error', 'Kategori tidak dapat dihapus karena masih digunakan oleh produk.');
+        try {
+            $category = Categories::withCount('products')->findOrFail($id);
+            
+            if ($category->products_count > 0) {
+                return redirect()->back()->with('error', 'Kategori tidak dapat dihapus karena masih digunakan oleh ' . $category->products_count . ' produk.');
+            }
+
+            $category->delete();
+
+            return redirect()->route('admin.categories.view')->with('success', 'Kategori berhasil dihapus.');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting category', [
+                'category_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', 'Gagal menghapus kategori: ' . $e->getMessage());
         }
-
-        $category->delete();
-
-        return redirect()->route('admin.categories.view')->with('success', 'Kategori berhasil dihapus.');
     }
 
 }

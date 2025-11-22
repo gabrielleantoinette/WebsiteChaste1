@@ -621,6 +621,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.success) {
                         if (photoItem) {
                             photoItem.remove();
+                            
+                            const remainingItems = uploadedPhotos.querySelectorAll('.uploaded-photo-item');
+                            remainingItems.forEach((item, newIndex) => {
+                                item.setAttribute('data-index', newIndex);
+                                const deleteBtn = item.querySelector('.delete-photo');
+                                if (deleteBtn) {
+                                    deleteBtn.setAttribute('data-index', newIndex);
+                                }
+                            });
                         }
                         updateFinalizeButton();
                         

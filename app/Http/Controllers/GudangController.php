@@ -362,19 +362,44 @@ class GudangController extends Controller
                 $photos = [$invoice->quality_proof_photo];
             }
             
-            if (!isset($photos[$photoIndex])) {
-                \Log::warning('Photo index not found', [
+            \Log::info('Photos array before deletion', [
+                'invoice_id' => $id,
+                'photo_index' => $photoIndex,
+                'total_photos' => count($photos),
+                'photos' => $photos
+            ]);
+            
+            $photoIndexInt = (int)$photoIndex;
+            
+            if ($photoIndexInt < 0 || $photoIndexInt >= count($photos)) {
+                \Log::warning('Photo index out of range', [
                     'invoice_id' => $id,
                     'photo_index' => $photoIndex,
-                    'total_photos' => count($photos)
+                    'photo_index_int' => $photoIndexInt,
+                    'total_photos' => count($photos),
+                    'photos' => $photos
                 ]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Foto tidak ditemukan'
+                    'message' => 'Foto tidak ditemukan. Index tidak valid.'
                 ], 404);
             }
             
-            $photoToDelete = $photos[$photoIndex];
+            if (!isset($photos[$photoIndexInt])) {
+                \Log::warning('Photo index not found in array', [
+                    'invoice_id' => $id,
+                    'photo_index' => $photoIndex,
+                    'photo_index_int' => $photoIndexInt,
+                    'total_photos' => count($photos),
+                    'photos' => $photos
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Foto tidak ditemukan. Index tidak ada di array.'
+                ], 404);
+            }
+            
+            $photoToDelete = $photos[$photoIndexInt];
             
             if (Storage::disk('public')->exists($photoToDelete)) {
                 $deleted = Storage::disk('public')->delete($photoToDelete);
@@ -390,8 +415,15 @@ class GudangController extends Controller
                 ]);
             }
             
-            unset($photos[$photoIndex]);
+            unset($photos[$photoIndexInt]);
             $photos = array_values($photos);
+            
+            \Log::info('Photos array after deletion', [
+                'invoice_id' => $id,
+                'deleted_index' => $photoIndexInt,
+                'remaining_photos' => count($photos),
+                'photos' => $photos
+            ]);
             
             if (empty($photos)) {
                 $invoice->quality_proof_photo = null;

@@ -25,16 +25,29 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
-        $setting = Setting::firstOrCreate(['id' => 1]);
+        $setting = Setting::firstOrCreate(
+            ['id' => 1],
+            [
+                'phone' => '',
+                'theme' => 'light',
+                'company_name' => '',
+                'company_email' => '',
+                'company_address' => '',
+                'company_policy' => ''
+            ]
+        );
 
-        $setting->update($request->only([
-            'phone',
+        $updateData = $request->only([
             'theme',
             'company_name',
             'company_email',
             'company_address',
             'company_policy'
-        ]));
+        ]);
+
+        $updateData['phone'] = $request->input('phone', '');
+
+        $setting->update($updateData);
 
         return back()->with('success', 'Pengaturan berhasil diperbarui');
     }

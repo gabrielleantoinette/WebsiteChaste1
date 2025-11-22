@@ -82,7 +82,7 @@
 
     {{-- Search dan Filter dengan Card --}}
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-5 lg:p-6 mb-4 sm:mb-6 lg:mb-8">
-        <form method="GET" action="" class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <form method="GET" action="{{ route('admin.categories.view') }}" class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div class="flex items-center gap-3 sm:gap-4">
                 <div class="flex items-center gap-2">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,8 +174,9 @@
                                     </a>
                                     @if (Session::get('user')->role !== 'admin')
                                         <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" class="inline"
-                                            onsubmit="return confirm('Yakin ingin hapus kategori ini?')">
+                                            onsubmit="return confirm('Yakin ingin hapus kategori ini?{{ $category->products_count > 0 ? ' Kategori ini memiliki ' . $category->products_count . ' produk.' : '' }}')">
                                             @csrf
+                                            @method('DELETE')
                                             <button type="submit"
                                                 class="inline-flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 border border-red-500 text-red-600 text-xs sm:text-sm font-medium rounded-lg hover:bg-red-50 transition-all duration-200 shadow-sm">
                                                 <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -257,8 +258,9 @@
                         </a>
                         @if (Session::get('user')->role !== 'admin')
                             <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" class="flex-1"
-                                onsubmit="return confirm('Yakin ingin hapus kategori ini?')">
+                                onsubmit="return confirm('Yakin ingin hapus kategori ini?{{ $category->products_count > 0 ? ' Kategori ini memiliki ' . $category->products_count . ' produk.' : '' }}')">
                                 @csrf
+                                @method('DELETE')
                                 <button type="submit"
                                     class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 border border-red-500 text-red-600 text-xs sm:text-sm font-medium rounded-lg hover:bg-red-50 transition-all duration-200 shadow-sm">
                                     <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
