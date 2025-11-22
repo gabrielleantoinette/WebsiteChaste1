@@ -70,55 +70,63 @@ class GudangController extends Controller
     public function assignGudang(Request $request, $id)
     {
         $request->validate([
-            'quality_proof_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048'
+            'quality_proof_photo' => 'required|array|min:1',
+            'quality_proof_photo.*' => 'image|mimes:jpeg,png,jpg|max:2048'
         ], [
-            'quality_proof_photo.required' => 'Foto bukti kualitas barang wajib diupload',
-            'quality_proof_photo.image' => 'File harus berupa gambar',
-            'quality_proof_photo.mimes' => 'Format file harus jpeg, png, atau jpg',
-            'quality_proof_photo.max' => 'Ukuran file maksimal 2MB'
+            'quality_proof_photo.required' => 'Minimal 1 foto bukti kualitas barang wajib diupload',
+            'quality_proof_photo.array' => 'Format file tidak valid',
+            'quality_proof_photo.min' => 'Minimal 1 foto bukti kualitas barang wajib diupload',
+            'quality_proof_photo.*.image' => 'File harus berupa gambar',
+            'quality_proof_photo.*.mimes' => 'Format file harus jpeg, png, atau jpg',
+            'quality_proof_photo.*.max' => 'Ukuran file maksimal 2MB per gambar'
         ]);
 
         $invoice = HInvoice::findOrFail($id);
         $user = Session::get('user');
         $invoice->gudang_id = $user->id;
+        
         if ($request->hasFile('quality_proof_photo')) {
-            $file = $request->file('quality_proof_photo');
+            $uploadedPaths = [];
             
-            $originalName = $file->getClientOriginalName();
-            $extension = $file->getClientOriginalExtension();
-            $timestamp = now()->format('YmdHis');
-            $randomString = \Str::random(10);
-            $filename = 'quality_proof_' . $invoice->code . '_' . $timestamp . '_' . $randomString . '_' . \Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $extension;
-            
-            $path = $file->storeAs('quality_proofs', $filename, 'public');
-            $invoice->quality_proof_photo = $path;
-            
-            \Log::info('Quality proof photo uploaded', [
-                'original_name' => $originalName,
-                'unique_file_name' => $filename,
-                'stored_path' => $path,
-                'file_size' => $file->getSize(),
-                'mime_type' => $file->getMimeType(),
-                'invoice_id' => $invoice->id,
-                'invoice_code' => $invoice->code,
-                'gudang_id' => $user->id,
-                'timestamp' => $timestamp
-            ]);
-            
-            if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
-                \Log::error('Quality proof file not saved correctly', [
-                    'path' => $path,
-                    'invoice_id' => $invoice->id
+            foreach ($request->file('quality_proof_photo') as $file) {
+                $originalName = $file->getClientOriginalName();
+                $extension = $file->getClientOriginalExtension();
+                $timestamp = now()->format('YmdHis');
+                $randomString = \Str::random(10);
+                $filename = 'quality_proof_' . $invoice->code . '_' . $timestamp . '_' . $randomString . '_' . \Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $extension;
+                
+                $path = $file->storeAs('quality_proofs', $filename, 'public');
+                $uploadedPaths[] = $path;
+                
+                \Log::info('Quality proof photo uploaded', [
+                    'original_name' => $originalName,
+                    'unique_file_name' => $filename,
+                    'stored_path' => $path,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                    'invoice_id' => $invoice->id,
+                    'invoice_code' => $invoice->code,
+                    'gudang_id' => $user->id,
+                    'timestamp' => $timestamp
                 ]);
-            } else {
-                $storedFileSize = \Illuminate\Support\Facades\Storage::disk('public')->size($path);
-                \Log::info('Quality proof file verified', [
-                    'path' => $path,
-                    'original_size' => $file->getSize(),
-                    'stored_size' => $storedFileSize,
-                    'match' => $file->getSize() === $storedFileSize
-                ]);
+                
+                if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+                    \Log::error('Quality proof file not saved correctly', [
+                        'path' => $path,
+                        'invoice_id' => $invoice->id
+                    ]);
+                } else {
+                    $storedFileSize = \Illuminate\Support\Facades\Storage::disk('public')->size($path);
+                    \Log::info('Quality proof file verified', [
+                        'path' => $path,
+                        'original_size' => $file->getSize(),
+                        'stored_size' => $storedFileSize,
+                        'match' => $file->getSize() === $storedFileSize
+                    ]);
+                }
             }
+            
+            $invoice->quality_proof_photo = json_encode($uploadedPaths);
         }
         if ($invoice->shipping_courier && $invoice->shipping_courier !== 'kurir') {
             $invoice->status = 'dikirim_ke_agen';
@@ -128,31 +136,36 @@ class GudangController extends Controller
         $invoice->save();
         
         if ($invoice->quality_proof_photo) {
-            $storedPath = $invoice->fresh()->quality_proof_photo;
-            $fileExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($invoice->quality_proof_photo);
+            $photos = json_decode($invoice->quality_proof_photo, true);
             
-            \Log::info('Invoice updated with quality proof photo', [
-                'invoice_id' => $invoice->id,
-                'invoice_code' => $invoice->code,
-                'quality_proof_path' => $invoice->quality_proof_photo,
-                'stored_path_in_db' => $storedPath,
-                'path_match' => $invoice->quality_proof_photo === $storedPath,
-                'file_exists' => $fileExists,
-                'gudang_id' => $user->id
-            ]);
-            
-            if ($invoice->quality_proof_photo !== $storedPath) {
-                \Log::error('Quality proof path mismatch!', [
+            if (is_array($photos)) {
+                $allFilesExist = true;
+                foreach ($photos as $path) {
+                    if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+                        $allFilesExist = false;
+                        \Log::warning('Quality proof file not found', [
+                            'invoice_id' => $invoice->id,
+                            'path' => $path
+                        ]);
+                    }
+                }
+                
+                \Log::info('Invoice updated with quality proof photos', [
                     'invoice_id' => $invoice->id,
-                    'expected_path' => $invoice->quality_proof_photo,
-                    'stored_path' => $storedPath
+                    'invoice_code' => $invoice->code,
+                    'photo_count' => count($photos),
+                    'all_files_exist' => $allFilesExist,
+                    'gudang_id' => $user->id
                 ]);
-            }
-            
-            if (!$fileExists) {
-                \Log::warning('Quality proof file not found after invoice update', [
+            } else {
+                $fileExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($invoice->quality_proof_photo);
+                
+                \Log::info('Invoice updated with quality proof photo (legacy format)', [
                     'invoice_id' => $invoice->id,
-                    'path' => $invoice->quality_proof_photo
+                    'invoice_code' => $invoice->code,
+                    'quality_proof_path' => $invoice->quality_proof_photo,
+                    'file_exists' => $fileExists,
+                    'gudang_id' => $user->id
                 ]);
             }
         }
