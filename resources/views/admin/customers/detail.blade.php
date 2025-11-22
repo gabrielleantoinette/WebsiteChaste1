@@ -29,7 +29,7 @@
 
         <h1 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 border-b pb-2">Detail Customer</h1>
 
-        <form method="POST" class="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 lg:p-6 shadow-md space-y-3 sm:space-y-4">
+        <form method="POST" action="{{ url('/admin/customers/detail/' . $customer->id) }}" class="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 lg:p-6 shadow-md space-y-3 sm:space-y-4">
             @csrf
 
             {{-- ID Customer --}}
