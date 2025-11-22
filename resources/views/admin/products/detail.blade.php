@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="max-w-3xl mx-auto">
+<div class="max-w-3xl mx-auto px-4 sm:px-0">
   {{-- Breadcrumb --}}
-  <nav class="mb-3">
-    <ol class="flex items-center space-x-1 text-xs text-gray-500">
+  <nav class="mb-3 sm:mb-4">
+    <ol class="flex items-center space-x-1 text-xs text-gray-500 flex-wrap">
       <li><a href="{{ url('/admin/products') }}" class="hover:text-teal-600 transition">Produk</a></li>
       <li class="flex items-center">
         <svg class="w-3 h-3 mx-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,9 +15,9 @@
     </ol>
   </nav>
 
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-xl font-bold text-gray-800">Edit: {{ $product->name }}</h2>
-    <button onclick="window.location.href='{{ url('/admin/products') }}'" class="text-sm text-gray-600 hover:text-teal-600 flex items-center gap-1">
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-0">
+    <h2 class="text-lg sm:text-xl font-bold text-gray-800">Edit: {{ $product->name }}</h2>
+    <button onclick="window.location.href='{{ url('/admin/products') }}'" class="text-xs sm:text-sm text-gray-600 hover:text-teal-600 flex items-center gap-1 w-full sm:w-auto justify-center sm:justify-start">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
       </svg>
@@ -27,53 +27,53 @@
 
   {{-- Error Message --}}
   @if(session('error'))
-    <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+    <div class="mb-3 sm:mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg">
       <div class="flex items-center">
-        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
         </svg>
-        <span>{{ session('error') }}</span>
+        <span class="text-xs sm:text-sm">{{ session('error') }}</span>
       </div>
     </div>
   @endif
 
   {{-- Success Message --}}
   @if(session('success'))
-    <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+    <div class="mb-3 sm:mb-4 bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg">
       <div class="flex items-center">
-        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
         </svg>
-        <span>{{ session('success') }}</span>
+        <span class="text-xs sm:text-sm">{{ session('success') }}</span>
       </div>
     </div>
   @endif
 
-  <form method="POST" action="{{ url('/admin/products/detail/' . $product->id) }}" enctype="multipart/form-data" class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+  <form method="POST" action="{{ url('/admin/products/detail/' . $product->id) }}" enctype="multipart/form-data" class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6 shadow-sm">
     @csrf
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       {{-- Nama Produk --}}
-      <div class="md:col-span-2">
-        <label class="block text-xs font-medium text-gray-700 mb-1">Nama Produk</label>
-        <input type="text" name="name" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-teal-300 focus:border-teal-500" value="{{ $product->name }}">
+      <div class="sm:col-span-2">
+        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Nama Produk</label>
+        <input type="text" name="name" class="w-full border border-gray-300 rounded-md px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-teal-300 focus:border-teal-500" value="{{ $product->name }}">
       </div>
 
       {{-- Deskripsi --}}
-      <div class="md:col-span-2">
-        <label class="block text-xs font-medium text-gray-700 mb-1">Deskripsi</label>
-        <textarea name="description" rows="2" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm resize-none focus:ring-2 focus:ring-teal-300 focus:border-teal-500">{{ $product->description }}</textarea>
+      <div class="sm:col-span-2">
+        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+        <textarea name="description" rows="3" class="w-full border border-gray-300 rounded-md px-3 sm:px-4 py-2 text-sm resize-none focus:ring-2 focus:ring-teal-300 focus:border-teal-500">{{ $product->description }}</textarea>
       </div>
 
       {{-- Gambar Produk --}}
-      <div class="md:col-span-2">
-        <label class="block text-xs font-medium text-gray-700 mb-1">Gambar Produk</label>
-        <div class="flex items-start gap-3">
+      <div class="sm:col-span-2">
+        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Gambar Produk</label>
+        <div class="flex flex-col sm:flex-row items-start gap-3">
           <img src="{{ asset($product->image_url) }}" alt="{{ $product->name }}" 
-               class="w-20 h-20 object-cover rounded border border-gray-200 flex-shrink-0">
-          <div class="flex-1">
+               class="w-20 h-20 object-cover rounded border border-gray-200 flex-shrink-0 mx-auto sm:mx-0">
+          <div class="flex-1 w-full sm:w-auto">
             <input type="file" name="image" accept="image/*"
-                   class="w-full text-xs text-gray-600
-                          file:py-1.5 file:px-3 file:rounded file:border-0
+                   class="w-full text-xs sm:text-sm text-gray-600
+                          file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded file:border-0
                           file:text-xs file:font-medium
                           file:bg-teal-50 file:text-teal-700
                           hover:file:bg-teal-100 focus:outline-none">
@@ -84,20 +84,20 @@
 
       {{-- Harga & Ukuran --}}
       <div>
-        <label class="block text-xs font-medium text-gray-700 mb-1">Harga Dasar (2x3)</label>
-        <input type="number" name="price" required class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-teal-300 focus:border-teal-500" value="{{ $product->price }}">
+        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Harga Dasar (2x3)</label>
+        <input type="number" name="price" required class="w-full border border-gray-300 rounded-md px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-teal-300 focus:border-teal-500" value="{{ $product->price }}">
       </div>
 
       <div>
-        <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
-        <select name="live" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-teal-300 focus:border-teal-500">
+        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select name="live" class="w-full border border-gray-300 rounded-md px-3 sm:px-4 py-2 text-sm focus:ring-2 focus:ring-teal-300 focus:border-teal-500">
           <option value="1" {{ $product->live ? 'selected' : '' }}>Tampil</option>
           <option value="0" {{ !$product->live ? 'selected' : '' }}>Tidak Tampil</option>
         </select>
       </div>
 
       {{-- Tombol Update --}}
-      <div class="md:col-span-2 pt-2">
+      <div class="sm:col-span-2 pt-2 sm:pt-4">
         <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 rounded-md transition text-sm">
           Update Produk
         </button>

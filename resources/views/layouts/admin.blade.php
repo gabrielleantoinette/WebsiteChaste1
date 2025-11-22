@@ -85,9 +85,19 @@
 
 <body class="{{ $theme }}">
 <div class="flex min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" onclick="toggleSidebar()"></div>
+    
     <!-- Sidebar -->
-    <aside id="admin-sidebar" class="w-64 bg-[#D9F2F2] text-gray-800 p-6 space-y-4">
-        <h2 class="text-xl font-bold mb-6">CHASTE Master</h2>
+    <aside id="admin-sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-[#D9F2F2] text-gray-800 p-4 lg:p-6 space-y-4 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold">CHASTE Master</h2>
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-700 hover:text-gray-900">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
 
         <nav class="flex flex-col gap-2 text-sm font-medium">
             @php 
@@ -161,10 +171,17 @@
     </aside>
 
     <!-- Konten Utama -->
-    <main class="flex-1 bg-white dark:bg-gray-900 text-gray-800 dark:text-white p-8">
+    <main class="flex-1 bg-white dark:bg-gray-900 text-gray-800 dark:text-white p-4 sm:p-6 lg:p-8 w-full lg:w-auto">
+        <!-- Mobile Menu Button -->
+        <button onclick="toggleSidebar()" class="lg:hidden fixed top-4 left-4 z-30 bg-teal-600 text-white p-2 rounded-md shadow-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        
         <!-- Header dengan Notifikasi -->
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 mt-12 lg:mt-0">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
             
             <!-- Notifikasi Bell -->
             <div class="relative">
@@ -419,6 +436,41 @@
                     popoverOpen = false;
                 }
             });
+        }
+    });
+    
+    // Toggle sidebar untuk mobile
+    function toggleSidebar() {
+        const sidebar = document.getElementById('admin-sidebar');
+        const overlay = document.getElementById('mobile-menu-overlay');
+        
+        if (sidebar && overlay) {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    }
+    
+    // Close sidebar saat klik di luar di mobile
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('admin-sidebar');
+        const overlay = document.getElementById('mobile-menu-overlay');
+        const menuButton = event.target.closest('button[onclick="toggleSidebar()"]');
+        
+        if (window.innerWidth < 1024) {
+            if (sidebar && overlay && !sidebar.contains(event.target) && !menuButton && !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+    });
+    
+    // Handle resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 1024) {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('mobile-menu-overlay');
+            if (sidebar) sidebar.classList.remove('-translate-x-full');
+            if (overlay) overlay.classList.add('hidden');
         }
     });
 </script>

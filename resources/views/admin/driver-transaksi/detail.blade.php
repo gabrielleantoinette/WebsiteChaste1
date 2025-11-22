@@ -1,34 +1,34 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="py-6">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Detail Transaksi Kurir</h1>
-            <a href="{{ url('/admin/driver-transaksi') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm">
+    <div class="py-4 sm:py-5 lg:py-6 px-4 sm:px-0">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Detail Transaksi Kurir</h1>
+            <a href="{{ url('/admin/driver-transaksi') }}" class="w-full sm:w-auto text-center bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-xs sm:text-sm transition">
                 ← Kembali ke Daftar Transaksi
             </a>
         </div>
 
         @if(session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {{ session('error') }}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded mb-3 sm:mb-4">
+                <span class="text-xs sm:text-sm">{{ session('error') }}</span>
             </div>
         @endif
 
-        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Informasi Invoice</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 lg:p-6 shadow-sm mb-4 sm:mb-6">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">Informasi Invoice</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                    <p class="text-sm text-gray-500">Invoice ID</p>
-                    <p class="font-semibold text-gray-800">{{ $invoice->id }}</p>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-1">Invoice ID</p>
+                    <p class="text-sm sm:text-base font-semibold text-gray-800">{{ $invoice->id }}</p>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-500">Kode Invoice</p>
-                    <p class="font-semibold text-gray-800">{{ $invoice->code }}</p>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-1">Kode Invoice</p>
+                    <p class="text-sm sm:text-base font-semibold text-gray-800">{{ $invoice->code }}</p>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-500">Status</p>
-                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold 
+                    <p class="text-xs sm:text-sm text-gray-500 mb-1">Status</p>
+                    <span class="inline-block px-2 sm:px-3 py-1 rounded-full text-xs font-semibold 
                         @if($invoice->status == 'dikirim') bg-teal-100 text-teal-700
                         @elseif($invoice->status == 'sampai') bg-green-100 text-green-700
                         @else bg-gray-100 text-gray-700
@@ -57,32 +57,32 @@
             </div>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Informasi Customer</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 lg:p-6 shadow-sm mb-4 sm:mb-6">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">Informasi Customer</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                    <p class="text-sm text-gray-500">Nama Customer</p>
-                    <p class="font-semibold text-gray-800">{{ $invoice->customer->name ?? '-' }}</p>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-1">Nama Customer</p>
+                    <p class="text-sm sm:text-base font-semibold text-gray-800 truncate">{{ $invoice->customer->name ?? '-' }}</p>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-500">Telepon</p>
-                    <p class="font-semibold text-gray-800">{{ $invoice->customer->phone ?? '-' }}</p>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-1">Telepon</p>
+                    <p class="text-sm sm:text-base font-semibold text-gray-800">{{ $invoice->customer->phone ?? '-' }}</p>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-500">Email</p>
-                    <p class="font-semibold text-gray-800">{{ $invoice->customer->email ?? '-' }}</p>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-1">Email</p>
+                    <p class="text-sm sm:text-base font-semibold text-gray-800 truncate">{{ $invoice->customer->email ?? '-' }}</p>
                 </div>
-                <div>
-                    <p class="text-sm text-gray-500">Alamat Pengiriman</p>
-                    <p class="font-semibold text-gray-800">{{ $invoice->address ?? '-' }}</p>
+                <div class="sm:col-span-2">
+                    <p class="text-xs sm:text-sm text-gray-500 mb-1">Alamat Pengiriman</p>
+                    <p class="text-sm sm:text-base font-semibold text-gray-800 break-words">{{ $invoice->address ?? '-' }}</p>
                 </div>
             </div>
         </div>
 
         @if($invoice->gudang)
-        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Staff Gudang</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 lg:p-6 shadow-sm mb-4 sm:mb-6">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">Staff Gudang</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                     <p class="text-sm text-gray-500">Nama Staff</p>
                     <p class="font-semibold text-gray-800">{{ $invoice->gudang->name ?? '-' }}</p>
@@ -105,9 +105,10 @@
         @endif
 
         @if($invoice->details && $invoice->details->count() > 0)
-        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Detail Produk</h2>
-            <div class="overflow-x-auto">
+        <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 lg:p-6 shadow-sm mb-4 sm:mb-6">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">Detail Produk</h2>
+            {{-- Desktop Table View --}}
+            <div class="hidden lg:block overflow-x-auto">
                 <table class="min-w-full table-auto text-sm border border-gray-200">
                     <thead class="bg-gray-100 text-gray-700">
                         <tr>
@@ -141,27 +142,58 @@
                     </tbody>
                 </table>
             </div>
+            {{-- Mobile Card View --}}
+            <div class="lg:hidden divide-y divide-gray-200">
+                @foreach ($invoice->details as $detail)
+                    <div class="p-4 hover:bg-gray-50 transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="text-sm font-medium text-gray-900 truncate flex-1 mr-2">{{ $detail->product->name ?? '-' }}</p>
+                            <span class="text-xs text-gray-500 flex-shrink-0">#{{ $loop->iteration }}</span>
+                        </div>
+                        <div class="space-y-2 text-xs sm:text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Warna:</span>
+                                <span class="text-gray-900">{{ $detail->variant->color ?? '-' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Jumlah:</span>
+                                <span class="text-gray-900 font-semibold">{{ $detail->quantity ?? 0 }}</span>
+                            </div>
+                            @if($isCOD)
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Harga:</span>
+                                    <span class="text-gray-900">Rp {{ number_format($detail->price ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="flex justify-between pt-2 border-t border-gray-200">
+                                    <span class="text-gray-600 font-medium">Subtotal:</span>
+                                    <span class="text-gray-900 font-semibold">Rp {{ number_format($detail->subtotal ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
             @if($isCOD)
-            <div class="mt-4 text-right">
-                <p class="text-lg font-bold text-red-800">Total yang Harus Ditagih: Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</p>
+            <div class="mt-4 text-right pt-4 border-t border-gray-200">
+                <p class="text-base sm:text-lg font-bold text-red-800">Total yang Harus Ditagih: Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</p>
             </div>
             @endif
         </div>
         @endif
 
         @if ($invoice->status === 'dikirim_ke_agen')
-        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Input Nomor Resi Ekspedisi</h2>
-            <p class="text-sm text-gray-600 mb-4">Pesanan ini menggunakan ekspedisi {{ ucfirst($invoice->shipping_courier) }}. Silakan input nomor resi setelah mengirim ke agen.</p>
-            <form method="POST" action="{{ url('/admin/driver-transaksi/finish/' . $invoice->id) }}" class="space-y-4">
+        <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 lg:p-6 shadow-sm mb-4 sm:mb-6">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">Input Nomor Resi Ekspedisi</h2>
+            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Pesanan ini menggunakan ekspedisi {{ ucfirst($invoice->shipping_courier) }}. Silakan input nomor resi setelah mengirim ke agen.</p>
+            <form method="POST" action="{{ url('/admin/driver-transaksi/finish/' . $invoice->id) }}" class="space-y-3 sm:space-y-4">
                 @csrf
                 <div>
-                    <label for="tracking_number" class="block text-sm font-medium text-gray-700 mb-1">Nomor Resi <span class="text-red-500">*</span></label>
+                    <label for="tracking_number" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Nomor Resi <span class="text-red-500">*</span></label>
                     <input type="text" name="tracking_number" id="tracking_number" required
-                           class="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                           class="border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm w-full focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                            placeholder="Masukkan nomor resi ekspedisi">
                 </div>
-                <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition">
+                <button type="submit" class="w-full sm:w-auto text-center bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition text-sm sm:text-base">
                     Simpan Nomor Resi
                 </button>
             </form>
@@ -169,88 +201,81 @@
         @endif
 
         @if ($invoice->status === 'dikirim')
-        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Upload Bukti Pengiriman</h2>
+        <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 lg:p-6 shadow-sm">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">Upload Bukti Pengiriman</h2>
             @if($invoice->tracking_number)
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p class="text-sm text-blue-800">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                <p class="text-xs sm:text-sm text-blue-800">
                     <strong>Nomor Resi:</strong> {{ $invoice->tracking_number }}<br>
                     <strong>Ekspedisi:</strong> {{ ucfirst($invoice->shipping_courier) }}
                 </p>
             </div>
             @endif
-            <form action="{{ url('/admin/invoices/upload-bukti/' . $invoice->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <form action="{{ url('/admin/invoices/upload-bukti/' . $invoice->id) }}" method="POST" enctype="multipart/form-data" class="space-y-3 sm:space-y-4">
                 @csrf
                 <div>
-                    <label for="photo" class="block text-sm font-medium text-gray-700 mb-1">Foto Bukti Kirim:</label>
-                    <input type="file" name="photo" accept="image/*" class="border border-gray-300 p-2 rounded w-full">
+                    <label for="photo" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Foto Bukti Kirim:</label>
+                    <input type="file" name="photo" accept="image/*" class="border border-gray-300 p-2 rounded w-full text-xs sm:text-sm">
                 </div>
                 <div>
-                    <label for="signature" class="block text-sm font-medium text-gray-700 mb-1">Tanda Tangan Penerima:</label>
-                    <input type="file" name="signature" accept="image/*" class="border border-gray-300 p-2 rounded w-full">
+                    <label for="signature" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Tanda Tangan Penerima:</label>
+                    <input type="file" name="signature" accept="image/*" class="border border-gray-300 p-2 rounded w-full text-xs sm:text-sm">
                 </div>
-                <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition">Upload Bukti</button>
+                <button type="submit" class="w-full sm:w-auto text-center bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition text-sm sm:text-base">
+                    Upload Bukti
+                </button>
             </form>
 
             @if ($invoice->delivery_proof_photo || $invoice->delivery_signature)
-                <div class="mt-6">
-                    <h3 class="text-md font-semibold mb-2">Bukti yang Sudah Diunggah:</h3>
+                <div class="mt-4 sm:mt-6">
+                    <h3 class="text-sm sm:text-base font-semibold mb-2 sm:mb-3">Bukti yang Sudah Diunggah:</h3>
                     @if ($invoice->delivery_proof_photo)
-                        <div class="mb-4">
-                            <p class="font-medium mb-2">Foto:</p>
+                        <div class="mb-3 sm:mb-4">
+                            <p class="text-xs sm:text-sm font-medium mb-2">Foto:</p>
                             @php
                                 $proofPath = $invoice->delivery_proof_photo;
                                 $imageUrl = null;
                                 
                                 if ($proofPath) {
-                                    // Bersihkan path dari karakter yang tidak valid
                                     $cleanPath = ltrim($proofPath, '/');
-                                    
-                                    // Gunakan format yang sama seperti produk: /public/storage/{path}
-                                    // Ini akan menghasilkan URL seperti: https://domain.com/public/storage/delivery_proofs/...
                                     $imageUrl = url('/public/storage/' . $cleanPath);
                                 }
                                 
-                                // Jika masih null, set ke placeholder
                                 if (!$imageUrl) {
                                     $imageUrl = asset('images/gulungan-terpal.png');
                                 }
                             @endphp
                             <a href="{{ $imageUrl }}" target="_blank" class="inline-block">
-                                <img src="{{ $imageUrl }}" alt="Foto Bukti Kirim" class="w-64 h-64 object-cover border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                                <img src="{{ $imageUrl }}" alt="Foto Bukti Kirim" class="w-full sm:w-64 h-auto sm:h-64 object-cover border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                             </a>
                         </div>
                     @endif
                     @if ($invoice->delivery_signature)
-                        <div>
-                            <p class="font-medium mb-2">Tanda Tangan:</p>
+                        <div class="mb-3 sm:mb-4">
+                            <p class="text-xs sm:text-sm font-medium mb-2">Tanda Tangan:</p>
                             @php
                                 $signaturePath = $invoice->delivery_signature;
                                 $signatureUrl = null;
                                 
                                 if ($signaturePath) {
-                                    // Bersihkan path dari karakter yang tidak valid
                                     $cleanPath = ltrim($signaturePath, '/');
-                                    
-                                    // Gunakan format yang sama seperti produk: /public/storage/{path}
                                     $signatureUrl = url('/public/storage/' . $cleanPath);
                                 }
                                 
-                                // Jika masih null, set ke placeholder
                                 if (!$signatureUrl) {
                                     $signatureUrl = asset('images/gulungan-terpal.png');
                                 }
                             @endphp
                             <a href="{{ $signatureUrl }}" target="_blank" class="inline-block">
-                                <img src="{{ $signatureUrl }}" alt="Tanda Tangan" class="w-64 h-64 object-cover border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                                <img src="{{ $signatureUrl }}" alt="Tanda Tangan" class="w-full sm:w-64 h-auto sm:h-64 object-cover border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                             </a>
                         </div>
                     @endif
                 </div>
                 @if ($invoice->delivery_proof_photo && $invoice->delivery_signature)
-                    <form method="POST" action="{{ url('/admin/driver-transaksi/finish/' . $invoice->id) }}" class="mt-6">
+                    <form method="POST" action="{{ url('/admin/driver-transaksi/finish/' . $invoice->id) }}" class="mt-4 sm:mt-6">
                         @csrf
-                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                        <button type="submit" class="w-full sm:w-auto text-center bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm sm:text-base">
                             Tandai Selesai / Sampai
                         </button>
                     </form>

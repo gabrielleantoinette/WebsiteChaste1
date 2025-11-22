@@ -1,25 +1,26 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="py-6">
+<div class="py-4 sm:py-5 lg:py-6 px-4 sm:px-0">
     {{-- Breadcrumb --}}
-    <div class="mb-6">
+    <div class="mb-4 sm:mb-6">
         <nav class="flex" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <ol class="inline-flex items-center space-x-1 sm:space-x-2 md:space-x-3 flex-wrap">
                 <li class="inline-flex items-center">
-                    <a href="{{ route('admin.invoices.view') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-teal-600">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <a href="{{ route('admin.invoices.view') }}" class="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-teal-600">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
                         </svg>
-                        Kelola Penjualan
+                        <span class="hidden sm:inline">Kelola Penjualan</span>
+                        <span class="sm:hidden">Penjualan</span>
                     </a>
                 </li>
                 <li>
                     <div class="flex items-center">
-                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
                         </svg>
-                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Detail Invoice</span>
+                        <span class="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2">Detail Invoice</span>
                     </div>
                 </li>
             </ol>
@@ -27,13 +28,13 @@
     </div>
 
     {{-- Header --}}
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Detail Invoice</h1>
-        <p class="text-gray-600">Informasi lengkap transaksi dan detail produk</p>
+    <div class="mb-4 sm:mb-6">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">Detail Invoice</h1>
+        <p class="text-sm sm:text-base text-gray-600">Informasi lengkap transaksi dan detail produk</p>
     </div>
 
     {{-- Status Badge --}}
-    <div class="mb-6">
+    <div class="mb-4 sm:mb-6">
         @php
             $statusColors = [
                 'Menunggu Pembayaran' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -47,25 +48,25 @@
             ];
             $statusColor = $statusColors[$invoice->status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
         @endphp
-        <span class="inline-flex items-center px-4 py-2 rounded-lg border font-semibold {{ $statusColor }}">
+        <span class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border text-sm sm:text-base font-semibold {{ $statusColor }}">
             {{ $invoice->status }}
         </span>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
         {{-- Kolom Kiri - Info Utama --}}
         <div class="lg:col-span-2 space-y-6">
             {{-- Info Invoice --}}
-            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="p-2 bg-teal-100 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-teal-600">
+            <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 lg:p-6 shadow-sm">
+                <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <div class="p-1.5 sm:p-2 bg-teal-100 rounded-lg flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 sm:w-6 sm:h-6 text-teal-600">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h11.25c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
                         </svg>
                     </div>
-                    <h2 class="text-xl font-semibold text-gray-800">Informasi Invoice</h2>
+                    <h2 class="text-base sm:text-lg lg:text-xl font-semibold text-gray-800">Informasi Invoice</h2>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div class="space-y-1">
                         <p class="text-sm text-gray-500">Kode Invoice</p>
                         <p class="font-mono font-semibold text-gray-900 text-lg">{{ $invoice->code }}</p>
