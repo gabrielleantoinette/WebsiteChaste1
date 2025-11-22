@@ -15,7 +15,6 @@ class KeuanganController extends Controller
             ->select('hinvoice.*', 'customers.name as customer_name')
             ->orderByDesc('hinvoice.created_at');
 
-        // Filter waktu
         switch ($request->filter) {
             case 'hari':
                 $query->whereDate('hinvoice.created_at', today());
@@ -58,7 +57,6 @@ class KeuanganController extends Controller
             $invoice->status = 'Dikemas';
             $invoice->save();
             
-            // Kirim notifikasi pembayaran dikonfirmasi ke admin
             $notificationService = app(NotificationService::class);
             $notificationService->notifyPayment($invoice->id, [
                 'amount' => $invoice->grand_total,
@@ -66,7 +64,6 @@ class KeuanganController extends Controller
                 'invoice_code' => $invoice->code
             ]);
 
-            // Kirim notifikasi ke customer bahwa pembayaran dikonfirmasi
             $notificationService->sendToCustomer(
                 'payment_confirmed',
                 'Pembayaran Dikonfirmasi',
@@ -82,7 +79,6 @@ class KeuanganController extends Controller
 
 
             
-            // Kirim notifikasi ke owner tentang action keuangan
             $notificationService->notifyFinanceAction([
                 'message' => "Keuangan telah mengkonfirmasi pembayaran untuk pesanan {$invoice->code} sebesar Rp " . number_format($invoice->grand_total),
                 'action_id' => $invoice->id,
@@ -103,7 +99,6 @@ class KeuanganController extends Controller
             $invoice->is_paid = 0;
             $invoice->save();
             
-            // Kirim notifikasi ke customer bahwa pembayaran ditolak
             $notificationService = app(NotificationService::class);
             $notificationService->sendToCustomer(
                 'payment_rejected',
@@ -118,7 +113,6 @@ class KeuanganController extends Controller
                 ]
             );
             
-            // Kirim notifikasi ke owner tentang action keuangan
             $notificationService->notifyFinanceAction([
                 'message' => "Keuangan telah menolak pembayaran untuk pesanan {$invoice->code} sebesar Rp " . number_format($invoice->grand_total),
                 'action_id' => $invoice->id,

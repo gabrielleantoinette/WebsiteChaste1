@@ -34,16 +34,14 @@ class CheckoutController extends Controller
             return redirect()->route('login')->with('error', 'Silakan login dahulu.');
         }
 
-        // Pastikan user adalah customer
         if (!is_array($user) || ($user['role'] ?? '') !== 'customer') {
             return redirect()->route('login')->with('error', 'Akses ditolak.');
         }
 
         $customerId = $user['id'];
 
-        $selectedItems = $request->input('selected_items'); // Ambil dari form
+        $selectedItems = $request->input('selected_items');
         
-        // Debug logging
         \Log::info('Checkout Debug:', [
             'selected_items' => $selectedItems,
             'customer_id' => $customerId,
@@ -54,7 +52,6 @@ class CheckoutController extends Controller
             return redirect()->route('keranjang')->with('error', 'Pilih minimal satu barang untuk checkout.');
         }
 
-        // Ambil barang produk biasa (termasuk yang hasil negosiasi)
         $produkItems = DB::table('cart')
             ->join('product_variants', 'cart.variant_id', '=', 'product_variants.id')
             ->join('products', 'product_variants.product_id', '=', 'products.id')
@@ -81,7 +78,6 @@ class CheckoutController extends Controller
             $product = Product::find($item->product_id);
             if ($product) {
                 $selectedSize = $item->selected_size ?? '2x3';
-                // Jika ada harga custom (hasil negosiasi), gunakan itu, jika tidak gunakan harga berdasarkan ukuran
                 $item->calculated_price = $item->harga_custom ?? $product->getPriceForSize($selectedSize);
             } else {
                 $item->calculated_price = $item->product_price ?? 0;
@@ -89,7 +85,6 @@ class CheckoutController extends Controller
             return $item;
         });
 
-        // Ambil barang custom terpal (yang tidak punya variant)
         $customItems = DB::table('cart')
             ->select(
                 'id',
@@ -106,11 +101,10 @@ class CheckoutController extends Controller
             ->where(function($query) {
                 $query->whereNull('variant_id')
                       ->orWhere('variant_id', 0);
-            }) // Tidak ada variant = custom terpal (NULL atau 0)
+            })
             ->whereIn('id', $selectedItems)
             ->get();
 
-        // Debug logging untuk custom items
         \Log::info('Custom Items Query Result:', [
             'custom_items_count' => $customItems->count(),
             'custom_items' => $customItems->toArray(),
@@ -119,11 +113,9 @@ class CheckoutController extends Controller
 
         $cartIds = [];
 
-        // Hitung subtotal produk + custom
         $subtotalProduk = 0;
 
         foreach ($produkItems as $item) {
-            // Gunakan calculated_price yang sudah dihitung berdasarkan ukuran
             $price = $item->calculated_price ?? $item->product_price ?? 0;
             $subtotalProduk += $price * $item->quantity;
             $cartIds[] = $item->id;
@@ -146,18 +138,15 @@ class CheckoutController extends Controller
                 ($customer->postal_code ? ' ' . $customer->postal_code : '')
             );
             
-            // Cek apakah customer dari Surabaya untuk ongkir gratis
             $isFromSurabaya = (strtolower($customer->city ?? '') === 'surabaya' || 
                               strtolower($customer->province ?? '') === 'jawa timur' && 
                               str_contains(strtolower($customer->city ?? ''), 'surabaya'));
         }
 
-        // Cek apakah customer sudah pernah transaksi lunas/diterima
         $bolehHutang = \App\Models\HInvoice::where('customer_id', $customerId)
             ->whereIn('status', ['lunas', 'diterima'])
             ->exists();
 
-        // Cek limit hutang dan jatuh tempo
         $hutangInvoices = \App\Models\HInvoice::where('customer_id', $customerId)
             ->with(['payments' => function($q) {
                 $q->where('is_paid', 0);
@@ -175,7 +164,6 @@ class CheckoutController extends Controller
             return $p && $p->method == 'hutang' && now()->gt($inv->created_at->addMonth()) && ($inv->grand_total - ($inv->paid_amount ?? 0)) > 0;
         });
         
-        // Validasi limit hutang 10 juta
         $limitHutang = 10000000; // 10 juta
         $totalHutangSetelahTransaksi = $totalHutangAktif + $subtotalProduk;
         $melebihiLimit = $totalHutangSetelahTransaksi > $limitHutang;

@@ -6,8 +6,8 @@ use App\Models\Cart;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
-use App\Models\Product; // Added this import for Product model
-use App\Models\ProductVariant; // Added this import for ProductVariant model
+use App\Models\Product;
+use App\Models\ProductVariant;
 
 class CartController extends Controller
 {
@@ -15,7 +15,7 @@ class CartController extends Controller
     {
         $user = Session::get('user');
         $cartItems = Cart::where('user_id', $user['id'])
-                        ->with(['variant.product']) // Load relationship
+                        ->with(['variant.product'])
                         ->get();
 
         return view('cart', compact('cartItems'));
@@ -25,22 +25,19 @@ class CartController extends Controller
     {
         $user = Session::get('user');
         $quantity = $request->quantity ?? 1;
-        $variantId = $request->variant_id; // Ambil variant_id dari form
-        $selectedSize = $request->selected_size; // Ambil ukuran yang dipilih
+        $variantId = $request->variant_id;
+        $selectedSize = $request->selected_size;
         $negotiatedPrice = $request->negotiated_price ?? null;
 
-        // Cari produk
         $product = Product::find($id);
         if (!$product) {
             return redirect()->back()->with('error', 'Produk tidak ditemukan.');
         }
         
-        // Validasi: jika ada harga tawar, pastikan quantity memenuhi syarat minimum
         if ($negotiatedPrice && $product->min_buying_stock && $quantity < $product->min_buying_stock) {
             return redirect()->back()->with('error', "Minimal {$product->min_buying_stock} pcs untuk menggunakan harga hasil tawar.");
         }
 
-        // Cari variant berdasarkan variant_id yang dikirim
         $variant = null;
         if ($variantId) {
             $variant = ProductVariant::where('id', $variantId)
@@ -48,20 +45,16 @@ class CartController extends Controller
                                    ->first();
         }
         
-        // Jika variant tidak ditemukan, ambil variant pertama sebagai fallback
         if (!$variant) {
             $variant = ProductVariant::where('product_id', $id)->first();
             if (!$variant) {
-                // Jika tidak ada variant sama sekali, buat default
                 $variant = new ProductVariant();
                 $variant->product_id = $id;
                 $variant->color = 'default';
-                $variant->stock = 999; // Default stock tinggi
+                $variant->stock = 999;
                 $variant->save();
             }
         }
-
-        // Cek apakah sudah ada di cart dengan variant dan ukuran yang sama
         $cartExist = Cart::where('user_id', $user['id'])
                         ->where('variant_id', $variant->id)
                         ->where('selected_size', $selectedSize)
@@ -69,18 +62,15 @@ class CartController extends Controller
                         ->first();
 
         if ($cartExist) {
-            // Update quantity jika sudah ada
             $cartExist->quantity += $quantity;
             $cartExist->save();
         } else {
-            // Buat cart item baru
             $cart = new Cart();
             $cart->user_id = $user['id'];
             $cart->variant_id = $variant->id;
             $cart->selected_size = $selectedSize;
             $cart->quantity = $quantity;
             
-            // Jika ada harga negosiasi, simpan sebagai harga custom
             if ($negotiatedPrice) {
                 $cart->harga_custom = $negotiatedPrice;
                 $cart->kebutuhan_custom = "Hasil negosiasi - Harga final: Rp " . number_format($negotiatedPrice, 0, ',', '.');
@@ -108,10 +98,8 @@ class CartController extends Controller
             return redirect()->back()->with('error', 'Produk tidak ditemukan.');
         }
 
-        // Ambil variant pertama dari produk (atau buat default)
         $variant = ProductVariant::where('product_id', $productId)->first();
         if (!$variant) {
-            // Jika tidak ada variant, buat default
             $variant = new ProductVariant();
             $variant->product_id = $productId;
             $variant->color = 'default';
@@ -119,18 +107,15 @@ class CartController extends Controller
             $variant->save();
         }
 
-        // Cek apakah sudah ada di cart dengan variant yang sama
         $cartExist = Cart::where('user_id', $user['id'])
                         ->where('variant_id', $variant->id)
                         ->whereNull('kebutuhan_custom')
                         ->first();
 
         if ($cartExist) {
-            // Update quantity jika sudah ada
             $cartExist->quantity += $quantity;
             $cartExist->save();
         } else {
-            // Buat cart item baru
             $cart = new Cart();
             $cart->user_id = $user['id'];
             $cart->variant_id = $variant->id;
@@ -154,13 +139,13 @@ class CartController extends Controller
             'jumlah_ring_custom' => 'nullable|string',
             'pakai_tali_custom' => 'nullable|string',
             'catatan_custom' => 'nullable|string',
-            'quantity' => 'required|integer|min:1', // <-- TAMBAHKAN VALIDASI INI
+            'quantity' => 'required|integer|min:1',
         ]);
 
         $cart = new Cart();
         $cart->user_id = $user['id'];
         $cart->variant_id = 0;
-        $cart->quantity = $validated['quantity']; // <-- GANTI dari 1 menjadi dari form
+        $cart->quantity = $validated['quantity'];
         $cart->harga_custom = $validated['harga_custom'];
         $cart->kebutuhan_custom = $validated['kebutuhan_custom'];
         $cart->bahan_custom = $validated['bahan_custom'] ?? null;
@@ -201,16 +186,23 @@ class CartController extends Controller
             }
 
             $quantity = $request->input('quantity', 1);
+            $originalQuantity = $cart->quantity;
             
-            // Validasi quantity minimal 1
+            $isNegotiated = $cart->harga_custom && $cart->kebutuhan_custom && str_contains($cart->kebutuhan_custom, 'Hasil negosiasi');
+            
+            if ($isNegotiated && $quantity < $originalQuantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Quantity barang hasil negosiasi tidak dapat dikurangi. Harga negosiasi berlaku untuk quantity yang sudah disepakati.'
+                ], 400);
+            }
+            
             if ($quantity < 1) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Quantity minimal 1.'
                 ], 400);
             }
-
-            // Cek stok jika produk dengan variant
             if ($cart->variant_id && $cart->variant) {
                 if ($quantity > $cart->variant->stock) {
                     return response()->json([
@@ -223,7 +215,6 @@ class CartController extends Controller
             $cart->quantity = $quantity;
             $cart->save();
 
-            // Hitung subtotal
             $subtotal = 0;
             if ($cart->harga_custom && $cart->kebutuhan_custom && str_contains($cart->kebutuhan_custom, 'Hasil negosiasi')) {
                 $subtotal = $cart->harga_custom * $quantity;

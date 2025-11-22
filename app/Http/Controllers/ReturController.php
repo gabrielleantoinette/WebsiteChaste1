@@ -59,7 +59,6 @@ class ReturController extends Controller
                         $productId = $variant ? $variant->product_id : null;
                     }
                     
-                    // Handle produk biasa dan custom
                     if ($productId || $cartItem->kebutuhan_custom) {
                         $damagedProduct = DamagedProduct::create([
                             'product_id' => $productId ?? 0, // 0 untuk custom

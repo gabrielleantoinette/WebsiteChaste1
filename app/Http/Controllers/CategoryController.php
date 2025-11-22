@@ -61,7 +61,6 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
         
-        // Opsional: pastikan tidak ada produk yang masih pakai kategori ini
         if ($category->products()->count() > 0) {
             return redirect()->back()->with('error', 'Kategori tidak dapat dihapus karena masih digunakan oleh produk.');
         }

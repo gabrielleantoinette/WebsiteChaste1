@@ -12,7 +12,7 @@ class NegotiationController extends Controller
 {
     public function show(Product $product)
     {
-        $user = Session::get('user');  // ambil object user dari session
+        $user = Session::get('user');
         $userId = is_array($user)
         ? $user['id']
         : $user->id;
@@ -21,10 +21,6 @@ class NegotiationController extends Controller
              'product_id' => $product->id]
         );
 
-        // Untuk saat ini, biarkan semua bisa akses halaman negosiasi
-        // Validasi quantity akan dilakukan di frontend dan saat checkout
-
-        // Build size options with prices
         $sizes = ['2x3', '3x4', '4x6', '6x8'];
         $sizeOptions = collect($sizes)->map(function ($size) use ($product) {
             return [
@@ -58,23 +54,20 @@ class NegotiationController extends Controller
         $quantity = (int) $request->input('quantity');
         $selectedSize = $request->input('selected_size', '2x3');
         
-        // Validasi minimum quantity untuk tawar menawar
         $minBuyingStock = $product->min_buying_stock ?? 1;
         if ($quantity < $minBuyingStock) {
             return back()->with('error', "Minimal {$minBuyingStock} pcs untuk tawar menawar.");
         }
         
-        // Simpan quantity dan selected_size ke session untuk konsistensi
         session(['quantity' => $quantity, 'selected_size' => $selectedSize]);
 
         $neg = NegotiationTable::firstOrCreate(
-            ['user_id'    => $userId,          // ← pakai $user->id
+            ['user_id'    => $userId,
              'product_id' => $product->id],
             ['status'      => 'proses',
              'final_price' => 0]
         );
 
-        // Hitung berapa kali customer sudah menawar
         $attempts = collect([
             $neg->cust_nego_1,
             $neg->cust_nego_2,
@@ -85,12 +78,10 @@ class NegotiationController extends Controller
             return back()->with('error', 'Sudah mencapai maksimal 3 kali tawar.');
         }
 
-        // Logika sistem merespons yang lebih fleksibel - gunakan harga dan min_price per ukuran
         $priceForSize = $product->getPriceForSize($selectedSize);
-        $min = $product->getMinPriceForSize($selectedSize); // Min price per ukuran
+        $min = $product->getMinPriceForSize($selectedSize);
         $max = $priceForSize;
         
-        // Validasi tawaran customer (tidak reveal harga minimal)
         if ($offer < ($max * 0.5)) {
             return back()->with('error', "Tawaran Anda Rp " . number_format($offer, 0, ',', '.') . " terlalu rendah. Silakan tawar minimal 50% dari harga normal (Rp " . number_format($max * 0.5, 0, ',', '.') . ").");
         }
@@ -99,44 +90,42 @@ class NegotiationController extends Controller
             return back()->with('error', "Tawaran Anda Rp " . number_format($offer, 0, ',', '.') . " sudah mencapai atau melebihi harga normal Rp " . number_format($max, 0, ',', '.') . ". Tidak perlu tawar lagi, silakan beli dengan harga normal.");
         }
         
-        // Logika counter offer yang lebih dinamis
         $discountPercentage = (($max - $offer) / $max) * 100;
+        $difference = $max - $offer;
         
-        // Sistem akan counter berdasarkan seberapa agresif tawaran customer
         if ($discountPercentage >= 40) {
-            // Tawaran sangat agresif (diskon >40%), counter dengan diskon 15-20%
-            $counterDiscount = rand(15, 20);
-            $response = (int) ($max * (1 - ($counterDiscount / 100)));
+            $percentage = rand(20, 30) / 100;
+            $response = (int) ($offer + ($difference * $percentage));
         } elseif ($discountPercentage >= 25) {
-            // Tawaran agresif (diskon 25-40%), counter dengan diskon 10-15%
-            $counterDiscount = rand(10, 15);
-            $response = (int) ($max * (1 - ($counterDiscount / 100)));
+            $percentage = rand(30, 40) / 100;
+            $response = (int) ($offer + ($difference * $percentage));
         } elseif ($discountPercentage >= 15) {
-            // Tawaran sedang (diskon 15-25%), counter dengan diskon 5-10%
-            $counterDiscount = rand(5, 10);
-            $response = (int) ($max * (1 - ($counterDiscount / 100)));
+            $percentage = rand(40, 50) / 100;
+            $response = (int) ($offer + ($difference * $percentage));
         } else {
-            // Tawaran ringan (diskon <15%), counter dengan diskon 3-5%
-            $counterDiscount = rand(3, 5);
-            $response = (int) ($max * (1 - ($counterDiscount / 100)));
+            $percentage = rand(50, 70) / 100;
+            $response = (int) ($offer + ($difference * $percentage));
         }
         
-        // Pastikan response tidak lebih rendah dari tawaran customer
         if ($response <= $offer) {
-            $response = (int) ($offer + ($max * 0.02)); // Tambah 2% dari harga normal
+            $response = (int) ($offer + 1000);
         }
         
-        // Pastikan response tidak di bawah harga minimal
+        if ($response > $max) {
+            $response = (int) $max;
+        }
+        
         if ($response < $min) {
-            $response = (int) $min;
+            if ($min > $offer) {
+                $response = (int) $min;
+            } else {
+                $response = (int) ($offer + 1000);
+            }
         }
 
-        // Simpan ke kolom attempt berikutnya
         $no = $attempts + 1;
         $neg->{"cust_nego_$no"}   = $offer;
         $neg->{"seller_nego_$no"} = $response;
-
-        // Kalau ini tawaran ke-3, jadikan final
         if ($no === 3) {
             $neg->status      = 'final';
             $neg->final_price = $response;
@@ -156,7 +145,6 @@ class NegotiationController extends Controller
         $user = Session::get('user');
         $userId = is_array($user) ? $user['id'] : $user->id;
 
-        // Hapus record negosiasi untuk user + product
         NegotiationTable::where('user_id', $userId)
                         ->where('product_id', $product->id)
                         ->delete();

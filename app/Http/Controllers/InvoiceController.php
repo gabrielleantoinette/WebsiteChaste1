@@ -39,7 +39,6 @@ class InvoiceController extends Controller
     {
         $query = HInvoice::with(['customer', 'employee', 'driver', 'gudang', 'accountant']);
         
-        // Filter berdasarkan status - mapping ke status yang benar
         if ($request->filled('status')) {
             $statusMap = [
                 'menunggu_pembayaran' => 'Menunggu Pembayaran',
@@ -51,7 +50,6 @@ class InvoiceController extends Controller
             $query->where('status', $statusValue);
         }
         
-        // Search berdasarkan kode invoice atau nama customer
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -62,7 +60,6 @@ class InvoiceController extends Controller
             });
         }
         
-        // Get total counts for statistics - gunakan status yang benar
         $totalInvoices = HInvoice::count();
         $completedInvoices = HInvoice::where('status', 'Selesai')->count();
         $pendingInvoices = HInvoice::whereIn('status', ['Menunggu Pembayaran', 'Menunggu Konfirmasi Pembayaran'])->count();
@@ -222,7 +219,6 @@ class InvoiceController extends Controller
 
     public function storeFromCheckout(Request $request)
     {
-        // Ambil customer_id dari session, jika tidak ada ambil dari user['id']
         $customerId = session()->get('customer_id');
         if (!$customerId) {
             $user = Session::get('user');
@@ -242,13 +238,11 @@ class InvoiceController extends Controller
         $invoiceCode = 'INV-' . date('Ymd') . '-' . Str::random(5);
         $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
         
-        // Validasi: Jika alamat pengiriman Surabaya, harus pilih kurir perusahaan (ekspedisi tidak tersedia)
         $isAlamatSurabaya = str_contains(strtolower($alamat ?? ''), 'surabaya');
         if ($isAlamatSurabaya && $shippingMethod === 'expedition') {
             return redirect()->back()->with('error', 'Untuk alamat pengiriman di Surabaya, silakan pilih Kurir Perusahaan. Ekspedisi tidak tersedia untuk Surabaya.');
         }
         
-        // Validasi COD hanya untuk Surabaya
         if ($paymentMethod == 'cod') {
             $customer = Customer::find($customerId);
             $isFromSurabaya = false;
@@ -258,13 +252,11 @@ class InvoiceController extends Controller
                                   str_contains(strtolower($customer->city ?? ''), 'surabaya'));
             }
             
-            // Juga cek dari alamat pengiriman
             if (!$isFromSurabaya && !$isAlamatSurabaya) {
                 return redirect()->back()->with('error', 'COD hanya tersedia untuk pengiriman di Surabaya. Silakan pilih metode pembayaran lain.');
             }
         }
         
-        // Validasi upload bukti transfer jika transfer bank
         if ($paymentMethod == 'transfer') {
             $request->validate([
                 'bukti_transfer' => 'required|image|max:2048',
@@ -274,13 +266,11 @@ class InvoiceController extends Controller
         // cari apakah ini pesanan pertama customer?
         $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
 
-        // Validasi limit hutang 10 juta untuk customer langganan
         if ($paymentMethod == 'hutang') {
             if ($isFirstOrder) {
                 return redirect()->back()->with('error', 'Anda harus minimal 1x transaksi lunas sebelum boleh berhutang.');
             }
             
-            // Hitung total hutang customer saat ini
             $totalHutangSaatIni = HInvoice::where('customer_id', $customerId)
                 ->whereHas('payments', function($q) {
                     $q->where('method', 'hutang')->where('is_paid', 0);
@@ -293,7 +283,6 @@ class InvoiceController extends Controller
             }
         }
 
-        // Validasi stok sebelum membuat transaksi
         if (!empty($cartIds)) {
             $stockValidation = $this->validateStockAvailability($cartIds);
             if (!$stockValidation['valid']) {
@@ -315,7 +304,6 @@ class InvoiceController extends Controller
                         ->first();
                     
                     if ($productModel) {
-                        // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga berdasarkan ukuran
                         $selectedSize = $cart->selected_size ?? '2x3';
                         $price = $cart->harga_custom ?? $productModel->getPriceForSize($selectedSize);
                         $subtotalProduk += ($price ?? 0) * $cart->quantity;
@@ -342,17 +330,14 @@ class InvoiceController extends Controller
         if ($paymentMethod == 'transfer' && $request->hasFile('bukti_transfer')) {
             $file = $request->file('bukti_transfer');
             
-            // Buat nama file yang unik dengan timestamp dan hash untuk menghindari konflik
             $originalName = $file->getClientOriginalName();
             $extension = $file->getClientOriginalExtension();
             $timestamp = now()->format('YmdHis');
             $randomString = \Str::random(10);
             $uniqueFileName = $timestamp . '_' . $randomString . '_' . \Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $extension;
             
-            // Simpan file dengan nama unik
             $transferProofPath = $file->storeAs('bukti_transfer', $uniqueFileName, 'public');
             
-            // Log untuk debugging
             \Log::info('Transfer proof uploaded', [
                 'original_name' => $originalName,
                 'unique_file_name' => $uniqueFileName,
@@ -363,14 +348,12 @@ class InvoiceController extends Controller
                 'timestamp' => $timestamp
             ]);
             
-            // Verifikasi file benar-benar tersimpan
             if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($transferProofPath)) {
                 \Log::error('Transfer proof file not saved correctly', [
                     'path' => $transferProofPath,
                     'customer_id' => $customerId
                 ]);
             } else {
-                // Verifikasi file size untuk memastikan file tersimpan dengan benar
                 $storedFileSize = \Illuminate\Support\Facades\Storage::disk('public')->size($transferProofPath);
                 \Log::info('Transfer proof file verified', [
                     'path' => $transferProofPath,
@@ -400,9 +383,7 @@ class InvoiceController extends Controller
             'transfer_proof' => $transferProofPath,
         ]);
         
-        // Log untuk memastikan path tersimpan dengan benar
         if ($transferProofPath) {
-            // Verifikasi sekali lagi setelah invoice dibuat
             $storedPath = DB::table('hinvoice')->where('id', $newInvoiceId)->value('transfer_proof');
             $fileExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($transferProofPath);
             
@@ -416,7 +397,6 @@ class InvoiceController extends Controller
                 'customer_id' => $customerId
             ]);
             
-            // Jika path tidak match, log error
             if ($transferProofPath !== $storedPath) {
                 \Log::error('Transfer proof path mismatch!', [
                     'invoice_id' => $newInvoiceId,
@@ -425,7 +405,6 @@ class InvoiceController extends Controller
                 ]);
             }
             
-            // Jika file tidak ada, log warning
             if (!$fileExists) {
                 \Log::warning('Transfer proof file not found after invoice creation', [
                     'invoice_id' => $newInvoiceId,
@@ -439,10 +418,8 @@ class InvoiceController extends Controller
         if ($paymentMethod == 'midtrans') {
             $customer = Customer::find($customerId);
             
-            // Build item_details dengan breakdown produk + ongkir
             $itemDetails = [];
             
-            // Tambahkan item produk
             if (!empty($cartIds)) {
                 $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
                 foreach ($carts as $cart) {
@@ -473,7 +450,6 @@ class InvoiceController extends Controller
                 }
             }
             
-            // Tambahkan ongkir sebagai item terpisah jika ada
             if ($shippingCost > 0) {
                 $shippingName = 'Ongkos Kirim';
                 if ($shippingCourier) {
@@ -491,17 +467,14 @@ class InvoiceController extends Controller
                 ];
             }
             
-            // Pastikan total item_details sama dengan grandTotal
             $itemsTotal = array_sum(array_column($itemDetails, 'price'));
             if (abs($itemsTotal - $grandTotal) > 1) { // Allow 1 rupiah difference for rounding
-                // Jika tidak sama, adjust item terakhir
                 if (!empty($itemDetails)) {
                     $diff = $grandTotal - $itemsTotal;
                     $itemDetails[count($itemDetails) - 1]['price'] += $diff;
                 }
             }
             
-            // Buat payment record dulu untuk mendapatkan ID
             $newPayment = new PaymentModel();
             $newPayment->invoice_id = $newInvoiceId;
             $newPayment->method = 'midtrans';
@@ -510,7 +483,6 @@ class InvoiceController extends Controller
             $newPayment->amount = $grandTotal;
             $newPayment->save();
             
-            // Buat URL redirect setelah pembayaran selesai menggunakan payment ID
             $finishRedirectUrl = url('/checkout/midtrans-result?paymentId=' . $newPayment->id . '&status=success');
             $unfinishRedirectUrl = url('/checkout/midtrans-result?paymentId=' . $newPayment->id . '&status=pending');
             $errorRedirectUrl = url('/checkout/midtrans-result?paymentId=' . $newPayment->id . '&status=error');
@@ -531,13 +503,10 @@ class InvoiceController extends Controller
             ];
             $snapToken = Snap::getSnapToken($payload);
             
-            // Update payment dengan snap token
             $newPayment->snap_token = $snapToken;
             $newPayment->save();
 
-            // Simpan detail produk ke dinvoice langsung saat checkout Midtrans
             if (!empty($cartIds)) {
-                // Hapus dinvoice records yang sudah ada untuk invoice ini (jika ada)
                 DB::table('dinvoice')->where('hinvoice_id', $newInvoiceId)->delete();
                 
                 $carts = DB::table('cart')
@@ -554,7 +523,6 @@ class InvoiceController extends Controller
                             ->first();
                         
                         if ($productModel) {
-                            // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga berdasarkan ukuran
                             $selectedSize = $cart->selected_size ?? '2x3';
                             $price = $cart->harga_custom ?? $productModel->getPriceForSize($selectedSize);
                             DB::table('dinvoice')->insert([
@@ -592,12 +560,10 @@ class InvoiceController extends Controller
                 }
             }
             
-            // Simpan cartIds ke session untuk dihapus setelah payment sukses
             session()->put('cart_ids_to_delete', $cartIds);
             return redirect()->route('checkout.midtrans.payment', ['snapToken' => $snapToken, 'paymentId' => $newPayment->id]);
         }
 
-        // Simpan detail produk ke tabel dinvoice
         if (!empty($cartIds)) {
             // Hapus dinvoice records yang sudah ada untuk invoice ini (jika ada)
             DB::table('dinvoice')->where('hinvoice_id', $newInvoiceId)->delete();
@@ -613,7 +579,6 @@ class InvoiceController extends Controller
                         ->first();
                     
                     if ($productModel) {
-                        // Gunakan harga custom jika ada (hasil negosiasi), jika tidak gunakan harga berdasarkan ukuran
                         $selectedSize = $cart->selected_size ?? '2x3';
                         $price = $cart->harga_custom ?? $productModel->getPriceForSize($selectedSize);
                         DB::table('dinvoice')->insert([
@@ -651,12 +616,10 @@ class InvoiceController extends Controller
             }
         }
 
-        // Kurangi stok untuk transaksi non-midtrans
         if (!empty($cartIds)) {
             $this->reduceStockFromCart($cartIds);
         }
 
-        // Tambahkan: untuk metode hutang/cod/transfer_bank, insert ke tabel payment
         if (in_array($paymentMethod, ['cod', 'hutang', 'transfer_bank'])) {
             PaymentModel::create([
                 'invoice_id' => $newInvoiceId,
@@ -667,12 +630,10 @@ class InvoiceController extends Controller
             ]);
         }
 
-        // Hapus item keranjang yang sudah di-checkout (untuk cod/hutang/transfer_bank)
         if (!empty($cartIds)) {
             DB::table('cart')->whereIn('id', $cartIds)->delete();
         }
 
-        // Kirim notifikasi pesanan baru ke admin
         $customer = Customer::find($customerId);
         $notificationService = app(NotificationService::class);
         $notificationService->notifyNewOrder($newInvoiceId, [
@@ -681,7 +642,6 @@ class InvoiceController extends Controller
             'total_amount' => $grandTotal
         ]);
 
-        // Kirim notifikasi ke owner tentang action customer
         $notificationService->notifyCustomerAction([
             'message' => "Customer {$customer->name} telah membuat pesanan baru dengan kode {$invoiceCode}",
             'action_id' => $newInvoiceId,
@@ -689,7 +649,6 @@ class InvoiceController extends Controller
             'priority' => 'high'
         ]);
 
-        // Kirim notifikasi ke customer
         $customerNotificationMessage = '';
         $customerNotificationTitle = '';
         
@@ -743,13 +702,11 @@ class InvoiceController extends Controller
                 'method' => $request->method()
             ]);
             
-            // Ambil status dengan berbagai cara untuk handle URL encoding issues
             $paymentStatus = $request->query('status') 
                 ?? $request->query('amp;status') 
                 ?? $request->input('status') 
                 ?? $request->get('status');
             
-            // Ambil paymentId
             $paymentId = $request->query('paymentId') 
                 ?? $request->input('paymentId') 
                 ?? $request->get('paymentId');
@@ -773,21 +730,18 @@ class InvoiceController extends Controller
             
             \Log::info('Midtrans callback: Payment found', ['paymentId' => $paymentId, 'invoice_id' => $payment->invoice_id]);
             
-            // Ambil invoice terlebih dahulu
             $invoice = HInvoice::find($payment->invoice_id);
             if (!$invoice) {
                 \Log::error('Midtrans callback: Invoice tidak ditemukan', ['invoice_id' => $payment->invoice_id]);
                 return redirect()->route('produk')->with('error', 'Invoice tidak ditemukan.');
             }
             
-            // Ambil customer
             $customer = Customer::find($invoice->customer_id);
             if (!$customer) {
                 \Log::error('Midtrans callback: Customer tidak ditemukan', ['customer_id' => $invoice->customer_id]);
                 return redirect()->route('produk')->with('error', 'Data customer tidak ditemukan.');
             }
             
-            // Update payment status
             $payment->is_paid = $paymentStatus == 'success' ? true : false;
             $payment->save();
             
@@ -800,7 +754,6 @@ class InvoiceController extends Controller
         // Set session last_invoice_id agar halaman sukses tidak error
         session()->put('last_invoice_id', $payment->invoice_id);
 
-        // Hapus cart dan update invoice setelah pembayaran sukses (midtrans)
         if ($paymentStatus == 'success') {
             
             $cartIds = [];
@@ -811,17 +764,14 @@ class InvoiceController extends Controller
                 session()->forget('cart_ids_to_delete');
             }
             
-            // Jika session hilang, hapus cart berdasarkan dinvoice yang sudah dibuat
             if (empty($cartIds)) {
                 \Log::info('Cart IDs tidak ditemukan di session, menghapus cart berdasarkan dinvoice', [
                     'invoice_id' => $invoice->id,
                     'customer_id' => $invoice->customer_id
                 ]);
                 
-                // Ambil semua dinvoice untuk invoice ini
                 $dinvoices = DB::table('dinvoice')->where('hinvoice_id', $invoice->id)->get();
                 
-                // Hapus cart yang sesuai dengan dinvoice
                 foreach ($dinvoices as $dinvoice) {
                     if ($dinvoice->variant_id) {
                         // Match cart berdasarkan customer_id, variant_id, quantity, dan selected_size
@@ -855,15 +805,12 @@ class InvoiceController extends Controller
                     }
                 }
                 
-                // Hapus duplikasi
                 $cartIds = array_unique($cartIds);
             }
             
             if (!empty($cartIds)) {
-                // Validasi stok sebelum mengurangi (untuk memastikan tidak ada perubahan stok selama proses pembayaran)
                 $stockValidation = $this->validateStockAvailability($cartIds);
                 if ($stockValidation['valid']) {
-                    // Kurangi stok sebelum menghapus cart
                     $this->reduceStockFromCart($cartIds);
                     DB::table('cart')->whereIn('id', $cartIds)->delete();
                     \Log::info('Cart berhasil dihapus setelah payment sukses', [
@@ -871,7 +818,6 @@ class InvoiceController extends Controller
                         'invoice_id' => $invoice->id
                     ]);
                 } else {
-                    // Jika stok tidak cukup, kembalikan pembayaran atau handle sesuai kebijakan
                     \Log::error("Stok tidak cukup setelah pembayaran midtrans: " . $stockValidation['message']);
                 }
             } else {
@@ -881,7 +827,6 @@ class InvoiceController extends Controller
                 ]);
             }
 
-            // Update Invoice setelah payment berhasil
             $invoice->status = 'Dikemas'; // Langsung ubah ke status Dikemas agar masuk ke gudang
             $invoice->is_paid = 1;
             $invoice->paid_amount = $payment->amount;
@@ -897,7 +842,6 @@ class InvoiceController extends Controller
             
             $notificationService = app(NotificationService::class);
             
-            // Kirim notifikasi ke customer jika pembayaran berhasil
             $notificationService->sendToCustomer(
                 'payment_success',
                 'Pembayaran Berhasil',
@@ -911,21 +855,18 @@ class InvoiceController extends Controller
                 ]
             );
 
-            // Kirim notifikasi ke admin tentang pembayaran berhasil
             $notificationService->notifyPayment($payment->id, [
                 'amount' => $payment->amount,
                 'customer_name' => $customer->name,
                 'invoice_code' => $invoice->code
             ]);
             
-            // Kirim notifikasi ke owner tentang pesanan baru
             $notificationService->notifyOrderCreated($invoice->id, $customer->id, [
                 'total_amount' => $payment->amount,
                 'invoice_code' => $invoice->code,
                 'customer_name' => $customer->name
             ]);
             
-            // Kirim notifikasi ke gudang tentang pesanan baru yang perlu diproses
             $notificationService->sendToRole(
                 'order_created',
                 'Pesanan Baru Siap Diproses',
@@ -940,7 +881,6 @@ class InvoiceController extends Controller
                 ]
             );
             
-            // Kirim notifikasi ke owner tentang pesanan baru
             $notificationService->notifyWarehouseAction([
                 'message' => "Pesanan baru {$invoice->code} dari {$customer->name} sebesar Rp " . number_format($payment->amount) . " siap untuk diproses",
                 'action_id' => $invoice->id,
@@ -948,7 +888,6 @@ class InvoiceController extends Controller
                 'priority' => 'high'
             ]);
             
-            // Kirim notifikasi ke admin tentang pesanan baru
             $notificationService->sendToRole(
                 'order_created',
                 'Pesanan Baru',
@@ -963,13 +902,11 @@ class InvoiceController extends Controller
                 ]
             );
             
-            // Cek apakah dinvoice sudah ada (seharusnya sudah dibuat saat checkout)
             $existingDInvoice = DB::table('dinvoice')->where('hinvoice_id', $invoice->id)->first();
             if (!$existingDInvoice) {
                 \Log::warning("No dinvoice data found for invoice {$invoice->id}. This should not happen.");
             }
         } else {
-            // Jika payment tidak sukses, log untuk debugging
             \Log::warning('Midtrans callback: Payment not successful', [
                 'paymentId' => $paymentId,
                 'status' => $paymentStatus,
@@ -977,10 +914,8 @@ class InvoiceController extends Controller
             ]);
         }
 
-            // Pastikan session last_invoice_id sudah diset sebelum redirect
             if ($paymentStatus == 'success' && $payment && $payment->invoice_id) {
                 session()->put('last_invoice_id', $payment->invoice_id);
-                // Simpan juga di cookie sebagai backup jika session hilang
                 cookie()->queue('last_invoice_id', $payment->invoice_id, 60); // 60 menit
             }
             
@@ -1008,7 +943,6 @@ class InvoiceController extends Controller
             abort(404, 'Invoice tidak ditemukan.');
         }
 
-        // Ambil data dari dinvoice yang sudah dibuat saat pembayaran
         $cartItems = DB::table('dinvoice')
             ->leftJoin('product_variants', 'dinvoice.variant_id', '=', 'product_variants.id')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
@@ -1032,7 +966,6 @@ class InvoiceController extends Controller
             ->where('dinvoice.hinvoice_id', $invoice->id)
             ->get();
 
-        // Jika tidak ada data di dinvoice, coba ambil dari cart (untuk transaksi lama)
         if ($cartItems->isEmpty()) {
             $cartItems = DB::table('cart')
                 ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
@@ -1060,7 +993,6 @@ class InvoiceController extends Controller
             abort(404, 'Invoice tidak ditemukan.');
         }
 
-        // Ambil data dari dinvoice yang sudah dibuat saat pembayaran
         $cartItems = DB::table('dinvoice')
             ->leftJoin('product_variants', 'dinvoice.variant_id', '=', 'product_variants.id')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
@@ -1084,7 +1016,6 @@ class InvoiceController extends Controller
             ->where('dinvoice.hinvoice_id', $invoice->id)
             ->get();
 
-        // Jika tidak ada data di dinvoice, coba ambil dari cart (untuk transaksi lama)
         if ($cartItems->isEmpty()) {
             $cartItems = DB::table('cart')
                 ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
@@ -1116,7 +1047,6 @@ class InvoiceController extends Controller
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
             
-            // Buat nama file yang unik dengan invoice code, timestamp, dan random string
             $originalName = $file->getClientOriginalName();
             $extension = $file->getClientOriginalExtension();
             $timestamp = now()->format('YmdHis');
@@ -1126,7 +1056,6 @@ class InvoiceController extends Controller
             $path = $file->storeAs('delivery_proofs', $filename, 'public');
             $invoice->delivery_proof_photo = $path;
             
-            // Log untuk debugging
             \Log::info('Delivery proof photo uploaded', [
                 'original_name' => $originalName,
                 'unique_file_name' => $filename,
@@ -1142,7 +1071,6 @@ class InvoiceController extends Controller
         if ($request->hasFile('signature')) {
             $file = $request->file('signature');
             
-            // Buat nama file yang unik dengan invoice code, timestamp, dan random string
             $originalName = $file->getClientOriginalName();
             $extension = $file->getClientOriginalExtension();
             $timestamp = now()->format('YmdHis');
@@ -1152,7 +1080,6 @@ class InvoiceController extends Controller
             $path = $file->storeAs('delivery_signatures', $filename, 'public');
             $invoice->delivery_signature = $path;
             
-            // Log untuk debugging
             \Log::info('Delivery signature uploaded', [
                 'original_name' => $originalName,
                 'unique_file_name' => $filename,
@@ -1189,7 +1116,6 @@ class InvoiceController extends Controller
                     }
                 }
             }
-            // Untuk produk custom, tidak perlu validasi stok
         }
 
         if (!empty($insufficientStock)) {
@@ -1207,13 +1133,11 @@ class InvoiceController extends Controller
         $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
         foreach ($carts as $cart) {
             if ($cart->variant_id) {
-                // Ambil stok saat ini dari product_variants
                 $productVariant = DB::table('product_variants')
                     ->where('id', $cart->variant_id)
                     ->first();
 
                 if ($productVariant && $productVariant->stock >= $cart->quantity) {
-                    // Kurangi stok
                     DB::table('product_variants')
                         ->where('id', $cart->variant_id)
                         ->update([
@@ -1227,7 +1151,6 @@ class InvoiceController extends Controller
                     \Log::error("Stok tidak cukup: Product Variant ID {$cart->variant_id}, Stok tersedia: {$productVariant->stock}, Qty diminta: {$cart->quantity}");
                 }
             } elseif ($cart->kebutuhan_custom) {
-                // Untuk produk custom, stok tidak dikelola di tabel product_variants
                 // Stok custom biasanya dikelola secara terpisah atau tidak ada stok
                 \Log::info("Produk custom tidak mengurangi stok: {$cart->kebutuhan_custom}");
             }

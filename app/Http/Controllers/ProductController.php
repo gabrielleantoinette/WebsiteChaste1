@@ -34,7 +34,6 @@ class ProductController extends Controller
     public function createProductAction(Request $request)
     {
         try {
-            // 1) Validasi
             $data = $request->validate([
                 'name'        => 'required|string|max:255',
                 'description' => 'nullable|string',
@@ -44,7 +43,6 @@ class ProductController extends Controller
                 'live'        => 'required|boolean',
             ]);
 
-            // 2) Upload image jika ada
             if ($request->hasFile('image')) {
                 try {
                     $data['image'] = $this->storeProductImage($request->file('image'), $data['name']);
@@ -59,10 +57,8 @@ class ProductController extends Controller
                 }
             }
 
-            // 3) Simpan
             $product = Product::create($data);
 
-            // 4) Kirim notifikasi ke owner
             $notificationService = app(NotificationService::class);
             $notificationService->notifyAdminAction([
                 'message' => "Admin telah menambahkan produk baru: {$product->name}",
@@ -115,7 +111,6 @@ class ProductController extends Controller
             
             \Log::info('Starting validation');
             
-            // 1) Validasi
             try {
                 $data = $request->validate([
                     'name'        => 'required|string|max:255',
@@ -140,7 +135,6 @@ class ProductController extends Controller
             \Log::info('Finding product', ['product_id' => $id]);
             $product = Product::findOrFail($id);
             
-            // Jika size tidak ada di request, gunakan size dari product yang sudah ada
             if (!isset($data['size']) || empty($data['size'])) {
                 $data['size'] = $product->size ?? '2x3';
                 \Log::info('Size not in request, using existing product size', ['size' => $data['size']]);
@@ -151,7 +145,6 @@ class ProductController extends Controller
                 'current_image' => $product->image
             ]);
 
-            // 2) Jika ada upload baru, hapus file lama dan simpan yang baru
             if ($request->hasFile('image')) {
                 \Log::info('Processing image upload', [
                     'product_id' => $id,
@@ -161,13 +154,11 @@ class ProductController extends Controller
                 ]);
                 
                 try {
-                    // Hapus file lama jika ada
                     if ($product->image) {
                         \Log::info('Deleting old image', ['old_image' => $product->image]);
                         $this->deleteExistingImage($product->image);
                     }
                     
-                    // Simpan file baru
                     \Log::info('Calling storeProductImage');
                     $data['image'] = $this->storeProductImage($request->file('image'), $data['name']);
                     \Log::info('Image stored successfully', ['new_image_path' => $data['image']]);
@@ -187,7 +178,6 @@ class ProductController extends Controller
                 \Log::info('No image file in request, skipping image update');
             }
 
-            // 3) Update
             \Log::info('Updating product data', [
                 'product_id' => $id,
                 'data_keys' => array_keys($data),
@@ -201,7 +191,6 @@ class ProductController extends Controller
                 'updated_image' => $product->fresh()->image
             ]);
 
-            // 4) Kirim notifikasi ke owner
             $notificationService = app(NotificationService::class);
             $notificationService->notifyAdminAction([
                 'message' => "Admin telah mengupdate produk: {$product->name}",
@@ -277,7 +266,6 @@ class ProductController extends Controller
                 'php_max_file_uploads' => ini_get('max_file_uploads')
             ]);
             
-            // Cek error upload
             if ($file->getError() !== UPLOAD_ERR_OK) {
                 $errorMessages = [
                     UPLOAD_ERR_INI_SIZE => 'File terlalu besar (melebihi upload_max_filesize)',
@@ -292,7 +280,6 @@ class ProductController extends Controller
                 throw new \Exception($errorMsg);
             }
             
-            // Gunakan move_uploaded_file untuk keamanan yang lebih baik
             if ($file->isValid()) {
                 $moved = $file->move($directory, $filename);
                 
@@ -355,7 +342,6 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $minPricePerSize = $request->input('min_price_per_size', []);
         
-        // Filter out empty values dan convert to integer
         $filteredPrices = [];
         foreach ($minPricePerSize as $size => $price) {
             if (!empty($price) && is_numeric($price)) {
@@ -363,7 +349,6 @@ class ProductController extends Controller
             }
         }
         
-        // Jika semua kosong, set null untuk auto-calculate
         if (empty($filteredPrices)) {
             $product->min_price_per_size = null;
         } else {
@@ -380,7 +365,6 @@ class ProductController extends Controller
     public function updateMinBuyingStockAction(Request $request, $id)
     {
         $user = Session::get('user');
-        // Hanya owner yang boleh update min_buying_stock
         if (!isset($user['role']) || $user['role'] !== 'owner') {
             return redirect()
                 ->to('/admin/products/detail/' . $id)
@@ -405,7 +389,6 @@ class ProductController extends Controller
     public function updateSizePricesAction(Request $request, $id)
     {
         $user = Session::get('user');
-        // Hanya owner yang boleh update size_prices
         if (!isset($user['role']) || $user['role'] !== 'owner') {
             return redirect()
                 ->to('/admin/products/detail/' . $id)
@@ -415,14 +398,12 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $sizePrices = $request->input('size_prices', []);
         
-        // Validasi: harga 2x3 wajib diisi
         if (empty($sizePrices['2x3']) || !is_numeric($sizePrices['2x3'])) {
             return redirect()
                 ->to('/admin/products/detail/' . $id)
                 ->with('error', 'Harga untuk ukuran 2x3 wajib diisi karena merupakan harga dasar.');
         }
         
-        // Filter out empty values dan convert to integer
         $filteredPrices = [];
         foreach ($sizePrices as $size => $price) {
             if (!empty($price) && is_numeric($price)) {
@@ -430,15 +411,12 @@ class ProductController extends Controller
             }
         }
         
-        // Pastikan 2x3 selalu ada
         if (!isset($filteredPrices['2x3'])) {
             $filteredPrices['2x3'] = (int) $sizePrices['2x3'];
         }
         
-        // Update harga dasar (price) dengan harga 2x3
         $product->price = $filteredPrices['2x3'];
         
-        // Jika hanya 2x3 yang diisi, set null untuk auto-calculate ukuran lain
         if (count($filteredPrices) === 1 && isset($filteredPrices['2x3'])) {
             $product->size_prices = null;
         } else {

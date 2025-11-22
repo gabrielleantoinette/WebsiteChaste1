@@ -68,7 +68,7 @@ class CustomerController extends Controller
 
         $customer->fill($validated);
         if ($request->filled('password')) {
-            $customer->password = $request->password; // hash jika perlu
+            $customer->password = $request->password;
         }
         if ($request->hasFile('profile_picture')) {
             $profile_picture = $request->file('profile_picture')->store('photos', 'public');
@@ -76,7 +76,6 @@ class CustomerController extends Controller
         }
         $customer->save();
 
-        // Redirect sesuai asal update
         if ($request->route()->getName() === 'profile.update') {
             return redirect()->route('profile')->with('success', 'Profil berhasil diperbarui!');
         } else {
@@ -105,15 +104,12 @@ class CustomerController extends Controller
             });
         }
 
-        // Filter kategori berdasarkan ID
         if ($request->has('kategori')) {
             $kategoriMap = ['plastik' => 1, 'kain' => 2, 'karet' => 3];
             $kategoriIds = collect($request->kategori)->map(fn($key) => $kategoriMap[$key] ?? null)->filter();
             $products->whereIn('category_id', $kategoriIds);
         }
 
-        // Filter ukuran - filter berdasarkan kolom size (string seperti "2x3, 3x4, 4x6, 6x8")
-        // atau size_prices JSON yang memiliki ukuran tersebut
         if ($request->has('ukuran') && !empty($request->input('ukuran'))) {
             $ukuranFilter = $request->input('ukuran');
             $products->where(function($query) use ($ukuranFilter) {
@@ -122,14 +118,11 @@ class CustomerController extends Controller
                     $jsonPath = '$.' . $ukuran;
                     if ($first) {
                         $query->where(function($q) use ($ukuran, $jsonPath) {
-                            // Cek di kolom size menggunakan LIKE (karena berisi string comma-separated seperti "2x3, 3x4, 4x6, 6x8")
                             $q->where('size', 'LIKE', "%{$ukuran}%")
-                              // Atau cek di size_prices JSON yang memiliki key untuk ukuran ini
                               ->orWhereRaw("JSON_EXTRACT(size_prices, ?) IS NOT NULL AND JSON_EXTRACT(size_prices, ?) > 0", [$jsonPath, $jsonPath]);
                         });
                         $first = false;
                     } else {
-                        // Untuk multiple ukuran, gunakan OR (artinya produk yang memiliki salah satu ukuran)
                         $query->orWhere(function($q) use ($ukuran, $jsonPath) {
                             $q->where('size', 'LIKE', "%{$ukuran}%")
                               ->orWhereRaw("JSON_EXTRACT(size_prices, ?) IS NOT NULL AND JSON_EXTRACT(size_prices, ?) > 0", [$jsonPath, $jsonPath]);
@@ -139,17 +132,11 @@ class CustomerController extends Controller
             });
         }
 
-        // Filter harga - filter berdasarkan base price dan size_prices
-        // Pre-filter di query builder, filter lebih akurat dilakukan setelah transform
         if ($request->filled('harga_min')) {
             $hargaMin = $request->harga_min;
-            // Filter produk yang memiliki setidaknya satu harga (base price atau size_prices) >= harga_min
-            // Ini akan di-filter lebih akurat setelah transform berdasarkan price range
             $products->where(function($query) use ($hargaMin) {
-                // Cek base price (harga untuk ukuran 2x3)
                 $query->where('price', '>=', $hargaMin);
                 
-                // Atau cek jika ada size_prices yang >= harga_min
                 $sizes = ['2x3', '3x4', '4x6', '6x8'];
                 foreach ($sizes as $size) {
                     $query->orWhereRaw("JSON_EXTRACT(size_prices, ?) >= ?", ["$.{$size}", $hargaMin]);
@@ -159,13 +146,9 @@ class CustomerController extends Controller
 
         if ($request->filled('harga_max')) {
             $hargaMax = $request->harga_max;
-            // Filter produk yang memiliki setidaknya satu harga (base price atau size_prices) <= harga_max
-            // Ini akan di-filter lebih akurat setelah transform berdasarkan price range
             $products->where(function($query) use ($hargaMax) {
-                // Cek base price (harga untuk ukuran 2x3)
                 $query->where('price', '<=', $hargaMax);
                 
-                // Atau cek jika ada size_prices yang <= harga_max
                 $sizes = ['2x3', '3x4', '4x6', '6x8'];
                 foreach ($sizes as $size) {
                     $query->orWhereRaw("JSON_EXTRACT(size_prices, ?) <= ?", ["$.{$size}", $hargaMax]);
@@ -173,18 +156,15 @@ class CustomerController extends Controller
             });
         }
 
-        // Filter warna berdasarkan product variants
         if ($request->has('warna')) {
             $products->whereHas('variants', function($query) use ($request) {
                 $query->whereIn('color', $request->warna);
             });
         }
 
-        // Sorting
         $sortBy = $request->get('sort', 'name');
         $sortOrder = $request->get('order', 'asc');
         
-        // Handle sorting options
         if ($request->has('sort')) {
             switch ($sortBy) {
                 case 'price':
@@ -204,13 +184,11 @@ class CustomerController extends Controller
                     break;
             }
         } else {
-            // Default sorting
             $products->orderBy('name', 'asc');
         }
 
         $products = $products->paginate(9)->withQueryString();
 
-        // Add price range to each product and apply accurate price filter
         $hargaMin = $request->filled('harga_min') ? $request->harga_min : null;
         $hargaMax = $request->filled('harga_max') ? $request->harga_max : null;
         
@@ -225,20 +203,17 @@ class CustomerController extends Controller
             $maxPrice = $prices->max();
             $product->price_range = $minPrice == $maxPrice ? number_format($minPrice, 0, ',', '.') : number_format($minPrice, 0, ',', '.') . ' - ' . number_format($maxPrice, 0, ',', '.');
             
-            // Store min and max price for filtering
             $product->min_price_calculated = $minPrice;
             $product->max_price_calculated = $maxPrice;
             
             return $product;
         });
         
-        // Apply accurate price filter after calculating price ranges
         if ($hargaMin !== null || $hargaMax !== null) {
             $filtered = $products->getCollection()->filter(function ($product) use ($hargaMin, $hargaMax) {
                 $minPrice = $product->min_price_calculated;
                 $maxPrice = $product->max_price_calculated;
                 
-                // Product matches if its price range overlaps with filter range
                 if ($hargaMin !== null && $maxPrice < $hargaMin) {
                     return false;
                 }
@@ -248,7 +223,6 @@ class CustomerController extends Controller
                 return true;
             });
             
-            // Replace collection with filtered results
             $products->setCollection($filtered);
         }
 
@@ -261,7 +235,6 @@ class CustomerController extends Controller
         $product = Product::find($id);
         $variants = ProductVariant::where('product_id', $id)->get();
 
-        // Build size options with prices (using getPriceForSize method)
         $sizes = ['2x3', '3x4', '4x6', '6x8'];
 
         $sizeOptions = collect($sizes)->map(function ($size) use ($product) {
@@ -271,13 +244,11 @@ class CustomerController extends Controller
             ];
         });
 
-        // Calculate price range for display
         $prices = $sizeOptions->pluck('price');
         $minPrice = $prices->min();
         $maxPrice = $prices->max();
         $priceRange = $minPrice == $maxPrice ? number_format($minPrice, 0, ',', '.') : number_format($minPrice, 0, ',', '.') . ' - ' . number_format($maxPrice, 0, ',', '.');
         
-        // Ambil review untuk produk ini
         $reviews = \App\Models\ProductReview::with(['user', 'order'])
                                            ->where('product_id', $id)
                                            ->approved()
@@ -295,10 +266,10 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $statusMap = [
             'menunggukonfirmasi' => 'Menunggu Konfirmasi Pembayaran',
-            'dikemas' => ['dibayar', 'Dikemas', 'dikemas'], // Tambahkan semua variasi status dikemas
+            'dikemas' => ['dibayar', 'Dikemas', 'dikemas'],
             'dikirim' => ['dikirim', 'sampai'],
             'diterima' => 'diterima',
-            'pengembalian' => 'retur_diajukan', // Ubah dari 'pengembalian' ke 'retur_diajukan'
+            'pengembalian' => 'retur_diajukan',
             'beripenilaian' => 'diterima',
         ];
         $transactions = HInvoice::where('customer_id', $user['id'])
@@ -340,24 +311,20 @@ class CustomerController extends Controller
     {
         $user = Session::get('user');
         
-        // Ambil transaction dengan eager loading untuk details, product, dan variant
         $transaction = HInvoice::with(['details.product', 'details.variant'])->find($id);
         
         if (!$transaction) {
             return redirect()->route('transaksi')->with('error', 'Transaksi tidak ditemukan.');
         }
         
-        // Validasi bahwa invoice milik customer yang login
         if ($transaction->customer_id != $user['id']) {
             return redirect()->route('transaksi')->with('error', 'Anda tidak memiliki akses untuk melihat transaksi ini.');
         }
         
-        // Ambil semua detail invoice (dinvoice) - untuk backup jika diperlukan
         $dinvoices = \App\Models\DInvoice::where('hinvoice_id', $id)
             ->with('product', 'variant')
             ->get();
         
-        // Untuk review, ambil product pertama (jika ada)
         $firstDinvoice = $transaction->details->first();
         $product = null;
         $productId = null;
@@ -367,7 +334,6 @@ class CustomerController extends Controller
             $product = $firstDinvoice->product;
         }
         
-        // Cek apakah user sudah review untuk order ini
         $hasReviewed = false;
         if ($productId && $user) {
             $hasReviewed = \App\Models\ProductReview::where('user_id', $user['id'])
@@ -389,7 +355,6 @@ class CustomerController extends Controller
         $dikirimCount = HInvoice::where('customer_id', $user['id'])->whereIn('status', ['dikirim', 'sampai'])->count();
         $reviewCount = HInvoice::where('customer_id', $user['id'])->where('status', 'diterima')->count();
 
-        // Hitung total hutang dan jumlah nota belum lunas (hanya payment method hutang/cod)
         $invoices = HInvoice::where('customer_id', $user['id'])
             ->with(['payments' => function($q) {
                 $q->where('is_paid', 0);
@@ -420,18 +385,15 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $invoice = HInvoice::findOrFail($id);
         
-        // Validasi bahwa invoice milik customer yang login
         if ($invoice->customer_id != $user['id']) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk membatalkan pesanan ini.');
         }
         
-        // Validasi status - hanya bisa dibatalkan jika status "Menunggu Pembayaran" atau "Dikemas"
         $allowedStatuses = ['Menunggu Pembayaran', 'Menunggu Konfirmasi Pembayaran', 'Dikemas'];
         if (!in_array($invoice->status, $allowedStatuses)) {
             return redirect()->back()->with('error', 'Pesanan dengan status "' . $invoice->status . '" tidak dapat dibatalkan. Hanya pesanan dengan status "Menunggu Pembayaran" atau "Dikemas" yang dapat dibatalkan.');
         }
         
-        // Validasi waktu - maksimal 15 menit setelah pembuatan pesanan
         $createdAt = \Carbon\Carbon::parse($invoice->created_at);
         $now = \Carbon\Carbon::now();
         $minutesDiff = $createdAt->diffInMinutes($now);
@@ -440,7 +402,6 @@ class CustomerController extends Controller
             return redirect()->back()->with('error', 'Pesanan hanya dapat dibatalkan maksimal 15 menit setelah pembuatan. Waktu pembatalan telah habis.');
         }
         
-        // Validasi input
         $request->validate([
             'cancellation_reason' => 'required|string|min:10|max:500',
         ], [
@@ -449,7 +410,6 @@ class CustomerController extends Controller
             'cancellation_reason.max' => 'Alasan pembatalan maksimal 500 karakter.',
         ]);
         
-        // Update invoice
         $invoice->status = 'Dibatalkan';
         $invoice->cancelled_at = $now;
         $invoice->cancellation_reason = $request->cancellation_reason;
@@ -467,7 +427,6 @@ class CustomerController extends Controller
             }
         }
         
-        // Kirim notifikasi ke admin
         $notificationService = app(\App\Services\NotificationService::class);
         $notificationService->sendToRole(
             'order_cancelled',
@@ -545,7 +504,6 @@ class CustomerController extends Controller
         return view('retur-form', compact('transaction'));
     }
 
-    // Simpan retur
     public function submitRetur(Request $request, $id)
     {
         $request->validate([
@@ -566,7 +524,6 @@ class CustomerController extends Controller
             'status' => 'diajukan',
         ]);
 
-        // Update status hinvoice menjadi 'retur_diajukan' dan reset driver_id
         $invoice = HInvoice::find($id);
         if ($invoice) {
             $invoice->status = 'retur_diajukan';
@@ -574,7 +531,6 @@ class CustomerController extends Controller
             $invoice->save();
         }
 
-        // Kirim notifikasi retur ke gudang
         $notificationService = app(NotificationService::class);
         $notificationService->notifyReturRequest(Returns::latest()->first()->id, [
             'customer_name' => Session::get('user')['name'],
@@ -590,12 +546,10 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $customerId = $user['id'];
         
-        // Ambil semua invoice customer yang belum lunas
         $invoices = \App\Models\HInvoice::where('customer_id', $customerId)
             ->whereIn('status', ['Menunggu Pembayaran', 'Menunggu Konfirmasi Pembayaran'])
             ->get();
             
-        // Filter hanya yang memiliki grand_total > 0 (ada hutang)
         $filtered = $invoices->filter(function($inv) {
             return $inv->grand_total > 0;
         });
@@ -621,7 +575,6 @@ class CustomerController extends Controller
             'notes' => 'nullable|string',
         ]);
         $proofPath = $request->file('payment_proof')->store('debt_proofs', 'public');
-        // Simpan ke debt_payments (tanpa relasi purchase_order, bisa tambahkan invoice_id jika perlu)
         \App\Models\DebtPayment::create([
             // 'purchase_order_id' => null, // jika ada relasi ke invoice, tambahkan di sini
             'payment_date' => $request->payment_date,
@@ -631,7 +584,7 @@ class CustomerController extends Controller
         return redirect()->route('profile.hutang')->with('success', 'Bukti pembayaran hutang berhasil diupload, menunggu verifikasi.');
     }
 
-    // Method untuk mengecek status hutang customer
+    public static function checkCustomerDebtStatus($customerId)
     public static function checkCustomerDebtStatus($customerId)
     {
         $hutangInvoices = \App\Models\HInvoice::where('customer_id', $customerId)

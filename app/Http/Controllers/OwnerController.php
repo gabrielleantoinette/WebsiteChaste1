@@ -21,15 +21,11 @@ class OwnerController extends Controller
     {
         $drivers = Employee::where('role', 'driver')->get();
         
-        // Hanya tampilkan transaksi yang sudah disiapkan gudang
-        // Untuk kurir perusahaan: status 'dikemas' dan sudah ada gudang_id
-        // Untuk ekspedisi: status 'dikirim_ke_agen' dan sudah ada gudang_id
         $pengirimanNormal = HInvoice::whereIn('status', ['dikemas', 'dikirim_ke_agen'])
             ->whereNotNull('gudang_id')
             ->whereNotIn('status', ['retur_diajukan', 'retur_diambil'])
             ->get();
             
-        // Pisahkan pengiriman kurir perusahaan dan ekspedisi
         $pengirimanKurir = $pengirimanNormal->filter(function($inv) {
             return !$inv->shipping_courier || $inv->shipping_courier === 'kurir';
         });
@@ -71,26 +67,21 @@ class OwnerController extends Controller
         
         $invoice->driver_id = $request->driver_id;
         
-        // Beda status untuk pengiriman normal vs retur
         if ($invoice->status === 'retur_diajukan') {
-            $invoice->status = 'retur_diambil'; // Status khusus untuk retur yang sudah di-assign driver
+            $invoice->status = 'retur_diambil';
             
-            // Kirim notifikasi ke driver untuk retur
             $notificationService = app(NotificationService::class);
             $notificationService->notifyReturnReadyForPickup([
                 'id' => $invoice->id,
                 'customer_name' => $invoice->customer->name
             ]);
 
-            // Kirim notifikasi ke customer bahwa retur disetujui
             $notificationService->notifyReturnApproved($invoice->id, $invoice->customer_id, [
                 'order_id' => $invoice->code,
                 'customer_name' => $invoice->customer->name
             ]);
         } else {
-            // Cek apakah menggunakan ekspedisi atau kurir perusahaan
             if ($invoice->shipping_courier && $invoice->shipping_courier !== 'kurir') {
-                // Jika ekspedisi, buat order di Biteship untuk mendapatkan waybill ID
                 \Log::info('Creating Biteship order for expedition', [
                     'invoice_id' => $invoice->id,
                     'invoice_code' => $invoice->code,
@@ -102,7 +93,6 @@ class OwnerController extends Controller
                 try {
                     $biteshipService = app(\App\Services\BiteshipService::class);
                     
-                    // Cari area ID untuk origin (Surabaya) dan destination
                     $originArea = $biteshipService->searchArea('Surabaya');
                     $destinationCity = $this->extractCityFromAddress($invoice->address);
                     $destinationArea = $biteshipService->searchArea($destinationCity);
@@ -114,10 +104,8 @@ class OwnerController extends Controller
                     ]);
                     
                     if ($originArea && $destinationArea) {
-                        // Hitung total berat (estimasi 1kg per item atau minimal 1kg)
                         $totalWeight = max(count($invoice->details) * 1000, 1000);
                         
-                        // Siapkan items untuk Biteship
                         $items = [];
                         foreach ($invoice->details as $detail) {
                             $items[] = [
@@ -131,7 +119,6 @@ class OwnerController extends Controller
                             ];
                         }
                         
-                        // Jika items kosong, buat default item
                         if (empty($items)) {
                             $items[] = [
                                 'name' => 'Paket',
@@ -144,7 +131,6 @@ class OwnerController extends Controller
                             ];
                         }
                         
-                        // Coba ambil service_code dari getRates untuk mendapatkan format yang benar
                         $courierType = null;
                         $rates = $biteshipService->getRates(
                             $originArea['id'],
@@ -153,7 +139,6 @@ class OwnerController extends Controller
                             [strtolower($invoice->shipping_courier)]
                         );
                         
-                        // Cari service_code yang sesuai dengan shipping_service
                         foreach ($rates as $rate) {
                             $serviceName = $rate['courier_service_name'] ?? '';
                             if (strcasecmp($serviceName, $invoice->shipping_service) === 0 || 
@@ -168,7 +153,6 @@ class OwnerController extends Controller
                             }
                         }
                         
-                        // Jika tidak ditemukan, gunakan mapping
                         if (!$courierType) {
                             $courierType = $this->mapShippingServiceToBiteship(
                                 $invoice->shipping_service, 
@@ -182,7 +166,6 @@ class OwnerController extends Controller
                             ]);
                         }
                         
-                        // Buat order di Biteship
                         $orderData = [
                             'origin_contact_name' => 'Chaste Gemilang Mandiri',
                             'origin_contact_phone' => '081234567890', // Ganti dengan nomor perusahaan
@@ -194,17 +177,15 @@ class OwnerController extends Controller
                             'destination_area_id' => $destinationArea['id'],
                             'courier_company' => strtolower($invoice->shipping_courier), // jne, pos, tiki, dll
                             'courier_type' => $courierType,
-                            'delivery_type' => 'now', // Gunakan 'now' untuk pengiriman langsung
+                            'delivery_type' => 'now',
                             'items' => $items
                         ];
                         
                         $biteshipOrder = $biteshipService->createOrder($orderData);
                         
                         if ($biteshipOrder) {
-                            // Coba ambil waybill ID
                             $waybillId = $biteshipService->extractWaybillId($biteshipOrder);
                             
-                            // Jika belum ada, coba polling
                             if (!$waybillId && isset($biteshipOrder['id'])) {
                                 $waybillId = $biteshipService->getWaybillIdWithPolling($biteshipOrder['id'], 3, 2);
                             }
@@ -244,15 +225,11 @@ class OwnerController extends Controller
                     ]);
                 }
                 
-                // Jika ekspedisi, status tetap "dikirim_ke_agen" (driver akan kirim ke agen)
-                // Status akan berubah ke "dikirim" setelah driver input tracking number
                 $invoice->status = 'dikirim_ke_agen';
             } else {
-                // Jika kurir perusahaan, langsung status "dikirim"
                 $invoice->status = 'dikirim';
             }
             
-            // Kirim notifikasi ke driver untuk pengiriman
             $notificationService = app(NotificationService::class);
             $notificationService->notifyOrderReadyForDelivery([
                 'id' => $invoice->id,
@@ -260,7 +237,6 @@ class OwnerController extends Controller
                 'customer_name' => $invoice->customer->name
             ]);
 
-            // Kirim notifikasi ke customer bahwa pesanan dikirim (hanya untuk kurir perusahaan)
             if (!$invoice->shipping_courier || $invoice->shipping_courier === 'kurir') {
             $notificationService->notifyOrderShipped($invoice->id, $invoice->customer_id, [
                 'invoice_code' => $invoice->code,
@@ -271,7 +247,6 @@ class OwnerController extends Controller
         
         $invoice->save();
         
-        // Log setelah save untuk memastikan tracking_number tersimpan
         $invoice->refresh();
         \Log::info('Invoice saved after assign driver', [
             'invoice_id' => $invoice->id,
@@ -293,12 +268,11 @@ class OwnerController extends Controller
     private function mapShippingServiceToBiteship($serviceName, $courier)
     {
         if (!$serviceName) {
-            return 'reg'; // Default (lowercase)
+            return 'reg';
         }
 
         $serviceNameUpper = strtoupper(trim($serviceName));
         
-        // Mapping untuk JNE (gunakan lowercase karena Biteship menggunakan lowercase)
         if ($courier === 'jne') {
             $jneMapping = [
                 'REGULER' => 'reg',
@@ -321,13 +295,11 @@ class OwnerController extends Controller
                 return $jneMapping[$serviceNameUpper];
             }
             
-            // Jika mengandung kata "reguler" atau "regular"
             if (str_contains($serviceNameUpper, 'REGULER') || str_contains($serviceNameUpper, 'REGULAR')) {
                 return 'reg';
             }
         }
         
-        // Mapping untuk POS (gunakan lowercase)
         if ($courier === 'pos') {
             $posMapping = [
                 'REGULER' => 'reg',
@@ -342,7 +314,6 @@ class OwnerController extends Controller
             }
         }
         
-        // Mapping untuk TIKI (gunakan lowercase)
         if ($courier === 'tiki') {
             $tikiMapping = [
                 'REGULER' => 'reg',
@@ -357,12 +328,10 @@ class OwnerController extends Controller
             }
         }
         
-        // Jika sudah dalam format lowercase, return as is
         if (preg_match('/^[a-z0-9]+$/', strtolower($serviceName))) {
             return strtolower($serviceName);
         }
         
-        // Default ke reg jika tidak ditemukan mapping
         \Log::warning('Unknown shipping service format, using reg as default', [
             'service_name' => $serviceName,
             'courier' => $courier
@@ -380,10 +349,9 @@ class OwnerController extends Controller
     private function extractCityFromAddress($address)
     {
         if (!$address) {
-            return 'Surabaya'; // Default
+            return 'Surabaya';
         }
 
-        // List of common city names in Indonesia
         $cities = [
             'Jakarta', 'Surabaya', 'Bandung', 'Medan', 'Semarang', 'Makassar', 
             'Palembang', 'Depok', 'Tangerang', 'Bekasi', 'Yogyakarta', 'Malang',
@@ -401,7 +369,6 @@ class OwnerController extends Controller
             }
         }
 
-        // Jika tidak ditemukan, coba ekstrak dari pattern "Kec. X, Kota Y" atau "Kota Y"
         if (preg_match('/kota\s+([^,\s]+)/i', $address, $matches)) {
             return ucfirst(trim($matches[1]));
         }
@@ -410,7 +377,6 @@ class OwnerController extends Controller
             return ucfirst(trim($matches[1]));
         }
 
-        // Default ke Surabaya jika tidak ditemukan
         return 'Surabaya';
     }
 
@@ -419,7 +385,6 @@ class OwnerController extends Controller
         $filter = $request->input('filter', 'semua');
         $search = $request->input('search');
 
-        // Filter waktu - menggunakan receive_date untuk data yang benar
         if ($filter !== 'semua') {
             $now = Carbon::now();
             switch ($filter) {
@@ -443,7 +408,6 @@ class OwnerController extends Controller
             }
         }
 
-        // Pendapatan (HInvoice) - menggunakan receive_date
         $pendapatanQuery = \App\Models\HInvoice::query();
         if ($filter !== 'semua') {
             $pendapatanQuery->whereBetween('receive_date', [$start, $end]);
@@ -453,7 +417,6 @@ class OwnerController extends Controller
         }
         $pendapatan = $pendapatanQuery->get();
 
-        // Pengeluaran (DebtPayment)
         $pengeluaranQuery = DebtPayment::query();
         if ($filter !== 'semua') {
             $pengeluaranQuery->whereBetween('payment_date', [$start, $end]);
@@ -465,7 +428,6 @@ class OwnerController extends Controller
         }
         $pengeluaran = $pengeluaranQuery->get();
 
-        // Hutang Piutang (PurchaseOrder)
         $hutangQuery = PurchaseOrder::query();
         if ($filter !== 'semua') {
             $hutangQuery->whereBetween('order_date', [$start, $end]);
@@ -509,14 +471,12 @@ class OwnerController extends Controller
 
 
 
-    // Method untuk download PDF laporan transaksi
     public function downloadLaporanTransaksi(Request $request)
     {
         $periode = ReportDateRange::fromRequest($request, 'bulanan');
         $start = $periode['start']->copy();
         $end = $periode['end']->copy();
 
-        // Data untuk PDF
         $pendapatan = HInvoice::with(['customer', 'payments'])
             ->where(function ($query) use ($start, $end) {
                 $query->whereBetween('receive_date', [$start, $end])
@@ -571,14 +531,12 @@ class OwnerController extends Controller
         return $pdf->download('laporan-transaksi-' . $periode['range'] . '-' . $end->format('Y-m-d') . '.pdf');
     }
 
-    // Method untuk download laporan payment gateway
     public function downloadLaporanPaymentGateway(Request $request)
     {
         $periode = ReportDateRange::fromRequest($request, 'bulanan');
         $start = $periode['start']->copy();
         $end = $periode['end']->copy();
 
-        // Data payment gateway
         $transaksiBerhasil = HInvoice::with(['customer', 'payments'])
             ->where(function ($query) use ($start, $end) {
                 $query->whereBetween('receive_date', [$start, $end])
@@ -640,14 +598,12 @@ class OwnerController extends Controller
         return $pdf->download('laporan-payment-gateway-' . $periode['range'] . '-' . $end->format('Y-m-d') . '.pdf');
     }
 
-    // Method untuk download laporan negosiasi
     public function downloadLaporanNegosiasi(Request $request)
     {
         $periode = ReportDateRange::fromRequest($request, 'bulanan');
         $start = $periode['start']->copy();
         $end = $periode['end']->copy();
 
-        // Data negosiasi
         $negosiasiBerhasil = NegotiationTable::with(['customer', 'product'])
             ->whereBetween('created_at', [$start, $end])
             ->where('status', 'disetujui')

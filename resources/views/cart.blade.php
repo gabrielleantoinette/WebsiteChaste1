@@ -146,20 +146,27 @@
                             </p>
                             
                             {{-- Quantity Control dengan tombol + dan - --}}
+                            @php
+                                $isNegotiated = $item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi');
+                            @endphp
                             <div class="flex items-center justify-end gap-2 mt-2">
                                 <button type="button" 
                                         onclick="decrementQuantity({{ $item->id }})"
-                                        class="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 font-semibold transition">
+                                        @if($isNegotiated) disabled @endif
+                                        class="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 font-semibold transition @if($isNegotiated) opacity-50 cursor-not-allowed @endif"
+                                        title="@if($isNegotiated) Quantity barang negosiasi tidak dapat dikurangi @endif">
                                     -
                                 </button>
                                 <input type="number" 
                                        id="quantity-{{ $item->id }}"
                                        value="{{ $item->quantity }}" 
-                                       min="1"
+                                       min="{{ $isNegotiated ? $item->quantity : 1 }}"
                                        max="{{ $item->variant && $item->variant->stock ? $item->variant->stock : 999 }}"
-                                       class="w-16 text-center border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                       @if($isNegotiated) readonly @endif
+                                       class="w-16 text-center border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 @if($isNegotiated) bg-gray-100 cursor-not-allowed @endif"
                                        onchange="updateQuantity({{ $item->id }}, this.value)"
-                                       onblur="validateQuantity({{ $item->id }})">
+                                       onblur="validateQuantity({{ $item->id }})"
+                                       title="@if($isNegotiated) Quantity barang negosiasi tidak dapat dikurangi @endif">
                                 <button type="button" 
                                         onclick="incrementQuantity({{ $item->id }})"
                                         class="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 font-semibold transition">
@@ -225,6 +232,7 @@
                     color: "{{ $item->variant ? ucfirst($item->variant->color) : ($item->warna_custom ?? '-') }}",
                     size: "{{ $item->selected_size ?? ($item->ukuran_custom ?? '-') }}",
                     isNegotiated: {{ $item->harga_custom && $item->kebutuhan_custom && str_contains($item->kebutuhan_custom, 'Hasil negosiasi') ? 'true' : 'false' }},
+                    originalQuantity: {{ $item->quantity }}, // Simpan quantity awal untuk item nego
                     maxStock: {{ $item->variant && $item->variant->stock ? $item->variant->stock : 999 }}
                 },
             @endforeach
@@ -248,6 +256,21 @@
 
         // Function untuk decrement quantity
         function decrementQuantity(itemId) {
+            const item = itemPrices[itemId];
+            
+            // Cek jika item adalah hasil negosiasi
+            if (item && item.isNegotiated) {
+                const originalQty = item.originalQuantity || item.quantity;
+                const input = document.getElementById('quantity-' + itemId);
+                const currentQty = parseInt(input.value) || originalQty;
+                
+                // Jika quantity sudah sama atau lebih rendah dari original, tidak bisa dikurangi
+                if (currentQty <= originalQty) {
+                    alert('Quantity barang hasil negosiasi tidak dapat dikurangi. Harga negosiasi berlaku untuk quantity yang sudah disepakati.');
+                    return;
+                }
+            }
+            
             const input = document.getElementById('quantity-' + itemId);
             const currentQty = parseInt(input.value) || 1;
             
@@ -260,13 +283,32 @@
 
         // Function untuk validate quantity
         function validateQuantity(itemId) {
+            const item = itemPrices[itemId];
             const input = document.getElementById('quantity-' + itemId);
+            
+            // Cek jika item adalah hasil negosiasi
+            if (item && item.isNegotiated) {
+                const originalQty = item.originalQuantity || item.quantity;
+                const currentQty = parseInt(input.value) || originalQty;
+                
+                // Jika quantity dikurangi dari original, kembalikan ke original
+                if (currentQty < originalQty) {
+                    alert('Quantity barang hasil negosiasi tidak dapat dikurangi. Harga negosiasi berlaku untuk quantity yang sudah disepakati.');
+                    input.value = originalQty;
+                    return;
+                }
+            }
+            
             let qty = parseInt(input.value) || 1;
             const maxStock = itemPrices[itemId]?.maxStock || 999;
+            const minQty = item && item.isNegotiated ? (item.originalQuantity || item.quantity) : 1;
             
-            if (qty < 1) {
-                qty = 1;
+            if (qty < minQty) {
+                qty = minQty;
                 input.value = qty;
+                if (item && item.isNegotiated) {
+                    alert('Quantity barang hasil negosiasi tidak dapat dikurangi.');
+                }
             } else if (qty > maxStock) {
                 qty = maxStock;
                 input.value = qty;
@@ -280,8 +322,18 @@
 
         // Function untuk update quantity via AJAX
         function updateQuantity(itemId, quantity) {
+            const item = itemPrices[itemId];
             const input = document.getElementById('quantity-' + itemId);
             const qty = parseInt(quantity) || 1;
+            const originalQty = item ? item.quantity : qty;
+            
+            // Cek jika item adalah hasil negosiasi dan quantity dikurangi dari original
+            const originalNegotiatedQty = item && item.isNegotiated ? (item.originalQuantity || item.quantity) : null;
+            if (originalNegotiatedQty && qty < originalNegotiatedQty) {
+                alert('Quantity barang hasil negosiasi tidak dapat dikurangi. Harga negosiasi berlaku untuk quantity yang sudah disepakati.');
+                input.value = originalNegotiatedQty;
+                return;
+            }
             
             // Disable input saat update
             input.disabled = true;

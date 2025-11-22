@@ -14,14 +14,11 @@ class HutangController extends Controller
     public function index(Request $request)
     {
             $query = PurchaseOrder::with('supplier');
-            // Tampilkan semua status hutang (termasuk yang sudah lunas)
 
-        // Filter berdasarkan status
         if ($request->has('status') && $request->status != '') {
             $query->where('status', $request->status);
         }
 
-        // Filter berdasarkan search
         if ($request->has('search') && $request->search != '') {
             $query->where(function ($q) use ($request) {
                 $q->where('code', 'like', '%' . $request->search . '%')
@@ -118,7 +115,6 @@ class HutangController extends Controller
 
         $po = PurchaseOrder::findOrFail($id);
         
-        // Cek apakah pembayaran tidak melebihi total hutang
         $totalPaid = $po->payments->sum('amount_paid');
         $remainingDebt = $po->total - $totalPaid;
         
@@ -126,10 +122,8 @@ class HutangController extends Controller
             return back()->withErrors(['amount_paid' => 'Jumlah pembayaran tidak boleh melebihi sisa hutang']);
         }
 
-        // Upload bukti pembayaran
         $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
 
-        // Simpan pembayaran
         $payment = \App\Models\DebtPayment::create([
             'purchase_order_id' => $po->id,
             'payment_date' => $request->payment_date,
@@ -138,7 +132,6 @@ class HutangController extends Controller
             'notes' => $request->notes,
         ]);
 
-        // Update status PO
         $newTotalPaid = $totalPaid + $request->amount_paid;
         if ($newTotalPaid >= $po->total) {
             $po->status = 'lunas';

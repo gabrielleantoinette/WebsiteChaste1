@@ -27,14 +27,13 @@ class GudangController extends Controller
     {
         $invoice = HInvoice::with('customer', 'gudang')->findOrFail($id);
     
-        // Query dinvoice untuk detail produk yang harus disiapkan
         $cartItems = DB::table('dinvoice')
             ->leftJoin('product_variants', 'dinvoice.variant_id', '=', 'product_variants.id')
             ->leftJoin('products', 'product_variants.product_id', '=', 'products.id')
             ->select(
                 'dinvoice.*',
                 'products.name as product_name',
-                'dinvoice.selected_size as selected_size', // Ukuran yang dipilih customer
+                'dinvoice.selected_size as selected_size',
                 'product_variants.color as variant_color',
                 'dinvoice.price as harga_custom',
                 'dinvoice.quantity',
@@ -50,7 +49,6 @@ class GudangController extends Controller
             ->where('dinvoice.hinvoice_id', $invoice->id)
             ->get();
     
-        // Jika dinvoice kosong, coba ambil dari cart sebagai fallback
         if ($cartItems->isEmpty()) {
             $cartItems = DB::table('cart')
                 ->leftJoin('product_variants', 'cart.variant_id', '=', 'product_variants.id')
@@ -58,8 +56,8 @@ class GudangController extends Controller
                 ->select(
                     'cart.*',
                     'products.name as product_name',
-                    'cart.selected_size as selected_size', // Ukuran yang dipilih customer
-                    'cart.ukuran_custom as ukuran_custom', // Ukuran custom dari cart
+                    'cart.selected_size as selected_size',
+                    'cart.ukuran_custom as ukuran_custom',
                     'product_variants.color as variant_color'
                 )
                 ->where('cart.user_id', $invoice->customer_id)
@@ -83,11 +81,9 @@ class GudangController extends Controller
         $invoice = HInvoice::findOrFail($id);
         $user = Session::get('user');
         $invoice->gudang_id = $user->id;
-        // Upload file
         if ($request->hasFile('quality_proof_photo')) {
             $file = $request->file('quality_proof_photo');
             
-            // Buat nama file yang unik dengan invoice code, timestamp, dan random string
             $originalName = $file->getClientOriginalName();
             $extension = $file->getClientOriginalExtension();
             $timestamp = now()->format('YmdHis');
@@ -97,7 +93,6 @@ class GudangController extends Controller
             $path = $file->storeAs('quality_proofs', $filename, 'public');
             $invoice->quality_proof_photo = $path;
             
-            // Log untuk debugging
             \Log::info('Quality proof photo uploaded', [
                 'original_name' => $originalName,
                 'unique_file_name' => $filename,
@@ -110,14 +105,12 @@ class GudangController extends Controller
                 'timestamp' => $timestamp
             ]);
             
-            // Verifikasi file benar-benar tersimpan
             if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
                 \Log::error('Quality proof file not saved correctly', [
                     'path' => $path,
                     'invoice_id' => $invoice->id
                 ]);
             } else {
-                // Verifikasi file size untuk memastikan file tersimpan dengan benar
                 $storedFileSize = \Illuminate\Support\Facades\Storage::disk('public')->size($path);
                 \Log::info('Quality proof file verified', [
                     'path' => $path,
@@ -127,8 +120,6 @@ class GudangController extends Controller
                 ]);
             }
         }
-        // Jika menggunakan ekspedisi (bukan kurir perusahaan), set status ke "dikirim_ke_agen"
-        // Jika menggunakan kurir perusahaan, tetap status "dikemas"
         if ($invoice->shipping_courier && $invoice->shipping_courier !== 'kurir') {
             $invoice->status = 'dikirim_ke_agen';
         } else {
@@ -136,7 +127,6 @@ class GudangController extends Controller
         }
         $invoice->save();
         
-        // Verifikasi path tersimpan dengan benar setelah save
         if ($invoice->quality_proof_photo) {
             $storedPath = $invoice->fresh()->quality_proof_photo;
             $fileExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($invoice->quality_proof_photo);
@@ -151,7 +141,6 @@ class GudangController extends Controller
                 'gudang_id' => $user->id
             ]);
             
-            // Jika path tidak match, log error
             if ($invoice->quality_proof_photo !== $storedPath) {
                 \Log::error('Quality proof path mismatch!', [
                     'invoice_id' => $invoice->id,
@@ -160,7 +149,6 @@ class GudangController extends Controller
                 ]);
             }
             
-            // Jika file tidak ada, log warning
             if (!$fileExists) {
                 \Log::warning('Quality proof file not found after invoice update', [
                     'invoice_id' => $invoice->id,
@@ -169,7 +157,6 @@ class GudangController extends Controller
             }
         }
 
-        // Kirim notifikasi ke customer bahwa pesanan sedang dikemas
         $notificationService = app(NotificationService::class);
         $notificationService->notifyOrderStatus(
             $invoice->id,
@@ -181,7 +168,6 @@ class GudangController extends Controller
             ]
         );
 
-        // Kirim notifikasi ke owner tentang action gudang
         $notificationService->notifyWarehouseAction([
             'message' => "Gudang telah menyiapkan pesanan {$invoice->code} untuk customer {$invoice->customer->name}",
             'action_id' => $invoice->id,
@@ -224,14 +210,12 @@ class GudangController extends Controller
         }
         $produkDisiapkan = array_values($produkDisiapkan);
         
-        // Data returan untuk gudang
         $returans = Returns::with(['invoice.customer'])
             ->whereIn('status', ['diajukan', 'diproses'])
             ->orderByDesc('created_at')
             ->get();
         $returanCount = $returans->count();
         
-        // Data work order untuk gudang
         $workOrders = WorkOrder::with(['createdBy', 'items'])
             ->where('assigned_to', $user->id)
             ->whereIn('status', ['dibuat', 'dikerjakan'])
@@ -247,7 +231,6 @@ class GudangController extends Controller
         return view('admin.dashboardgudang', compact('orders', 'siapProsesCount', 'totalProdukDisiapkan', 'produkDisiapkan', 'returans', 'returanCount', 'workOrders', 'workOrderStats'));
     }
 
-    // Menampilkan daftar barang rusak untuk staf gudang
     public function viewBarangRusak()
     {
         $damagedProducts = DamagedProduct::with(['product', 'variant', 'retur.invoice.customer'])
@@ -256,17 +239,14 @@ class GudangController extends Controller
         return view('admin.gudang.barang-rusak', compact('damagedProducts'));
     }
 
-    // Update status barang rusak menjadi diperbaiki dan update stok normal
     public function perbaikiBarangRusak($id)
     {
         $damaged = DamagedProduct::findOrFail($id);
         if ($damaged->status !== 'rusak') {
             return redirect()->back()->with('error', 'Barang sudah diperbaiki atau status tidak valid.');
         }
-        // Update status
         $damaged->status = 'diperbaiki';
         $damaged->save();
-        // Update stok normal produk (jika nanti diaktifkan)
         // $product = Product::find($damaged->product_id);
         // if ($product) {
         //     $product->stock += $damaged->quantity;
@@ -300,14 +280,12 @@ class GudangController extends Controller
         $bulan = $request->get('bulan', now()->format('Y-m'));
         $tahun = $request->get('tahun', now()->format('Y'));
         
-        // Set tanggal berdasarkan periode
         switch ($periode) {
             case 'harian':
                 $startDate = $tanggal;
                 $endDate = $tanggal;
                 break;
             case 'mingguan':
-                // Ambil tanggal yang dipilih, lalu cari awal dan akhir minggu
                 $selectedDate = \Carbon\Carbon::parse($tanggal);
                 $startDate = $selectedDate->copy()->startOfWeek()->format('Y-m-d');
                 $endDate = $selectedDate->copy()->endOfWeek()->format('Y-m-d');
@@ -329,13 +307,10 @@ class GudangController extends Controller
                 $endDate = $tanggal;
         }
 
-        // Data stok saat ini
         $stokSaatIni = $this->getStokSaatIni();
         
-        // Data stok masuk
         $stokMasuk = $this->getStokMasuk($startDate, $endDate);
         
-        // Data stok keluar
         $stokKeluar = $this->getStokKeluar($startDate, $endDate);
 
         return view('admin.gudang.laporan-stok', compact(
@@ -359,7 +334,7 @@ class GudangController extends Controller
         $bulan = $request->get('bulan', now()->format('Y-m'));
         $tahun = $request->get('tahun', now()->format('Y'));
         
-        // Set tanggal berdasarkan periode (sama seperti laporanStokHarian)
+ (sama seperti laporanStokHarian)
         switch ($periode) {
             case 'harian':
                 $startDate = $tanggal;
@@ -412,7 +387,6 @@ class GudangController extends Controller
         return $pdf->download($filename);
     }
 
-    // Helper method untuk mendapatkan stok saat ini
     private function getStokSaatIni()
     {
         // Stok produk regular
@@ -475,12 +449,10 @@ class GudangController extends Controller
         return $products->concat($customMaterials)->concat($rawMaterials);
     }
 
-    // Helper method untuk mendapatkan stok masuk
     private function getStokMasuk($startDate, $endDate)
     {
         $stokMasuk = [];
 
-        // Stok masuk dari work orders selesai
         $workOrdersSelesai = WorkOrder::with(['items'])
             ->where('status', 'selesai')
             ->whereBetween('completed_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
@@ -516,7 +488,6 @@ class GudangController extends Controller
             }
         }
 
-        // Stok masuk dari retur yang diterima
         $returDiterima = Returns::with(['invoice.customer'])
             ->where('status', 'selesai')
             ->whereBetween('updated_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
@@ -549,12 +520,10 @@ class GudangController extends Controller
         return collect($stokMasuk)->sortBy('tanggal');
     }
 
-    // Helper method untuk mendapatkan stok keluar
     private function getStokKeluar($startDate, $endDate)
     {
         $stokKeluar = [];
 
-        // Stok keluar dari penjualan (menggunakan dinvoice)
         $penjualan = DB::table('dinvoice')
             ->join('hinvoice', 'dinvoice.hinvoice_id', '=', 'hinvoice.id')
             ->leftJoin('product_variants', 'dinvoice.variant_id', '=', 'product_variants.id')
@@ -583,7 +552,6 @@ class GudangController extends Controller
                 ];
             }
 
-            // Buat nama produk yang lebih detail
             if ($item->product_name) {
                 $namaProduk = $item->product_name;
                 $detailWarna = $item->product_color ? " - Warna: {$item->product_color}" : "";
@@ -600,7 +568,6 @@ class GudangController extends Controller
             ];
         }
 
-        // Stok keluar dari work orders (bahan baku)
         $workOrdersBahan = WorkOrder::with(['items'])
             ->whereIn('status', ['dibuat', 'dikerjakan', 'selesai'])
             ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
@@ -635,7 +602,6 @@ class GudangController extends Controller
             }
         }
 
-        // Stok keluar dari barang rusak
         $barangRusak = DamagedProduct::with(['product', 'variant', 'retur'])
             ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->get();

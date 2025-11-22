@@ -16,22 +16,18 @@ class DriverController extends Controller
         $user = Session::get('user');
         $drivers = Employee::where('role', 'driver')->get();
         
-        // Ambil semua invoice yang di-assign ke driver ini (pengiriman normal)
         $normalDeliveries = HInvoice::where('driver_id', $user->id)
             ->whereNotIn('status', ['retur_diajukan', 'retur_diambil', 'retur_selesai'])
             ->with(['customer', 'details.product', 'details.variant'])
             ->get();
             
-        // Ambil semua retur yang di-assign ke driver ini
         $returns = HInvoice::where('driver_id', $user->id)
             ->whereIn('status', ['retur_diajukan', 'retur_diambil', 'retur_selesai'])
             ->with(['customer', 'returns'])
             ->get();
             
-        // Gabungkan dan format data untuk ditampilkan
         $allTasks = collect();
         
-        // Format pengiriman normal
         foreach ($normalDeliveries as $delivery) {
             $allTasks->push([
                 'id' => $delivery->id,
@@ -47,7 +43,6 @@ class DriverController extends Controller
             ]);
         }
         
-        // Format retur
         foreach ($returns as $retur) {
             $allTasks->push([
                 'id' => $retur->id,
@@ -63,7 +58,6 @@ class DriverController extends Controller
             ]);
         }
         
-        // Urutkan berdasarkan tanggal terbaru
         $allTasks = $allTasks->sortByDesc('receive_date');
         
         return view('admin.driver-transaksi.view', compact('allTasks', 'drivers'));
@@ -79,7 +73,6 @@ class DriverController extends Controller
 
             $invoice = HInvoice::with(['customer', 'details.product', 'details.variant', 'driver', 'gudang'])->findOrFail($id);
             
-            // Pastikan ini adalah invoice yang di-assign ke driver ini
             if ($invoice->driver_id != $user->id) {
                 return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk melihat detail transaksi ini.');
             }
@@ -94,7 +87,6 @@ class DriverController extends Controller
     {
         $invoice = HInvoice::find($id);
         
-        // Jika menggunakan ekspedisi dan status masih "dikirim_ke_agen", update tracking number dan ubah status ke "dikirim"
         if ($invoice->status === 'dikirim_ke_agen' && $invoice->shipping_courier && $invoice->shipping_courier !== 'kurir') {
             $request->validate([
                 'tracking_number' => 'required|string|max:100',
@@ -106,7 +98,6 @@ class DriverController extends Controller
             $invoice->status = 'dikirim';
             $invoice->save();
             
-            // Kirim notifikasi ke customer bahwa pesanan dikirim dengan tracking number
             $notificationService = app(NotificationService::class);
             $notificationService->notifyOrderShipped($invoice->id, $invoice->customer_id, [
                 'invoice_code' => $invoice->code,
@@ -118,14 +109,11 @@ class DriverController extends Controller
             return redirect()->back()->with('success', 'Nomor resi berhasil disimpan. Pesanan sekarang dalam status "Dikirim".');
         }
         
-        // Untuk kurir perusahaan atau status sudah "dikirim", langsung ubah ke "sampai"
         $invoice->status = 'sampai';
         $invoice->save();
 
-        // Kirim notifikasi ke customer bahwa pesanan telah diterima
         $notificationService = app(NotificationService::class);
         
-        // Kirim notifikasi ke owner tentang action driver
         $notificationService->notifyDriverAction([
             'message' => "Driver telah menyelesaikan pengiriman pesanan {$invoice->code} ke {$invoice->customer->name}",
             'action_id' => $invoice->id,
@@ -149,31 +137,26 @@ class DriverController extends Controller
     {
         $user = Session::get('user');
         
-        // Pesanan siap dikirim (status: dikirim atau dikirim_ke_agen)
         $ordersReady = HInvoice::where('driver_id', $user->id)
             ->whereIn('status', ['dikirim', 'dikirim_ke_agen'])
             ->with(['customer', 'details.product', 'details.variant'])
             ->get();
             
-        // Retur siap diambil (status: retur_diambil) yang sudah di-assign ke driver ini
         $returnsReady = HInvoice::where('driver_id', $user->id)
             ->where('status', 'retur_diambil')
             ->with(['customer', 'returns'])
             ->get();
 
-        // Pengiriman dalam proses (status: dikirim atau dikirim_ke_agen)
         $ordersInProcess = HInvoice::where('driver_id', $user->id)
             ->whereIn('status', ['dikirim', 'dikirim_ke_agen'])
             ->with(['customer', 'details.product', 'details.variant'])
             ->get();
             
-        // History pengiriman selesai (status: sampai)
         $ordersHistory = HInvoice::where('driver_id', $user->id)
             ->where('status', 'sampai')
             ->with(['customer', 'details.product', 'details.variant'])
             ->get();
             
-        // History pengambilan retur selesai (status: retur_selesai)
         $returnsHistory = HInvoice::where('driver_id', $user->id)
             ->where('status', 'retur_selesai')
             ->with(['customer', 'returns'])
@@ -182,7 +165,6 @@ class DriverController extends Controller
         return view('admin.dashboarddriver', compact('ordersReady', 'returnsReady', 'ordersInProcess', 'ordersHistory', 'returnsHistory'));
     }
 
-    // Method untuk menangani pengambilan retur
     public function pickupRetur($id)
     {
         try {
@@ -193,23 +175,19 @@ class DriverController extends Controller
 
             $invoice = HInvoice::findOrFail($id);
             
-            // Pastikan ini adalah retur yang di-assign ke driver ini
             if ($invoice->driver_id != $user->id) {
                 return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengambil retur ini.');
             }
             
-            // Update status retur
             $invoice->status = 'retur_selesai';
             $invoice->save();
             
-            // Update status di tabel returns jika ada
             $retur = Returns::where('invoice_id', $id)->first();
             if ($retur) {
                 $retur->status = 'selesai';
                 $retur->save();
             }
 
-            // Kirim notifikasi ke customer bahwa retur telah selesai diambil
             $notificationService = app(NotificationService::class);
             $notificationService->sendToCustomer(
                 'return_completed',
@@ -231,12 +209,10 @@ class DriverController extends Controller
         }
     }
 
-    // Method untuk melihat daftar retur
     public function viewReturDriver()
     {
         $user = Session::get('user');
         
-        // Ambil semua retur yang di-assign ke driver ini
         $returns = HInvoice::where('driver_id', $user->id)
             ->whereIn('status', ['retur_diajukan', 'retur_diambil', 'retur_selesai'])
             ->with(['customer', 'returns'])
@@ -246,7 +222,6 @@ class DriverController extends Controller
         return view('admin.driver-retur.view', compact('returns'));
     }
 
-    // Method untuk melihat detail retur
     public function detailRetur($id)
     {
         try {
@@ -257,7 +232,6 @@ class DriverController extends Controller
 
             $invoice = HInvoice::with(['customer', 'returns'])->findOrFail($id);
             
-            // Pastikan ini adalah retur yang di-assign ke driver ini
             if ($invoice->driver_id != $user->id) {
                 return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk melihat detail retur ini.');
             }

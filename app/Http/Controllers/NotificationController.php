@@ -26,7 +26,6 @@ class NotificationController extends Controller
             return redirect('/login');
         }
 
-        // Untuk admin, keuangan, owner, gudang, dan driver, ambil semua notifikasi role mereka
         if (is_array($user) && isset($user['role']) && in_array($user['role'], ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
             $role = $user['role'];
             $notifications = Notification::where('recipient_type', 'employee')
@@ -50,7 +49,6 @@ class NotificationController extends Controller
                 ->where('is_read', false)
                 ->count();
         } else {
-            // Handle both array and object user data untuk customer
             $recipientType = is_array($user) ? 'customer' : ($user instanceof \App\Models\Employee ? 'employee' : 'customer');
             $recipientId = is_array($user) ? $user['id'] : $user->id;
 
@@ -72,7 +70,6 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // Untuk admin, keuangan, owner, gudang, dan driver, ambil semua notifikasi role mereka
         if (is_array($user) && isset($user['role']) && in_array($user['role'], ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
             $role = $user['role'];
             $notifications = Notification::where('recipient_type', 'employee')
@@ -98,7 +95,6 @@ class NotificationController extends Controller
                 ->where('is_read', false)
                 ->count();
         } else {
-            // Handle both array and object user data untuk customer
             $recipientType = is_array($user) ? 'customer' : ($user instanceof \App\Models\Employee ? 'employee' : 'customer');
             $recipientId = is_array($user) ? $user['id'] : $user->id;
 
@@ -152,7 +148,6 @@ class NotificationController extends Controller
                 'is_read' => $notification->is_read
             ]);
 
-                    // Untuk admin, keuangan, owner, gudang, dan driver, kita perlu mengecek berdasarkan role, bukan hanya recipient_id
         $userRole = null;
         if (is_array($user) && isset($user['role'])) {
             $userRole = $user['role'];
@@ -162,7 +157,6 @@ class NotificationController extends Controller
         
         if ($userRole && in_array($userRole, ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
             \Log::info('User is ' . $userRole . ', checking permissions');
-            // Employee dengan role tertentu bisa menandai notifikasi untuk role mereka masing-masing
             if ($notification->recipient_type === 'employee' && $notification->recipient_role === $userRole) {
                 \Log::info($userRole . ' can mark this notification as read');
                 $result = $this->notificationService->markAsRead($id);
@@ -177,7 +171,6 @@ class NotificationController extends Controller
             }
         }
             
-            // Untuk user lain, cek berdasarkan recipient_id
             $recipientType = is_array($user) ? 'customer' : ($user instanceof \App\Models\Employee ? 'employee' : 'customer');
             $recipientId = is_array($user) ? $user['id'] : $user->id;
             
@@ -188,14 +181,12 @@ class NotificationController extends Controller
                 'notification_recipient_id' => $notification->recipient_id
             ]);
             
-            // Untuk customer, cek berdasarkan recipient_id saja
             if ($recipientType === 'customer') {
                 if ($notification->recipient_type !== 'customer' || $notification->recipient_id != $recipientId) {
                     \Log::error('Customer cannot mark this notification - permission denied');
                     return response()->json(['error' => 'Unauthorized'], 401);
                 }
             } else {
-                // Untuk employee, cek berdasarkan recipient_id
                 if ($notification->recipient_type !== $recipientType || $notification->recipient_id != $recipientId) {
                     \Log::error('User cannot mark this notification - permission denied');
                     return response()->json(['error' => 'Unauthorized'], 401);
@@ -260,7 +251,6 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Notification not found'], 404);
         }
 
-        // Pastikan user hanya bisa menghapus notifikasinya sendiri
         $recipientType = is_array($user) ? 'customer' : ($user instanceof \App\Models\Employee ? 'employee' : 'customer');
         $recipientId = is_array($user) ? $user['id'] : $user->id;
         if ($notification->recipient_type !== $recipientType || $notification->recipient_id !== $recipientId) {
@@ -299,7 +289,6 @@ class NotificationController extends Controller
             return response()->json(['count' => 0]);
         }
 
-        // Untuk admin, keuangan, owner, gudang, dan driver, ambil semua notifikasi role mereka
         if (is_array($user) && isset($user['role']) && in_array($user['role'], ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
             $role = $user['role'];
             $count = Notification::where('recipient_type', 'employee')
@@ -331,7 +320,6 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         
-        // Untuk admin, keuangan, owner, gudang, dan driver, ambil semua notifikasi role mereka
         if (is_array($user) && isset($user['role']) && in_array($user['role'], ['admin', 'keuangan', 'owner', 'gudang', 'driver'])) {
             $role = $user['role'];
             $notifications = Notification::where('recipient_type', 'employee')
