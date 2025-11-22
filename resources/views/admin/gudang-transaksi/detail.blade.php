@@ -441,16 +441,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
             })
-            .then(response => {
+            .then(async response => {
+                const contentType = response.headers.get("content-type");
+                let errorData;
+                
                 if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.message || 'Upload gagal');
-                    });
+                    if (contentType && contentType.includes("application/json")) {
+                        errorData = await response.json();
+                        throw new Error(errorData.message || errorData.error || 'Upload gagal');
+                    } else {
+                        const text = await response.text();
+                        throw new Error(`Upload gagal: ${response.status} ${response.statusText}`);
+                    }
                 }
-                return response.json();
+                
+                if (contentType && contentType.includes("application/json")) {
+                    return response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error('Response tidak valid');
+                }
             })
             .then(data => {
                 if (data.success) {
@@ -494,11 +508,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (uploadMessage) {
                     uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${error.message || 'Terjadi kesalahan saat mengupload'}</p>`;
                 }
-                console.error('Error:', error);
+                console.error('Upload Error:', error);
+                console.error('Error Details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
             })
             .finally(() => {
                 uploadBtn.disabled = false;
-                uploadBtn.textContent = 'Upload';
+                uploadBtn.textContent = 'Unggah';
             });
         });
     }

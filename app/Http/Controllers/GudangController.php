@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use App\Models\DamagedProduct;
 use App\Models\Product;
 use App\Models\WorkOrder;
@@ -195,20 +196,46 @@ class GudangController extends Controller
 
     public function uploadQualityPhoto(Request $request, $id)
     {
-        $request->validate([
-            'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048'
-        ], [
-            'photo.required' => 'Foto wajib diupload',
-            'photo.image' => 'File harus berupa gambar',
-            'photo.mimes' => 'Format file harus jpeg, png, atau jpg',
-            'photo.max' => 'Ukuran file maksimal 2MB'
-        ]);
+        try {
+            $request->validate([
+                'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048'
+            ], [
+                'photo.required' => 'Foto wajib diupload',
+                'photo.image' => 'File harus berupa gambar',
+                'photo.mimes' => 'Format file harus jpeg, png, atau jpg',
+                'photo.max' => 'Ukuran file maksimal 2MB'
+            ]);
 
-        $invoice = HInvoice::findOrFail($id);
-        $user = Session::get('user');
-        
-        if ($request->hasFile('photo')) {
+            $invoice = HInvoice::findOrFail($id);
+            $user = Session::get('user');
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User tidak terautentikasi'
+                ], 401);
+            }
+            
+            if (!$request->hasFile('photo')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan'
+                ], 400);
+            }
+            
             $file = $request->file('photo');
+            
+            $qualityProofsDir = storage_path('app/public/quality_proofs');
+            if (!File::exists($qualityProofsDir)) {
+                File::makeDirectory($qualityProofsDir, 0775, true);
+                \Log::info('Created quality_proofs directory', ['path' => $qualityProofsDir]);
+            }
+            
+            if (!is_writable($qualityProofsDir)) {
+                @chmod($qualityProofsDir, 0775);
+                \Log::warning('Changed quality_proofs directory permissions', ['path' => $qualityProofsDir]);
+            }
+            
             $originalName = $file->getClientOriginalName();
             $extension = $file->getClientOriginalExtension();
             $timestamp = now()->format('YmdHis');
@@ -216,6 +243,28 @@ class GudangController extends Controller
             $filename = 'quality_proof_' . $invoice->code . '_' . $timestamp . '_' . $randomString . '_' . \Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $extension;
             
             $path = $file->storeAs('quality_proofs', $filename, 'public');
+            
+            if (!$path) {
+                \Log::error('Failed to store quality proof photo', [
+                    'invoice_id' => $invoice->id,
+                    'filename' => $filename
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menyimpan file'
+                ], 500);
+            }
+            
+            if (!\Storage::disk('public')->exists($path)) {
+                \Log::error('Quality proof photo file not found after upload', [
+                    'invoice_id' => $invoice->id,
+                    'path' => $path
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak tersimpan dengan benar'
+                ], 500);
+            }
             
             $existingPhotos = [];
             if ($invoice->quality_proof_photo) {
@@ -232,6 +281,12 @@ class GudangController extends Controller
             $cleanPath = ltrim($path, '/');
             $imageUrl = url('/public/storage/' . $cleanPath);
             
+            \Log::info('Quality proof photo uploaded successfully', [
+                'invoice_id' => $invoice->id,
+                'path' => $path,
+                'total_photos' => count($existingPhotos)
+            ]);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Foto berhasil diupload',
@@ -239,12 +294,24 @@ class GudangController extends Controller
                 'url' => $imageUrl,
                 'total_photos' => count($existingPhotos)
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error uploading quality proof photo', [
+                'invoice_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal mengupload foto'
-        ], 400);
     }
 
     public function deleteQualityPhoto(Request $request, $id, $photoIndex)
