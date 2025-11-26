@@ -255,6 +255,24 @@ class InvoiceController extends Controller
             if (!$isFromSurabaya && !$isAlamatSurabaya) {
                 return redirect()->back()->with('error', 'COD hanya tersedia untuk pengiriman di Surabaya. Silakan pilih metode pembayaran lain.');
             }
+            
+            // Cek apakah customer sudah punya minimal 1x transaksi selesai dan lunas
+            // Transaksi selesai dan lunas: status 'diterima' atau 'lunas' dengan payment is_paid = 1
+            // Atau status 'diterima'/'lunas' dengan payment method COD (karena COD dibayar saat pengiriman)
+            $hasCompletedTransaction = HInvoice::where('customer_id', $customerId)
+                ->whereIn('status', ['diterima', 'lunas'])
+                ->where(function($query) {
+                    $query->whereHas('payments', function($q) {
+                        $q->where('is_paid', 1);
+                    })->orWhereHas('payments', function($q) {
+                        $q->where('method', 'cod')->where('is_paid', 1);
+                    });
+                })
+                ->exists();
+            
+            if (!$hasCompletedTransaction) {
+                return redirect()->back()->with('error', 'Anda harus minimal 1x transaksi selesai dan lunas sebelum boleh menggunakan COD.');
+            }
         }
         
         if ($paymentMethod == 'transfer') {
@@ -320,11 +338,17 @@ class InvoiceController extends Controller
 
         $grandTotal = $subtotalProduk + $shippingCost;
 
-        $statusInvoice = 'Dikemas';
-        if ($paymentMethod == 'transfer') {
+        // Untuk COD, status tetap Dikemas tapi is_paid = 0 (belum lunas)
+        // Untuk transfer, status Menunggu Konfirmasi Pembayaran
+        // Untuk first order, status Menunggu Pembayaran
+        if ($paymentMethod == 'cod') {
+            $statusInvoice = 'Dikemas'; // Status pesanan tetap Dikemas untuk COD
+        } elseif ($paymentMethod == 'transfer') {
             $statusInvoice = 'Menunggu Konfirmasi Pembayaran';
         } elseif ($isFirstOrder) {
             $statusInvoice = 'Menunggu Pembayaran';
+        } else {
+            $statusInvoice = 'Dikemas';
         }
         $transferProofPath = null;
         if ($paymentMethod == 'transfer' && $request->hasFile('bukti_transfer')) {
@@ -364,6 +388,9 @@ class InvoiceController extends Controller
             }
         }
         // ⬇️ Ubah ini supaya insert sekaligus ambil ID
+        // Untuk COD, is_paid = 0 karena pembayaran dilakukan saat pengiriman
+        $isPaid = ($paymentMethod == 'cod') ? 0 : ($paymentMethod == 'transfer' ? 0 : ($isFirstOrder ? 0 : 1));
+        
         $newInvoiceId = DB::table('hinvoice')->insertGetId([
             'code' => $invoiceCode,
             'customer_id' => $customerId,
@@ -371,6 +398,7 @@ class InvoiceController extends Controller
             'address' => $alamat,
             'is_online' => 1, // Transaksi dari checkout online
             'status' => $statusInvoice,
+            'is_paid' => $isPaid, // Untuk COD, is_paid = 0
             'is_dp' => $isFirstOrder ? true : false,
             'dp_amount' => $isFirstOrder ? $grandTotal / 2 : 0,
             'grand_total' => $grandTotal,

@@ -383,7 +383,34 @@ class CustomerController extends Controller
         $menungguPembayaranCount = HInvoice::where('customer_id', $user['id'])->where('status', 'Menunggu Konfirmasi Pembayaran')->count();
         $dikemasCount = HInvoice::where('customer_id', $user['id'])->whereIn('status', ['dibayar', 'Dikemas', 'dikemas'])->count();
         $dikirimCount = HInvoice::where('customer_id', $user['id'])->whereIn('status', ['dikirim', 'sampai'])->count();
-        $reviewCount = HInvoice::where('customer_id', $user['id'])->where('status', 'diterima')->count();
+        
+        // Hitung invoice dengan status 'diterima' yang BELUM di-review (tidak ada review untuk semua produk di invoice)
+        $invoicesDiterima = HInvoice::where('customer_id', $user['id'])
+            ->where('status', 'diterima')
+            ->with('details')
+            ->get();
+        
+        $reviewCount = 0;
+        foreach ($invoicesDiterima as $invoice) {
+            // Cek apakah semua produk di invoice sudah di-review
+            $allReviewed = true;
+            foreach ($invoice->details as $detail) {
+                if ($detail->product_id) {
+                    $hasReview = \App\Models\ProductReview::where('user_id', $user['id'])
+                        ->where('order_id', $invoice->id)
+                        ->where('product_id', $detail->product_id)
+                        ->exists();
+                    if (!$hasReview) {
+                        $allReviewed = false;
+                        break;
+                    }
+                }
+            }
+            // Jika belum semua di-review, tambahkan ke count
+            if (!$allReviewed) {
+                $reviewCount++;
+            }
+        }
 
         $invoices = HInvoice::where('customer_id', $user['id'])
             ->with(['payments' => function($q) {

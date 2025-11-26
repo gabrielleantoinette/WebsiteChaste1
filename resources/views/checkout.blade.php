@@ -359,32 +359,31 @@
                         </svg>
                     </label>
 
-                    @if($isFromSurabaya)
-                        <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer">
-                            <input type="radio" name="payment_method" value="cod" class="accent-teal-600 mr-3"
-                                    onchange="showPaymentInfo()">
-                            <div class="flex-1">
-                                <div class="font-semibold text-gray-800">COD</div>
-                                <div class="text-sm text-gray-600">Bayar di Tempat</div>
+                    @php
+                        $codDisabled = !$isFromSurabaya || !$bolehCOD;
+                        $codDisabledReason = '';
+                        if (!$isFromSurabaya) {
+                            $codDisabledReason = 'COD hanya tersedia untuk pengiriman di Surabaya. Silakan pilih metode pembayaran lain.';
+                        } elseif (!$bolehCOD) {
+                            $codDisabledReason = 'Anda harus minimal 1x transaksi selesai dan lunas sebelum boleh menggunakan COD.';
+                        }
+                    @endphp
+                    
+                    <label id="codLabel" class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 transition {{ $codDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 cursor-pointer' }}">
+                        <input type="radio" name="payment_method" value="cod" id="codRadio" class="accent-teal-600 mr-3"
+                                onchange="showPaymentInfo()" {{ $codDisabled ? 'disabled' : '' }}>
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">COD</div>
+                            <div class="text-sm text-gray-600">Bayar di Tempat</div>
+                            @if($codDisabled)
+                                <div class="text-xs text-red-500 mt-1">{{ $codDisabledReason }}</div>
+                            @endif
                         </div>
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            </label>
-                    @else
-                        <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <div class="flex items-center text-red-600">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span class="font-semibold">COD Tidak Tersedia</span>
-                            </div>
-                            <div class="text-sm text-red-600 mt-1">
-                                COD hanya tersedia untuk pengiriman di Surabaya. Silakan pilih metode pembayaran lain.
-                            </div>
-                        </div>
-                    @endif
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </label>
 
                     <label class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition cursor-pointer {{ !$bolehHutang || $melebihiLimit ? 'opacity-50 cursor-not-allowed' : '' }}">
                         <input type="radio" name="payment_method" value="hutang" class="accent-teal-600 mr-3"
@@ -698,6 +697,9 @@
             errorEl.classList.remove('hidden');
         }
 
+        // Variabel PHP untuk JavaScript
+        const bolehCOD = @json($bolehCOD ?? false);
+        
         function checkShippingOptions() {
             const addressText = document.getElementById('address').value.toLowerCase();
             const isSurabaya = addressText.includes('surabaya');
@@ -707,6 +709,11 @@
             const shippingOptionsList = document.getElementById('shippingOptionsList');
             const shippingLoading = document.getElementById('shippingLoading');
             const shippingError = document.getElementById('shippingError');
+            
+            // Update COD option berdasarkan alamat pengiriman dan syarat transaksi
+            const codRadio = document.querySelector('input[name="payment_method"][value="cod"]');
+            const codLabel = document.getElementById('codLabel');
+            const codReasonText = codLabel ? codLabel.querySelector('.text-xs.text-red-500') : null;
             
             // Jika alamat mengandung "Surabaya"
             if (isSurabaya) {
@@ -727,6 +734,44 @@
                     kurirRadio.checked = true;
                     updateShippingCost(0, 'kurir', 'Kurir Perusahaan');
                 }
+                
+                // Update status COD berdasarkan syarat
+                if (bolehCOD) {
+                    // Aktifkan COD jika sudah punya transaksi lunas
+                    if (codLabel) {
+                        codLabel.classList.remove('opacity-50', 'cursor-not-allowed');
+                        codLabel.classList.add('hover:bg-gray-100', 'cursor-pointer');
+                    }
+                    if (codRadio) {
+                        codRadio.disabled = false;
+                    }
+                    if (codReasonText) {
+                        codReasonText.textContent = '';
+                        codReasonText.classList.add('hidden');
+                    }
+                } else {
+                    // Nonaktifkan COD jika belum punya transaksi lunas
+                    if (codLabel) {
+                        codLabel.classList.add('opacity-50', 'cursor-not-allowed');
+                        codLabel.classList.remove('hover:bg-gray-100', 'cursor-pointer');
+                    }
+                    if (codRadio) {
+                        codRadio.disabled = true;
+                        if (codRadio.checked) {
+                            codRadio.checked = false;
+                            // Pilih transfer sebagai default jika COD terpilih
+                            const transferRadio = document.querySelector('input[name="payment_method"][value="transfer"]');
+                            if (transferRadio) {
+                                transferRadio.checked = true;
+                                showPaymentInfo();
+                            }
+                        }
+                    }
+                    if (codReasonText) {
+                        codReasonText.textContent = 'Anda harus minimal 1x transaksi selesai dan lunas sebelum boleh menggunakan COD.';
+                        codReasonText.classList.remove('hidden');
+                    }
+                }
             } else {
                 // Jika bukan Surabaya, sembunyikan Kurir Perusahaan
                 if (kurirOption) {
@@ -738,6 +783,28 @@
                 }
                 if (kurirNotAvailable) {
                     kurirNotAvailable.classList.remove('hidden');
+                }
+                
+                // Nonaktifkan COD jika alamat bukan Surabaya
+                if (codLabel) {
+                    codLabel.classList.add('opacity-50', 'cursor-not-allowed');
+                    codLabel.classList.remove('hover:bg-gray-100', 'cursor-pointer');
+                }
+                if (codRadio) {
+                    codRadio.disabled = true;
+                    if (codRadio.checked) {
+                        codRadio.checked = false;
+                        // Pilih transfer sebagai default jika COD terpilih
+                        const transferRadio = document.querySelector('input[name="payment_method"][value="transfer"]');
+                        if (transferRadio) {
+                            transferRadio.checked = true;
+                            showPaymentInfo();
+                        }
+                    }
+                }
+                if (codReasonText) {
+                    codReasonText.textContent = 'COD hanya tersedia untuk pengiriman di Surabaya. Silakan pilih metode pembayaran lain.';
+                    codReasonText.classList.remove('hidden');
                 }
                 
                 // Cek ongkir via Biteship
@@ -811,6 +878,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             const hutangRadio = document.getElementById('hutang');
             const btnBayar = document.getElementById('btnBayar');
+            const codRadio = document.querySelector('input[name="payment_method"][value="cod"]');
+            const codLabel = document.getElementById('codLabel');
+            
+            // Prevent click on disabled COD option
+            if (codLabel && codRadio) {
+                codLabel.addEventListener('click', function(e) {
+                    if (codRadio.disabled) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                });
+            }
+            
             if (hutangRadio && hutangRadio.disabled) {
                 hutangRadio.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -821,6 +902,8 @@
                 radio.addEventListener('change', function() {
                     if (hutangRadio && hutangRadio.checked && hutangRadio.disabled) {
                         btnBayar.disabled = true;
+                    } else if (codRadio && codRadio.checked && codRadio.disabled) {
+                        btnBayar.disabled = true;
                     } else {
                         btnBayar.disabled = false;
                     }
@@ -830,12 +913,26 @@
             if (hutangRadio && hutangRadio.checked && hutangRadio.disabled) {
                 btnBayar.disabled = true;
             }
+            // Inisialisasi: jika COD terpilih dan disabled, button disable
+            if (codRadio && codRadio.checked && codRadio.disabled) {
+                btnBayar.disabled = true;
+            }
         });
 
         // Validasi sebelum submit
         const form = document.querySelector('form');
         form.addEventListener('submit', function(e) {
             const selected = document.querySelector('input[name="payment_method"]:checked');
+            
+            // Validasi COD: jika COD dipilih tapi di-disable, prevent submit
+            if (selected && selected.value === 'cod' && selected.disabled) {
+                e.preventDefault();
+                const codLabel = document.getElementById('codLabel');
+                const reasonText = codLabel ? codLabel.querySelector('.text-xs.text-red-500')?.textContent || '' : '';
+                alert('COD tidak tersedia. ' + reasonText);
+                return false;
+            }
+            
             if (selected && selected.value === 'transfer') {
                 const buktiInput = document.getElementById('bukti_transfer');
                 if (!buktiInput || buktiInput.files.length === 0) {

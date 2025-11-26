@@ -18,7 +18,7 @@ class DriverController extends Controller
         
         $normalDeliveries = HInvoice::where('driver_id', $user->id)
             ->whereNotIn('status', ['retur_diajukan', 'retur_diambil', 'retur_selesai'])
-            ->with(['customer', 'details.product', 'details.variant'])
+            ->with(['customer', 'details.product', 'details.variant', 'payments'])
             ->get();
             
         $returns = HInvoice::where('driver_id', $user->id)
@@ -29,6 +29,9 @@ class DriverController extends Controller
         $allTasks = collect();
         
         foreach ($normalDeliveries as $delivery) {
+            $paymentMethod = $delivery->payments->first()->method ?? null;
+            $isCOD = $paymentMethod === 'cod';
+            
             $allTasks->push([
                 'id' => $delivery->id,
                 'code' => $delivery->code,
@@ -39,7 +42,9 @@ class DriverController extends Controller
                 'receive_date' => $delivery->receive_date,
                 'type' => 'delivery',
                 'details' => $delivery->details,
-                'invoice' => $delivery
+                'invoice' => $delivery,
+                'isCOD' => $isCOD,
+                'grand_total' => $delivery->grand_total
             ]);
         }
         
@@ -71,7 +76,7 @@ class DriverController extends Controller
                 return redirect('/login')->with('error', 'Silakan login terlebih dahulu.');
             }
 
-            $invoice = HInvoice::with(['customer', 'details.product', 'details.variant', 'driver', 'gudang'])->findOrFail($id);
+            $invoice = HInvoice::with(['customer', 'details.product', 'details.variant', 'driver', 'gudang', 'payments'])->findOrFail($id);
             
             if ($invoice->driver_id != $user->id) {
                 return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk melihat detail transaksi ini.');

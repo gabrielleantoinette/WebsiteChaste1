@@ -39,7 +39,14 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 font-mono text-teal-700 dark:text-[#80C0CE] font-semibold">{{ $task['code'] }}</td>
-                            <td class="px-4 py-3">{{ $task['customer_name'] }}</td>
+                            <td class="px-4 py-3">
+                                <div>{{ $task['customer_name'] }}</div>
+                                @if($task['type'] == 'delivery' && isset($task['isCOD']) && $task['isCOD'])
+                                    <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">
+                                        💰 COD - Tagih Rp {{ number_format($task['grand_total'] ?? 0, 0, ',', '.') }}
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3">{{ $task['driver_name'] }}</td>
                             <td class="px-4 py-3">
                                 @if($task['type'] == 'delivery')
@@ -104,6 +111,11 @@
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-mono font-semibold text-teal-700 dark:text-[#80C0CE] truncate">{{ $task['code'] }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">ID: {{ $task['id'] }}</p>
+                            @if($task['type'] == 'delivery' && isset($task['isCOD']) && $task['isCOD'])
+                                <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">
+                                    💰 COD - Tagih Rp {{ number_format($task['grand_total'] ?? 0, 0, ',', '.') }}
+                                </span>
+                            @endif
                         </div>
                         <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold ml-2 flex-shrink-0
                             @if($task['type'] == 'delivery') bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300
