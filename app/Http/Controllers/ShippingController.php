@@ -68,11 +68,12 @@ class ShippingController extends Controller
 
             $destinationAreaId = $destinationArea['id'] ?? null;
             
-            // Validasi area ID
+            // Validasi area ID - pastikan tidak null dan convert ke string
             if (!$destinationAreaId) {
                 \Log::error('Destination area ID is missing', [
                     'destination_area' => $destinationArea,
-                    'searched_city' => $destinationCity
+                    'searched_city' => $destinationCity,
+                    'area_keys' => array_keys($destinationArea ?? [])
                 ]);
                 
                 return response()->json([
@@ -80,6 +81,19 @@ class ShippingController extends Controller
                     'message' => 'Area ID tidak valid. Silakan coba lagi atau hubungi customer service.'
                 ], 200);
             }
+            
+            // Pastikan area ID adalah string
+            $destinationAreaId = (string) $destinationAreaId;
+            $originAreaId = (string) $originAreaId;
+            
+            // Log area IDs untuk debugging
+            \Log::info('Area IDs validated', [
+                'origin_area_id' => $originAreaId,
+                'origin_area_id_type' => gettype($originAreaId),
+                'destination_area_id' => $destinationAreaId,
+                'destination_area_id_type' => gettype($destinationAreaId),
+                'destination_area_full' => $destinationArea
+            ]);
             
             \Log::info('Biteship area IDs', [
                 'origin_area_id' => $originAreaId,
