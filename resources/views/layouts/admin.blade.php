@@ -164,7 +164,13 @@
         <!-- Profil + Logout -->
         <div class="pt-10 border-t text-sm text-gray-600">
             <div class="mb-2">{{ is_array($user) ? $user['name'] : $user->name }}</div>
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex flex-col gap-2 mb-2">
+                @php
+                    $userRole = is_array($user) ? ($user['role'] ?? '') : ($user->role ?? '');
+                @endphp
+                @if($userRole != 'customer' && $userRole != '')
+                    <a href="{{ route('employee.profile') }}" class="text-teal-600 hover:text-teal-800 hover:underline">Profil Saya</a>
+                @endif
                 <a href="{{ url('logout') }}" class="text-red-600 hover:underline">Logout</a>
             </div>
         </div>

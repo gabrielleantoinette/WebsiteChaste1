@@ -244,7 +244,13 @@ Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
         Route::get('/create', [EmployeeController::class, 'create']);
         Route::post('/create', [EmployeeController::class, 'createEmployeeAction']);
         Route::get('/detail/{id}', [EmployeeController::class, 'detail']);
-        Route::post('/detail/{id}', [EmployeeController::class, 'updateEmployeeAction']);
+        Route::post('/detail/{id}', [EmployeeController::class, 'updateEmployeeAction'])->name('admin.employees.update');
+    });
+    
+    // Employee Profile (untuk employees edit profile sendiri)
+    Route::prefix('employee')->group(function () {
+        Route::get('/profile', [EmployeeController::class, 'profile'])->name('employee.profile');
+        Route::post('/profile', [EmployeeController::class, 'updateProfile'])->name('employee.profile.update');
     });
 
     Route::prefix('customers')->group(function () {

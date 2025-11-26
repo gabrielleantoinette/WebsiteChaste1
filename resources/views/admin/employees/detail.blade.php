@@ -4,7 +4,7 @@
     <div class="max-w-5xl mx-auto px-4 sm:px-0">
         <h1 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-800 border-b pb-2">Detail Pegawai</h1>
 
-        <form method="POST" action="{{ route('employees.updateEmployeeAction', $employee->id) }}"
+        <form method="POST" action="{{ url('/admin/employees/detail/' . $employee->id) }}"
               enctype="multipart/form-data"
               class="bg-white p-4 sm:p-5 lg:p-6 rounded-lg shadow-md border">
             @csrf

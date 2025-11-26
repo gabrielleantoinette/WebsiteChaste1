@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 
 class EmployeeController extends Controller
 {
@@ -50,14 +51,15 @@ class EmployeeController extends Controller
 
     public function detail($id)
     {
+        $employee = Employee::findOrFail($id);
         return view('admin.employees.detail', [
-            'employee' => Employee::find($id)
+            'employee' => $employee
         ]);
     }
 
     public function updateEmployeeAction(Request $request, $id)
     {
-        $employee = Employee::find($id);
+        $employee = Employee::findOrFail($id);
 
         $employee->name = $request->name;
         $employee->email = $request->email;
@@ -79,5 +81,72 @@ class EmployeeController extends Controller
         $employee->save();
 
         return redirect('/admin/employees/');
+    }
+
+    public function profile()
+    {
+        $user = Session::get('user');
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        // Jika user adalah array (customer), redirect
+        if (is_array($user)) {
+            return redirect('/login');
+        }
+
+        // Pastikan user adalah Employee
+        $employee = Employee::findOrFail($user->id);
+        return view('admin.employees.profile', [
+            'employee' => $employee
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Session::get('user');
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        // Jika user adalah array (customer), redirect
+        if (is_array($user)) {
+            return redirect('/login');
+        }
+
+        $employee = Employee::findOrFail($user->id);
+
+        // Validasi
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:employees,email,' . $employee->id,
+            'phone' => 'nullable|string|max:20',
+            'ktp' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:6',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        $employee->name = $request->name;
+        $employee->email = $request->email;
+        
+        if ($request->filled('password')) {
+            $employee->password = Hash::make($request->password);
+        }
+
+        $employee->phone = $request->phone;
+        $employee->ktp = $request->ktp;
+
+        // Update profile picture
+        if ($request->hasFile('profile_picture')) {
+            $profile_picture = $request->file('profile_picture')->store('photos', 'public');
+            $employee->profile_picture = basename($profile_picture);
+        }
+
+        $employee->save();
+
+        // Update session dengan data terbaru
+        Session::put('user', $employee);
+
+        return redirect()->route('employee.profile')->with('success', 'Profil berhasil diperbarui');
     }
 }
