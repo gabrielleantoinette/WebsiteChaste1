@@ -94,7 +94,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Alamat Lengkap</label>
                         <input type="text" name="address"
-                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black">
+                            class="w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-black outline-none text-black" required>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
