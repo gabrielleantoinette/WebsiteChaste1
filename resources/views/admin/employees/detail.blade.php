@@ -1,5 +1,9 @@
 @extends('layouts.admin')
 
+@php
+use Illuminate\Support\Facades\Storage;
+@endphp
+
 @section('content')
     <div class="max-w-5xl mx-auto px-4 sm:px-0">
         <h1 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-800 border-b pb-2">Detail Pegawai</h1>
@@ -68,7 +72,7 @@
                 <div class="space-y-3 text-center lg:text-left">
                     <label class="block text-xs sm:text-sm font-medium text-gray-700">Foto Wajah</label>
                     @if ($employee->profile_picture)
-                        <img src="{{ asset('storage/photos/' . $employee->profile_picture) }}"
+                        <img src="{{ Storage::url('photos/' . $employee->profile_picture) }}"
                              class="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-full mx-auto lg:mx-0 border shadow">
                     @else
                         <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gray-200 flex items-center justify-center mx-auto lg:mx-0">

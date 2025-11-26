@@ -376,11 +376,11 @@
                                     form.appendChild(input);
                                 });
                             } else {
-                                const input = document.createElement('input');
-                                input.type = 'hidden';
-                                input.name = key;
-                                input.value = value;
-                                form.appendChild(input);
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = key;
+                            input.value = value;
+                            form.appendChild(input);
                             }
                         }
                     }

@@ -1,3 +1,7 @@
+@php
+use Illuminate\Support\Facades\Storage;
+@endphp
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -32,7 +36,7 @@
                 @csrf
                 <div class="flex flex-col items-center mb-6">
                     @if ($customer->profile_picture)
-                        <img src="{{ asset('storage/photos/' . $customer->profile_picture) }}" alt="Foto Profil" class="w-30 h-30 rounded-full object-cover" style="width:120px;height:120px;">
+                        <img src="{{ Storage::url('photos/' . $customer->profile_picture) }}" alt="Foto Profil" class="w-30 h-30 rounded-full object-cover" style="width:120px;height:120px;">
                     @else
                         <div class="w-30 h-30 rounded-full bg-gray-200 flex items-center justify-center text-4xl font-bold text-gray-500" style="width:120px;height:120px;">
                             {{ strtoupper(substr($customer->name,0,1)) }}

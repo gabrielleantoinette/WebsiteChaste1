@@ -30,7 +30,8 @@ class DashboardController extends Controller
         // Recent invoices dengan limit untuk performa
         $recentInvoices = HInvoice::with('customer')
                         ->whereDate('receive_date', $today)
-                        ->orderBy('receive_date', 'desc')
+                        ->orderBy('created_at', 'desc')
+                        ->orderBy('id', 'desc')
                         ->limit(10)
                         ->get();
 

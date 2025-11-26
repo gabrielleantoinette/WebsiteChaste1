@@ -6,6 +6,7 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
 {
@@ -74,6 +75,10 @@ class EmployeeController extends Controller
 
         // Ganti ke profile_picture (bukan photo)
         if ($request->hasFile('profile_picture')) {
+            // Hapus foto lama jika ada
+            if ($employee->profile_picture && Storage::disk('public')->exists('photos/' . $employee->profile_picture)) {
+                Storage::disk('public')->delete('photos/' . $employee->profile_picture);
+            }
             $profile_picture = $request->file('profile_picture')->store('photos', 'public');
             $employee->profile_picture = basename($profile_picture);
         }
@@ -138,6 +143,10 @@ class EmployeeController extends Controller
 
         // Update profile picture
         if ($request->hasFile('profile_picture')) {
+            // Hapus foto lama jika ada
+            if ($employee->profile_picture && Storage::disk('public')->exists('photos/' . $employee->profile_picture)) {
+                Storage::disk('public')->delete('photos/' . $employee->profile_picture);
+            }
             $profile_picture = $request->file('profile_picture')->store('photos', 'public');
             $employee->profile_picture = basename($profile_picture);
         }

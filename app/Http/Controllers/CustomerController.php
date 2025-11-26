@@ -97,6 +97,10 @@ class CustomerController extends Controller
             $customer->active = $request->active === 'true' || $request->active === true;
         }
         if ($request->hasFile('profile_picture')) {
+            // Hapus foto lama jika ada
+            if ($customer->profile_picture && Storage::disk('public')->exists('photos/' . $customer->profile_picture)) {
+                Storage::disk('public')->delete('photos/' . $customer->profile_picture);
+            }
             $profile_picture = $request->file('profile_picture')->store('photos', 'public');
             $customer->profile_picture = basename($profile_picture);
         }

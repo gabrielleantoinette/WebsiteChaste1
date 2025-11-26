@@ -65,7 +65,7 @@ class InvoiceController extends Controller
         $pendingInvoices = HInvoice::whereIn('status', ['Menunggu Pembayaran', 'Menunggu Konfirmasi Pembayaran'])->count();
         $totalSales = HInvoice::sum('grand_total');
         
-        $invoices = $query->orderBy('receive_date', 'desc')->paginate(10);
+        $invoices = $query->orderBy('created_at', 'desc')->orderBy('id', 'desc')->paginate(10);
         
         return view('admin.invoices.view', compact('invoices', 'totalInvoices', 'completedInvoices', 'pendingInvoices', 'totalSales'));
     }
