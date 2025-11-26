@@ -532,8 +532,17 @@
             return null;
         }
 
+        // Flag untuk mencegah multiple API calls
+        let isCheckingShipping = false;
+        let lastCheckedCity = '';
+
         // Check shipping cost via Biteship
         function checkBiteshipCost() {
+            // Prevent multiple simultaneous calls
+            if (isCheckingShipping) {
+                return;
+            }
+
             const addressText = document.getElementById('address').value.trim();
             
             if (!addressText || addressText.length < 5) {
@@ -545,9 +554,15 @@
                 showShippingError('Mohon cantumkan nama kota/kabupaten di alamat pengiriman (contoh: Jl. Contoh, Kabupaten Banyuwangi, Jawa Timur)');
                 return;
             }
-            
-            // Debug log
-            console.log('Extracted city name:', cityName);
+
+            // Skip jika city sama dengan yang baru saja dicek
+            if (lastCheckedCity === cityName) {
+                return;
+            }
+
+            // Set flag dan update last checked city
+            isCheckingShipping = true;
+            lastCheckedCity = cityName;
 
             const weight = calculateTotalWeight();
             const loadingEl = document.getElementById('shippingLoading');
@@ -561,7 +576,6 @@
 
             // Call API - use route helper or base URL
             const shippingUrl = '{{ route("shipping.check-cost") }}';
-            console.log('Shipping URL:', shippingUrl);
             fetch(shippingUrl, {
                 method: 'POST',
                 headers: {
@@ -587,34 +601,19 @@
             })
             .then(data => {
                 loadingEl.classList.add('hidden');
-                
-                console.log('Shipping API Response:', data);
+                isCheckingShipping = false;
                 
                 if (data.success) {
-                    console.log('Couriers data:', data.couriers);
-                    console.log('Total couriers:', data.couriers ? data.couriers.length : 0);
-                    
-                    // Log detail setiap courier
-                    if (data.couriers && Array.isArray(data.couriers)) {
-                        data.couriers.forEach((courier, index) => {
-                            console.log(`Courier #${index}:`, {
-                                name: courier.courier_name,
-                                code: courier.courier,
-                                services_count: courier.services ? courier.services.length : 0,
-                                services: courier.services
-                            });
-                        });
-                    }
-                    
                     displayShippingOptions(data.couriers, data.destination_city);
                 } else {
-                    console.error('Biteship API Error:', data);
+                    // Hanya tampilkan error di UI, tidak perlu console.error yang berlebihan
                     showShippingError(data.message || 'Gagal mendapatkan data ongkir');
                 }
             })
             .catch(error => {
                 loadingEl.classList.add('hidden');
-                console.error('Error:', error);
+                isCheckingShipping = false;
+                // Hanya tampilkan error di UI
                 showShippingError('Terjadi kesalahan saat menghitung ongkir: ' + error.message);
             });
         }
@@ -624,14 +623,7 @@
             const container = document.getElementById('shippingOptionsList');
             container.innerHTML = '';
 
-            console.log('displayShippingOptions called with:', {
-                couriers: couriers,
-                couriers_length: couriers ? couriers.length : 0,
-                destinationCity: destinationCity
-            });
-
             if (!couriers || couriers.length === 0) {
-                console.warn('No couriers available');
                 showShippingError('Tidak ada layanan pengiriman tersedia untuk tujuan ini.');
                 return;
             }
@@ -700,9 +692,19 @@
         // Variabel PHP untuk JavaScript
         const bolehCOD = @json($bolehCOD ?? false);
         
+        // Debounce untuk checkShippingOptions
+        let checkShippingTimeout = null;
+        
         function checkShippingOptions() {
-            const addressText = document.getElementById('address').value.toLowerCase();
-            const isSurabaya = addressText.includes('surabaya');
+            // Clear previous timeout
+            if (checkShippingTimeout) {
+                clearTimeout(checkShippingTimeout);
+            }
+            
+            // Debounce: tunggu 500ms setelah user selesai mengetik
+            checkShippingTimeout = setTimeout(() => {
+                const addressText = document.getElementById('address').value.toLowerCase();
+                const isSurabaya = addressText.includes('surabaya');
             
             const kurirOption = document.getElementById('kurirOption');
             const kurirNotAvailable = document.getElementById('kurirNotAvailable');
@@ -810,6 +812,7 @@
                 // Cek ongkir via Biteship
                 checkBiteshipCost();
             }
+            }, 500); // Debounce 500ms
         }
 
         function updateShippingCost(cost, courier = '', service = '', serviceCode = '') {
@@ -954,9 +957,124 @@
             }
         });
         
-        // Panggil checkShippingOptions saat halaman dimuat untuk inisialisasi
+        // Panggil checkShippingOptions saat halaman dimuat untuk inisialisasi (tanpa debounce)
         document.addEventListener('DOMContentLoaded', function() {
-            checkShippingOptions();
+            // Clear timeout jika ada
+            if (checkShippingTimeout) {
+                clearTimeout(checkShippingTimeout);
+            }
+            // Panggil langsung tanpa debounce untuk inisialisasi
+            const addressText = document.getElementById('address').value.toLowerCase();
+            const isSurabaya = addressText.includes('surabaya');
+            
+            const kurirOption = document.getElementById('kurirOption');
+            const kurirNotAvailable = document.getElementById('kurirNotAvailable');
+            const shippingOptionsList = document.getElementById('shippingOptionsList');
+            const shippingLoading = document.getElementById('shippingLoading');
+            const shippingError = document.getElementById('shippingError');
+            
+            // Update COD option berdasarkan alamat pengiriman dan syarat transaksi
+            const codRadio = document.querySelector('input[name="payment_method"][value="cod"]');
+            const codLabel = document.getElementById('codLabel');
+            const codReasonText = codLabel ? codLabel.querySelector('.text-xs.text-red-500') : null;
+            
+            // Jika alamat mengandung "Surabaya"
+            if (isSurabaya) {
+                // Tampilkan Kurir Perusahaan, sembunyikan opsi Biteship
+                if (kurirOption) {
+                    kurirOption.classList.remove('hidden');
+                }
+                if (kurirNotAvailable) {
+                    kurirNotAvailable.classList.add('hidden');
+                }
+                shippingOptionsList.innerHTML = '';
+                shippingLoading.classList.add('hidden');
+                shippingError.classList.add('hidden');
+                
+                // Set default ke kurir jika belum ada yang dipilih
+                const kurirRadio = kurirOption ? kurirOption.querySelector('input[value="kurir"]') : null;
+                if (kurirRadio && !document.querySelector('input[name="shipping_method"]:checked')) {
+                    kurirRadio.checked = true;
+                    updateShippingCost(0, 'kurir', 'Kurir Perusahaan');
+                }
+                
+                // Update status COD berdasarkan syarat
+                if (bolehCOD) {
+                    // Aktifkan COD jika sudah punya transaksi lunas
+                    if (codLabel) {
+                        codLabel.classList.remove('opacity-50', 'cursor-not-allowed');
+                        codLabel.classList.add('hover:bg-gray-100', 'cursor-pointer');
+                    }
+                    if (codRadio) {
+                        codRadio.disabled = false;
+                    }
+                    if (codReasonText) {
+                        codReasonText.textContent = '';
+                        codReasonText.classList.add('hidden');
+                    }
+                } else {
+                    // Nonaktifkan COD jika belum punya transaksi lunas
+                    if (codLabel) {
+                        codLabel.classList.add('opacity-50', 'cursor-not-allowed');
+                        codLabel.classList.remove('hover:bg-gray-100', 'cursor-pointer');
+                    }
+                    if (codRadio) {
+                        codRadio.disabled = true;
+                        if (codRadio.checked) {
+                            codRadio.checked = false;
+                            // Pilih transfer sebagai default jika COD terpilih
+                            const transferRadio = document.querySelector('input[name="payment_method"][value="transfer"]');
+                            if (transferRadio) {
+                                transferRadio.checked = true;
+                                showPaymentInfo();
+                            }
+                        }
+                    }
+                    if (codReasonText) {
+                        codReasonText.textContent = 'Anda harus minimal 1x transaksi selesai dan lunas sebelum boleh menggunakan COD.';
+                        codReasonText.classList.remove('hidden');
+                    }
+                }
+            } else {
+                // Jika bukan Surabaya, sembunyikan Kurir Perusahaan
+                if (kurirOption) {
+                    kurirOption.classList.add('hidden');
+                    const kurirRadio = kurirOption.querySelector('input[value="kurir"]');
+                    if (kurirRadio && kurirRadio.checked) {
+                        kurirRadio.checked = false;
+                    }
+                }
+                if (kurirNotAvailable) {
+                    kurirNotAvailable.classList.remove('hidden');
+                }
+                
+                // Nonaktifkan COD jika alamat bukan Surabaya
+                if (codLabel) {
+                    codLabel.classList.add('opacity-50', 'cursor-not-allowed');
+                    codLabel.classList.remove('hover:bg-gray-100', 'cursor-pointer');
+                }
+                if (codRadio) {
+                    codRadio.disabled = true;
+                    if (codRadio.checked) {
+                        codRadio.checked = false;
+                        // Pilih transfer sebagai default jika COD terpilih
+                        const transferRadio = document.querySelector('input[name="payment_method"][value="transfer"]');
+                        if (transferRadio) {
+                            transferRadio.checked = true;
+                            showPaymentInfo();
+                        }
+                    }
+                }
+                if (codReasonText) {
+                    codReasonText.textContent = 'COD hanya tersedia untuk pengiriman di Surabaya. Silakan pilih metode pembayaran lain.';
+                    codReasonText.classList.remove('hidden');
+                }
+                
+                // Cek ongkir via Biteship (hanya jika alamat sudah diisi)
+                if (addressText && addressText.length >= 5) {
+                    checkBiteshipCost();
+                }
+            }
             
             // Pastikan shipping cost ter-update jika sudah ada yang terpilih
             const selectedShipping = document.querySelector('input[name="shipping_method"]:checked');

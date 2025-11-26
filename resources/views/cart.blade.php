@@ -194,9 +194,6 @@
                             Rp 0
                         </div>
                     </div>
-                    <div class="text-sm text-gray-500 mt-2" id="totalDetail">
-                        Pilih item untuk melihat total
-                    </div>
                 </div>
 
                 <div class="flex justify-end mt-8">
@@ -415,14 +412,12 @@
         function updateTotal() {
             // Cek apakah elemen total ada (hanya ada jika cart tidak kosong)
             const totalHargaEl = document.getElementById('totalHarga');
-            const totalDetailEl = document.getElementById('totalDetail');
             
-            if (!totalHargaEl || !totalDetailEl) {
+            if (!totalHargaEl) {
                 return; // Cart kosong, tidak perlu update total
             }
             
             let total = 0;
-            let selectedItems = [];
             let checkboxes = document.querySelectorAll('.item-checkbox:checked');
             
             checkboxes.forEach(checkbox => {
@@ -431,34 +426,14 @@
                 if (item) {
                     const itemTotal = item.price * item.quantity;
                     total += itemTotal;
-                    
-                    // Tambahkan detail item
-                    const priceText = item.isNegotiated ? 
-                        `Rp ${item.price.toLocaleString('id-ID')} (Hasil Negosiasi)` : 
-                        `Rp ${item.price.toLocaleString('id-ID')}`;
-                    
-                    selectedItems.push({
-                        name: item.name,
-                        color: item.color,
-                        size: item.size,
-                        quantity: item.quantity,
-                        price: priceText,
-                        total: itemTotal
-                    });
                 }
             });
 
             // Update total harga
-            totalHargaEl.textContent = `Rp ${total.toLocaleString('id-ID')}`;
-            
-            // Update detail
-            if (selectedItems.length === 0) {
-                totalDetailEl.textContent = 'Pilih item untuk melihat total';
+            if (checkboxes.length === 0) {
+                totalHargaEl.textContent = 'Rp 0';
             } else {
-                let detailText = selectedItems.map(item => 
-                    `${item.name} (${item.color}, ${item.size}) - ${item.quantity} pcs × ${item.price} = Rp ${item.total.toLocaleString('id-ID')}`
-                ).join('\n');
-                totalDetailEl.innerHTML = detailText.replace(/\n/g, '<br>');
+                totalHargaEl.textContent = `Rp ${total.toLocaleString('id-ID')}`;
             }
         }
 
