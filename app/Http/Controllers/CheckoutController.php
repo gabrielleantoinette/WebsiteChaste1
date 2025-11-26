@@ -147,19 +147,8 @@ class CheckoutController extends Controller
             ->whereIn('status', ['lunas', 'diterima'])
             ->exists();
 
-        // Cek apakah customer boleh menggunakan COD (minimal 1x transaksi selesai dan lunas)
-        // Transaksi selesai dan lunas: status 'diterima' atau 'lunas' dengan payment is_paid = 1
-        // Atau status 'diterima'/'lunas' dengan payment method COD (karena COD dibayar saat pengiriman)
-        $bolehCOD = \App\Models\HInvoice::where('customer_id', $customerId)
-            ->whereIn('status', ['diterima', 'lunas'])
-            ->where(function($query) {
-                $query->whereHas('payments', function($q) {
-                    $q->where('is_paid', 1);
-                })->orWhereHas('payments', function($q) {
-                    $q->where('method', 'cod')->where('is_paid', 1);
-                });
-            })
-            ->exists();
+        // COD hanya perlu syarat alamat Surabaya, tidak perlu transaksi selesai dan lunas
+        $bolehCOD = $isFromSurabaya;
 
         $hutangInvoices = \App\Models\HInvoice::where('customer_id', $customerId)
             ->with(['payments' => function($q) {

@@ -255,24 +255,6 @@ class InvoiceController extends Controller
             if (!$isFromSurabaya && !$isAlamatSurabaya) {
                 return redirect()->back()->with('error', 'COD hanya tersedia untuk pengiriman di Surabaya. Silakan pilih metode pembayaran lain.');
             }
-            
-            // Cek apakah customer sudah punya minimal 1x transaksi selesai dan lunas
-            // Transaksi selesai dan lunas: status 'diterima' atau 'lunas' dengan payment is_paid = 1
-            // Atau status 'diterima'/'lunas' dengan payment method COD (karena COD dibayar saat pengiriman)
-            $hasCompletedTransaction = HInvoice::where('customer_id', $customerId)
-                ->whereIn('status', ['diterima', 'lunas'])
-                ->where(function($query) {
-                    $query->whereHas('payments', function($q) {
-                        $q->where('is_paid', 1);
-                    })->orWhereHas('payments', function($q) {
-                        $q->where('method', 'cod')->where('is_paid', 1);
-                    });
-                })
-                ->exists();
-            
-            if (!$hasCompletedTransaction) {
-                return redirect()->back()->with('error', 'Anda harus minimal 1x transaksi selesai dan lunas sebelum boleh menggunakan COD.');
-            }
         }
         
         if ($paymentMethod == 'transfer') {

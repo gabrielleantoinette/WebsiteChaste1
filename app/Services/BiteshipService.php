@@ -25,6 +25,7 @@ class BiteshipService
     public function getAreas($input, $type = 'single')
     {
         try {
+            // Biteship menggunakan format authorization langsung dengan token (tanpa Bearer)
             $response = Http::withHeaders([
                 'authorization' => $this->apiKey,
                 'content-type' => 'application/json'
@@ -33,18 +34,22 @@ class BiteshipService
                 'input' => $input,
                 'type' => $type
             ]);
+            
+            // Log response untuk debugging
+            if (!$response->successful()) {
+                Log::error('Biteship getAreas failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'input' => $input,
+                    'api_key_prefix' => substr($this->apiKey, 0, 20) . '...'
+                ]);
+            }
 
             if ($response->successful()) {
                 $data = $response->json();
                 if (isset($data['areas']) && !empty($data['areas'])) {
                     return $data['areas'];
                 }
-            } else {
-                Log::error('Biteship getAreas failed', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                    'input' => $input
-                ]);
             }
             return [];
         } catch (\Exception $e) {
@@ -132,24 +137,35 @@ class BiteshipService
     public function getRates($originAreaId, $destinationAreaId, $weight, $couriers = ['jne', 'pos', 'tiki'])
     {
         try {
-            // Log API key yang digunakan (hanya 20 karakter pertama untuk security)
-            Log::info('Biteship getRates request', [
-                'api_key_prefix' => substr($this->apiKey, 0, 20) . '...',
-                'base_url' => $this->baseUrl,
-                'origin_area_id' => $originAreaId,
-                'destination_area_id' => $destinationAreaId,
-                'weight' => $weight,
-                'couriers' => $couriers
-            ]);
+            // Validasi area ID sebelum request
+            if (empty($originAreaId) || empty($destinationAreaId)) {
+                Log::error('Biteship getRates: Invalid area IDs', [
+                    'origin_area_id' => $originAreaId,
+                    'destination_area_id' => $destinationAreaId
+                ]);
+                return [];
+            }
             
-            // Biteship menerima couriers sebagai string (comma-separated) atau array
-            // Tapi lebih aman pakai string untuk menghindari error
-            $couriersString = is_array($couriers) ? implode(',', $couriers) : $couriers;
+            // Validasi weight minimal
+            if ($weight < 1) {
+                Log::error('Biteship getRates: Invalid weight', [
+                    'weight' => $weight
+                ]);
+                return [];
+            }
             
-            $response = Http::withHeaders([
-                'authorization' => $this->apiKey,
-                'content-type' => 'application/json'
-            ])->post($this->baseUrl . '/rates/couriers', [
+            // Biteship menerima couriers sebagai array
+            // Pastikan couriers adalah array
+            $couriersArray = is_array($couriers) ? $couriers : explode(',', $couriers);
+            // Filter couriers yang valid (hapus yang kosong)
+            $couriersArray = array_filter(array_map('trim', $couriersArray));
+            
+            if (empty($couriersArray)) {
+                Log::error('Biteship getRates: No valid couriers provided');
+                return [];
+            }
+            
+            $requestPayload = [
                 'origin_area_id' => $originAreaId,
                 'destination_area_id' => $destinationAreaId,
                 'items' => [
@@ -163,8 +179,22 @@ class BiteshipService
                         'weight' => $weight
                     ]
                 ],
-                'couriers' => $couriersString
+                'couriers' => $couriersArray
+            ];
+            
+            Log::info('Biteship getRates request', [
+                'api_key_prefix' => substr($this->apiKey, 0, 20) . '...',
+                'base_url' => $this->baseUrl,
+                'origin_area_id' => $originAreaId,
+                'destination_area_id' => $destinationAreaId,
+                'weight' => $weight,
+                'couriers' => $couriersArray
             ]);
+            
+            $response = Http::withHeaders([
+                'authorization' => $this->apiKey,
+                'content-type' => 'application/json'
+            ])->post($this->baseUrl . '/rates/couriers', $requestPayload);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -200,16 +230,33 @@ class BiteshipService
                 ]);
             } else {
                 $errorBody = $response->json();
+                $statusCode = $response->status();
+                
                 Log::error('Biteship getRates failed', [
-                    'status' => $response->status(),
+                    'status' => $statusCode,
                     'body' => $response->body(),
                     'error_json' => $errorBody,
                     'origin_area_id' => $originAreaId,
                     'destination_area_id' => $destinationAreaId,
                     'weight' => $weight,
                     'couriers' => $couriers,
-                    'api_key_type' => str_starts_with($this->apiKey, 'biteship_test') ? 'testing' : 'production'
+                    'couriers_array' => $couriersArray,
+                    'api_key_type' => str_starts_with($this->apiKey, 'biteship_test') ? 'testing' : 'production',
+                    'api_key_prefix' => substr($this->apiKey, 0, 20) . '...'
                 ]);
+                
+                // Handle specific error codes
+                if ($statusCode === 401) {
+                    Log::error('Biteship API: Unauthorized - API key mungkin tidak valid atau expired');
+                } elseif ($statusCode === 400) {
+                    Log::error('Biteship API: Bad Request - Format request atau parameter tidak valid', [
+                        'error_details' => $errorBody
+                    ]);
+                } elseif ($statusCode === 403) {
+                    Log::error('Biteship API: Forbidden - API key tidak memiliki permission');
+                } elseif ($statusCode === 404) {
+                    Log::error('Biteship API: Not Found - Endpoint atau resource tidak ditemukan');
+                }
                 
                 // Jika error "No sufficient balance" dan menggunakan testing key, log warning khusus
                 if (isset($errorBody['error']) && 
