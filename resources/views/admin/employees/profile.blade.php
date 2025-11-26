@@ -22,9 +22,17 @@ use Illuminate\Support\Facades\Storage;
             {{-- Foto Profil --}}
             <div class="flex flex-col items-center mb-6">
                 @if ($employee->profile_picture)
-                    <img src="{{ Storage::url('photos/' . $employee->profile_picture) }}" 
+                    @php
+                        $cleanPath = ltrim('photos/' . $employee->profile_picture, '/');
+                        $imageUrl = url('/public/storage/' . $cleanPath);
+                    @endphp
+                    <div style="display: none;" class="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-4xl font-bold text-gray-500 border-4 border-teal-200 profile-fallback">
+                        {{ strtoupper(substr($employee->name, 0, 1)) }}
+                    </div>
+                    <img src="{{ $imageUrl }}" 
                          alt="Foto Profil" 
-                         class="w-32 h-32 rounded-full object-cover border-4 border-teal-200 shadow-md">
+                         class="w-32 h-32 rounded-full object-cover border-4 border-teal-200 shadow-md profile-image"
+                         onerror="this.onerror=null; this.style.display='none'; document.querySelector('.profile-fallback').style.display='flex';">
                 @else
                     <div class="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-4xl font-bold text-gray-500 border-4 border-teal-200">
                         {{ strtoupper(substr($employee->name, 0, 1)) }}

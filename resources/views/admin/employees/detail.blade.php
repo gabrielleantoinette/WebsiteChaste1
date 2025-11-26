@@ -72,8 +72,16 @@ use Illuminate\Support\Facades\Storage;
                 <div class="space-y-3 text-center lg:text-left">
                     <label class="block text-xs sm:text-sm font-medium text-gray-700">Foto Wajah</label>
                     @if ($employee->profile_picture)
-                        <img src="{{ Storage::url('photos/' . $employee->profile_picture) }}"
-                             class="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-full mx-auto lg:mx-0 border shadow">
+                        @php
+                            $cleanPath = ltrim('photos/' . $employee->profile_picture, '/');
+                            $imageUrl = url('/public/storage/' . $cleanPath);
+                        @endphp
+                        <div style="display: none;" class="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gray-200 flex items-center justify-center mx-auto lg:mx-0 profile-fallback">
+                            <span class="text-gray-500 text-xs sm:text-sm">Belum ada foto</span>
+                        </div>
+                        <img src="{{ $imageUrl }}"
+                             class="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-full mx-auto lg:mx-0 border shadow profile-image"
+                             onerror="this.onerror=null; this.style.display='none'; document.querySelector('.profile-fallback').style.display='flex';">
                     @else
                         <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gray-200 flex items-center justify-center mx-auto lg:mx-0">
                             <span class="text-gray-500 text-xs sm:text-sm">Belum ada foto</span>

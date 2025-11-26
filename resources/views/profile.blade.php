@@ -36,7 +36,14 @@ use Illuminate\Support\Facades\Storage;
                 @csrf
                 <div class="flex flex-col items-center mb-6">
                     @if ($customer->profile_picture)
-                        <img src="{{ Storage::url('photos/' . $customer->profile_picture) }}" alt="Foto Profil" class="w-30 h-30 rounded-full object-cover" style="width:120px;height:120px;">
+                        @php
+                            $cleanPath = ltrim('photos/' . $customer->profile_picture, '/');
+                            $imageUrl = url('/public/storage/' . $cleanPath);
+                        @endphp
+                        <div style="display: none;" class="w-30 h-30 rounded-full bg-gray-200 flex items-center justify-center text-4xl font-bold text-gray-500 profile-fallback" style="width:120px;height:120px;">
+                            {{ strtoupper(substr($customer->name,0,1)) }}
+                        </div>
+                        <img src="{{ $imageUrl }}" alt="Foto Profil" class="w-30 h-30 rounded-full object-cover profile-image" style="width:120px;height:120px;" onerror="this.onerror=null; this.style.display='none'; document.querySelector('.profile-fallback').style.display='flex';">
                     @else
                         <div class="w-30 h-30 rounded-full bg-gray-200 flex items-center justify-center text-4xl font-bold text-gray-500" style="width:120px;height:120px;">
                             {{ strtoupper(substr($customer->name,0,1)) }}
