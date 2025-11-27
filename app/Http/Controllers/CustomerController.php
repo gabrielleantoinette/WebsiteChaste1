@@ -620,12 +620,18 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $customerId = $user['id'];
         
+        // Ambil semua invoice customer dengan relasi payments
         $invoices = \App\Models\HInvoice::where('customer_id', $customerId)
-            ->whereIn('status', ['Menunggu Pembayaran', 'Menunggu Konfirmasi Pembayaran'])
+            ->with(['payments' => function($q) {
+                $q->where('is_paid', 0);
+            }])
             ->get();
-            
+        
+        // Filter invoice yang memiliki payment method COD atau hutang dengan is_paid = 0
         $filtered = $invoices->filter(function($inv) {
-            return $inv->grand_total > 0;
+            $p = $inv->payments->first();
+            // Ambil invoice dengan payment method COD atau hutang yang belum lunas
+            return $p && in_array($p->method, ['cod', 'hutang']) && $p->is_paid == 0 && $inv->grand_total > 0;
         });
         
         $totalHutang = $filtered->sum(function($inv) {

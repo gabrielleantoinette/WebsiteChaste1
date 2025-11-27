@@ -154,8 +154,8 @@
                         }
                         
                         $date = \Carbon\Carbon::parse($transaction->created_at);
-                        $details = $transaction->details;
-                        $totalItems = $details->sum('quantity');
+                        $details = $transaction->details ?? collect();
+                        $totalItems = $details->sum('quantity') ?? 0;
                     @endphp
                     
                     <div class="bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:shadow-sm transition-all duration-200 overflow-hidden">
@@ -254,7 +254,16 @@
                                     @endif
                                     @else
                                         <div class="text-sm text-gray-500 italic">
-                                            Detail produk sedang dimuat...
+                                            @php
+                                                $paymentMethod = $transaction->payments->first()->method ?? null;
+                                                if ($paymentMethod == 'cod') {
+                                                    echo 'Pembayaran COD (Cash on Delivery)';
+                                                } elseif ($paymentMethod == 'hutang') {
+                                                    echo 'Pembayaran Hutang';
+                                                } else {
+                                                    echo 'Detail produk sedang dimuat...';
+                                                }
+                                            @endphp
                                         </div>
                                     @endif
                                 </div>
@@ -264,12 +273,20 @@
                                     <div class="text-right">
                                         <p class="text-xs text-gray-500 mb-1">Total Pembayaran</p>
                                         <p class="text-lg font-bold text-teal-600">Rp {{ number_format($transaction->grand_total, 0, ',', '.') }}</p>
+                                        @php
+                                            $paymentMethod = $transaction->payments->first()->method ?? null;
+                                        @endphp
+                                        @if($paymentMethod == 'cod')
+                                            <p class="text-xs text-orange-600 font-semibold mt-1">COD (Bayar saat terima)</p>
+                                        @elseif($paymentMethod == 'hutang')
+                                            <p class="text-xs text-red-600 font-semibold mt-1">Hutang (Belum Lunas)</p>
+                                        @endif
                                         @if($transaction->shipping_cost > 0)
                                             <p class="text-xs text-gray-500 mt-1">
-                                                {{ $totalItems }} barang + ongkir Rp {{ number_format($transaction->shipping_cost, 0, ',', '.') }}
+                                                {{ $totalItems > 0 ? $totalItems : '0' }} barang + ongkir Rp {{ number_format($transaction->shipping_cost, 0, ',', '.') }}
                                             </p>
                                         @else
-                                            <p class="text-xs text-gray-500 mt-1">{{ $totalItems }} barang</p>
+                                            <p class="text-xs text-gray-500 mt-1">{{ $totalItems > 0 ? $totalItems : '0' }} barang</p>
                                         @endif
                                     </div>
                                 <a href="{{ route('transaksi.detail', $transaction->id) }}"

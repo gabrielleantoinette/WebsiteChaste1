@@ -41,17 +41,28 @@
                             <td class="border px-2 py-1">{{ $inv->created_at->format('d-m-Y') }}</td>
                             <td class="border px-2 py-1">Rp {{ number_format($inv->grand_total, 0, ',', '.') }}</td>
                             <td class="border px-2 py-1">Rp {{ number_format($inv->grand_total - ($inv->paid_amount ?? 0), 0, ',', '.') }}</td>
-                            <td class="border px-2 py-1">Belum Lunas</td>
+                            <td class="border px-2 py-1">
+                                @php $p = $inv->payments->first(); @endphp
+                                @if($p && $p->method == 'cod')
+                                    COD (Belum Lunas)
+                                @elseif($p && $p->method == 'hutang')
+                                    Hutang (Belum Lunas)
+                                @else
+                                    Belum Lunas
+                                @endif
+                            </td>
                             <td class="border px-2 py-1">
                                 @php $p = $inv->payments->first(); @endphp
                                 @if($p && $p->method == 'hutang')
-                                    {{ $inv->due_date ? \Carbon\Carbon::parse($inv->due_date)->format('d-m-Y') : $inv->created_at->addMonth()->format('d-m-Y') }}
+                                    {{ $inv->due_date ? \Carbon\Carbon::parse($inv->due_date)->format('d-m-Y') : $inv->created_at->copy()->addMonth()->format('d-m-Y') }}
                                     @php
-                                        $jatuhTempo = $inv->due_date ? \Carbon\Carbon::parse($inv->due_date) : $inv->created_at->addMonth();
+                                        $jatuhTempo = $inv->due_date ? \Carbon\Carbon::parse($inv->due_date) : $inv->created_at->copy()->addMonth();
                                     @endphp
                                     @if(now()->gt($jatuhTempo) && ($inv->grand_total - ($inv->paid_amount ?? 0)) > 0)
                                         <span class="text-red-500 font-bold ml-1">(Terlambat)</span>
                                     @endif
+                                @elseif($p && $p->method == 'cod')
+                                    Bayar saat terima
                                 @else
                                     -
                                 @endif
