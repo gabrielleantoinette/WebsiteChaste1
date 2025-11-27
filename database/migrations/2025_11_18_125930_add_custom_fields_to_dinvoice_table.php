@@ -26,13 +26,28 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('dinvoice', function (Blueprint $table) {
-            $table->dropColumn([
-                'bahan_custom',
-                'ukuran_custom',
-                'jumlah_ring_custom',
-                'pakai_tali_custom',
-                'catatan_custom',
-            ]);
+            $columnsToDrop = [];
+            
+            // Cek apakah kolom ada sebelum drop
+            if (Schema::hasColumn('dinvoice', 'bahan_custom')) {
+                $columnsToDrop[] = 'bahan_custom';
+            }
+            if (Schema::hasColumn('dinvoice', 'ukuran_custom')) {
+                $columnsToDrop[] = 'ukuran_custom';
+            }
+            if (Schema::hasColumn('dinvoice', 'jumlah_ring_custom')) {
+                $columnsToDrop[] = 'jumlah_ring_custom';
+            }
+            if (Schema::hasColumn('dinvoice', 'pakai_tali_custom')) {
+                $columnsToDrop[] = 'pakai_tali_custom';
+            }
+            if (Schema::hasColumn('dinvoice', 'catatan_custom')) {
+                $columnsToDrop[] = 'catatan_custom';
+            }
+            
+            if (!empty($columnsToDrop)) {
+                $table->dropColumn($columnsToDrop);
+            }
         });
     }
 };
