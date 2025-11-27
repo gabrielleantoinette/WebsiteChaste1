@@ -177,7 +177,8 @@
                             <div class="flex flex-col md:flex-row gap-4">
                                 {{-- Product Images & Info --}}
                                 <div class="flex-1 space-y-3">
-                                    @foreach($details->take(3) as $detail)
+                                    @if($details && $details->count() > 0)
+                                        @foreach($details->take(3) as $detail)
                                         @php
                                             // Check if this is a custom item
                                             // Custom item: has kebutuhan_custom OR (no product_id or product_id = 0) AND no variant_id
@@ -249,6 +250,11 @@
                                     @if($details->count() > 3)
                                         <div class="text-xs text-gray-500 pt-2 border-t border-gray-100">
                                             +{{ $details->count() - 3 }} produk lainnya
+                                        </div>
+                                    @endif
+                                    @else
+                                        <div class="text-sm text-gray-500 italic">
+                                            Detail produk sedang dimuat...
                                         </div>
                                     @endif
                                 </div>

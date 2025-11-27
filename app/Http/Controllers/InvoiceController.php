@@ -263,33 +263,7 @@ class InvoiceController extends Controller
             ]);
         }
 
-        // cari apakah ini pesanan pertama customer?
-        $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
-
-        if ($paymentMethod == 'hutang') {
-            if ($isFirstOrder) {
-                return redirect()->back()->with('error', 'Anda harus minimal 1x transaksi lunas sebelum boleh berhutang.');
-            }
-            
-            $totalHutangSaatIni = HInvoice::where('customer_id', $customerId)
-                ->whereHas('payments', function($q) {
-                    $q->where('method', 'hutang')->where('is_paid', 0);
-                })
-                ->sum('grand_total');
-            
-            $limitHutang = 10000000; // 10 juta
-            if (($totalHutangSaatIni + $grandTotal) > $limitHutang) {
-                return redirect()->back()->with('error', 'Total hutang Anda akan melebihi limit Rp 10.000.000. Silakan lunasi hutang terlebih dahulu atau pilih metode pembayaran lain.');
-            }
-        }
-
-        if (!empty($cartIds)) {
-            $stockValidation = $this->validateStockAvailability($cartIds);
-            if (!$stockValidation['valid']) {
-                return redirect()->back()->with('error', $stockValidation['message']);
-            }
-        }
-
+        // Hitung subtotal produk terlebih dahulu untuk validasi hutang
         $subtotalProduk = 0;
         $cartIds = [];
         if ($request->has('cart_ids')) {
@@ -319,6 +293,35 @@ class InvoiceController extends Controller
         }
 
         $grandTotal = $subtotalProduk + $shippingCost;
+
+        // Validasi stok sebelum validasi hutang
+        if (!empty($cartIds)) {
+            $stockValidation = $this->validateStockAvailability($cartIds);
+            if (!$stockValidation['valid']) {
+                return redirect()->back()->with('error', $stockValidation['message']);
+            }
+        }
+
+        // cari apakah ini pesanan pertama customer?
+        $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
+
+        // Validasi hutang setelah grandTotal sudah dihitung
+        if ($paymentMethod == 'hutang') {
+            if ($isFirstOrder) {
+                return redirect()->back()->with('error', 'Anda harus minimal 1x transaksi lunas sebelum boleh berhutang.');
+            }
+            
+            $totalHutangSaatIni = HInvoice::where('customer_id', $customerId)
+                ->whereHas('payments', function($q) {
+                    $q->where('method', 'hutang')->where('is_paid', 0);
+                })
+                ->sum('grand_total');
+            
+            $limitHutang = 10000000; // 10 juta
+            if (($totalHutangSaatIni + $grandTotal) > $limitHutang) {
+                return redirect()->back()->with('error', 'Total hutang Anda akan melebihi limit Rp 10.000.000. Silakan lunasi hutang terlebih dahulu atau pilih metode pembayaran lain.');
+            }
+        }
 
         // Untuk COD, status tetap Dikemas tapi is_paid = 0 (belum lunas)
         // Untuk transfer, status Menunggu Konfirmasi Pembayaran

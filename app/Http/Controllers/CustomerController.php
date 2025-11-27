@@ -308,7 +308,8 @@ class CustomerController extends Controller
                     $query->orderBy('id', 'asc');
                 },
                 'details.product',
-                'details.variant'
+                'details.variant',
+                'payments'
             ])
             ->when($request->filled('status'), function ($query) use ($request, $statusMap) {
                 $key = $request->status;
@@ -326,7 +327,7 @@ class CustomerController extends Controller
                 $query->where(function ($q) use ($search) {
                     // Search by invoice code
                     $q->where('code', 'like', '%' . $search . '%')
-                      // Search by product name in invoice details
+                      // Search by product name in invoice details (jika ada details)
                       ->orWhereHas('details.product', function ($productQuery) use ($search) {
                           $productQuery->where('name', 'like', '%' . $search . '%');
                       });
@@ -334,6 +335,22 @@ class CustomerController extends Controller
             })
             ->orderBy('created_at', 'desc')
             ->get();
+        
+        // Debug: Log semua transaksi untuk memastikan COD muncul
+        \Log::info('Customer Transactions', [
+            'customer_id' => $user['id'],
+            'total' => $transactions->count(),
+            'transactions' => $transactions->map(function($t) {
+                return [
+                    'id' => $t->id,
+                    'code' => $t->code,
+                    'status' => $t->status,
+                    'payment_method' => $t->payments->first()->method ?? 'none',
+                    'created_at' => $t->created_at
+                ];
+            })->toArray()
+        ]);
+        
         return view('transaction-list', compact('transactions'));
     }
 
