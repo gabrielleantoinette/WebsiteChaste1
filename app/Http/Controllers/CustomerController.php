@@ -622,9 +622,7 @@ class CustomerController extends Controller
         
         // Ambil semua invoice customer dengan relasi payments
         $invoices = \App\Models\HInvoice::where('customer_id', $customerId)
-            ->with(['payments' => function($q) {
-                $q->where('is_paid', 0);
-            }])
+            ->with('payments')
             ->get();
         
         // Filter invoice yang memiliki payment method COD atau hutang dengan is_paid = 0
@@ -649,18 +647,70 @@ class CustomerController extends Controller
         $user = Session::get('user');
         $customerId = $user['id'];
         $request->validate([
+            'invoice_id' => 'required|exists:hinvoice,id',
             'amount_paid' => 'required|numeric|min:1000',
             'payment_date' => 'required|date',
             'payment_proof' => 'required|image|mimes:jpg,jpeg,png|max:2048',
             'notes' => 'nullable|string',
         ]);
+        
+        // Validasi invoice milik customer
+        $invoice = HInvoice::where('id', $request->invoice_id)
+            ->where('customer_id', $customerId)
+            ->with('payments')
+            ->firstOrFail();
+        
+        // Validasi payment method adalah hutang atau COD
+        $payment = $invoice->payments->first();
+        if (!$payment || !in_array($payment->method, ['hutang', 'cod'])) {
+            return back()->withErrors(['invoice_id' => 'Invoice ini bukan transaksi hutang atau COD.']);
+        }
+        
+        // Validasi jumlah pembayaran tidak melebihi sisa hutang
+        $currentPaid = $invoice->paid_amount ?? 0;
+        $remainingDebt = $invoice->grand_total - $currentPaid;
+        
+        if ($request->amount_paid > $remainingDebt) {
+            return back()->withErrors(['amount_paid' => 'Jumlah pembayaran tidak boleh melebihi sisa hutang (Rp ' . number_format($remainingDebt, 0, ',', '.') . ').']);
+        }
+        
+        // Simpan bukti pembayaran
         $proofPath = $request->file('payment_proof')->store('debt_proofs', 'public');
-        \App\Models\DebtPayment::create([
-            // 'purchase_order_id' => null, // jika ada relasi ke invoice, tambahkan di sini
-            'payment_date' => $request->payment_date,
+        
+        // Update paid_amount di hinvoice
+        $newPaidAmount = $currentPaid + $request->amount_paid;
+        $invoice->paid_amount = $newPaidAmount;
+        
+        // Simpan bukti pembayaran di transfer_proof (jika belum ada, atau append jika sudah ada)
+        if ($invoice->transfer_proof) {
+            $invoice->transfer_proof = $invoice->transfer_proof . ',' . $proofPath;
+        } else {
+            $invoice->transfer_proof = $proofPath;
+        }
+        
+        // Update status jika sudah lunas
+        if ($newPaidAmount >= $invoice->grand_total) {
+            $invoice->is_paid = true;
+            $invoice->status = 'Menunggu Konfirmasi Pembayaran'; // Akan dikonfirmasi oleh keuangan
+            // Update payment is_paid
+            $payment->is_paid = true;
+            $payment->save();
+        }
+        
+        $invoice->save();
+        
+        // Log untuk tracking
+        \Log::info('Customer debt payment uploaded', [
+            'customer_id' => $customerId,
+            'invoice_id' => $invoice->id,
+            'invoice_code' => $invoice->code,
             'amount_paid' => $request->amount_paid,
-            'notes' => $request->notes . ' | Bukti: ' . basename($proofPath),
+            'total_paid' => $newPaidAmount,
+            'grand_total' => $invoice->grand_total,
+            'is_lunas' => $newPaidAmount >= $invoice->grand_total,
+            'proof_path' => $proofPath
         ]);
+        
         return redirect()->route('profile.hutang')->with('success', 'Bukti pembayaran hutang berhasil diupload, menunggu verifikasi.');
     }
 
