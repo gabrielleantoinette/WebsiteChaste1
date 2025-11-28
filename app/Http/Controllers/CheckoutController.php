@@ -98,10 +98,7 @@ class CheckoutController extends Controller
                 'harga_custom'
             )
             ->where('user_id', $customerId)
-            ->where(function($query) {
-                $query->whereNull('variant_id')
-                      ->orWhere('variant_id', 0);
-            })
+            ->whereNull('variant_id')
             ->whereIn('id', $selectedItems)
             ->get();
 

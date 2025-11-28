@@ -144,7 +144,7 @@ class CartController extends Controller
 
         $cart = new Cart();
         $cart->user_id = $user['id'];
-        $cart->variant_id = 0;
+        $cart->variant_id = null; // Custom items don't have a variant
         $cart->quantity = $validated['quantity'];
         $cart->harga_custom = $validated['harga_custom'];
         $cart->kebutuhan_custom = $validated['kebutuhan_custom'];
