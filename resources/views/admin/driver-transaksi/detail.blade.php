@@ -1,6 +1,16 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $paymentMethod = $invoice->payments->first()->method ?? null;
+        $paymentType = $invoice->payments->first()->type ?? null;
+        $isCOD = $paymentMethod === 'cod';
+        $isDP = $paymentMethod === 'midtrans' && $paymentType === 'dp';
+        $remainingAmount = $invoice->remaining_amount ?? 0;
+        $dpAmount = $invoice->dp_amount ?? 0;
+        $dpPaidAt = $invoice->dp_paid_at;
+        $remainingPaidAt = $invoice->remaining_paid_at;
+    @endphp
     <div class="py-4 sm:py-5 lg:py-6 px-4 sm:px-0">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
             <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Detail Transaksi Kurir</h1>
@@ -36,10 +46,6 @@
                         {{ ucfirst($invoice->status) }}
                     </span>
                 </div>
-                @php
-                    $paymentMethod = $invoice->payments->first()->method ?? null;
-                    $isCOD = $paymentMethod === 'cod';
-                @endphp
                 @if($isCOD)
                 <div class="sm:col-span-2 bg-red-50 border-2 border-red-300 rounded-lg p-3 sm:p-4">
                     <div class="flex items-center gap-2 mb-2">
@@ -50,6 +56,56 @@
                     </div>
                     <p class="text-xs sm:text-sm text-red-700 mb-1">Pembayaran dilakukan saat pengiriman ke customer</p>
                     <p class="text-base sm:text-lg font-bold text-red-900">Total yang Harus Ditagih: Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</p>
+                </div>
+                @elseif($isDP && $dpPaidAt && $remainingAmount > 0 && !$remainingPaidAt)
+                <div class="sm:col-span-2 bg-red-50 border-2 border-red-300 rounded-lg p-3 sm:p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        {{-- <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg> --}}
+                        <p class="text-sm sm:text-base font-bold text-red-800"> PESANAN DP - HARUS MENAGIH SISA PEMBAYARAN</p>
+                    </div>
+                    <p class="text-xs sm:text-sm text-red-700 mb-2">Pembayaran sisa dilakukan saat pengiriman ke customer</p>
+                    <div class="space-y-1.5 text-xs sm:text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-red-700">Total Pesanan:</span>
+                            <span class="font-semibold text-red-900">Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-red-700">DP (50%) sudah dibayar:</span>
+                            <span class="font-semibold text-green-700">Rp {{ number_format($dpAmount, 0, ',', '.') }} ✓</span>
+                        </div>
+                        <div class="pt-1.5 border-t border-red-300">
+                            <div class="flex justify-between items-center">
+                                <span class="text-red-800 font-medium">Sisa yang harus ditagih:</span>
+                                <span class="text-base sm:text-lg font-bold text-red-900">Rp {{ number_format($remainingAmount, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @elseif($isDP && $dpPaidAt && $remainingPaidAt)
+                <div class="sm:col-span-2 bg-green-50 border-2 border-green-300 rounded-lg p-3 sm:p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-sm sm:text-base font-bold text-green-800">✅ PESANAN DP - SUDAH LUNAS</p>
+                    </div>
+                    <div class="space-y-2 text-xs sm:text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-green-700">Total Pesanan:</span>
+                            <span class="font-semibold text-green-900">Rp {{ number_format($invoice->grand_total, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-green-700">DP (50%) sudah dibayar:</span>
+                            <span class="font-semibold text-green-700">Rp {{ number_format($dpAmount, 0, ',', '.') }} ✓</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-green-700">Sisa sudah dibayar:</span>
+                            <span class="font-semibold text-green-700">Rp {{ number_format($remainingAmount, 0, ',', '.') }} ✓</span>
+                        </div>
+                    </div>
+                    <p class="text-xs sm:text-sm text-green-700 mt-2">Pembayaran sudah lengkap</p>
                 </div>
                 @endif
                 <div>
@@ -121,11 +177,11 @@
                             <th class="px-4 py-3 text-left font-semibold">No</th>
                             <th class="px-4 py-3 text-left font-semibold">Nama Produk</th>
                             <th class="px-4 py-3 text-left font-semibold">Warna</th>
-                            @if($isCOD)
+                            @if($isCOD || ($isDP && $dpPaidAt && $remainingAmount > 0 && !$remainingPaidAt))
                             <th class="px-4 py-3 text-left font-semibold">Harga</th>
                             @endif
                             <th class="px-4 py-3 text-left font-semibold">Jumlah</th>
-                            @if($isCOD)
+                            @if($isCOD || ($isDP && $dpPaidAt && $remainingAmount > 0 && !$remainingPaidAt))
                             <th class="px-4 py-3 text-left font-semibold">Subtotal</th>
                             @endif
                         </tr>
@@ -136,11 +192,11 @@
                                 <td class="px-4 py-3">{{ $loop->iteration }}</td>
                                 <td class="px-4 py-3">{{ $detail->product->name ?? '-' }}</td>
                                 <td class="px-4 py-3">{{ $detail->variant->color ?? '-' }}</td>
-                                @if($isCOD)
+                                @if($isCOD || ($isDP && $dpPaidAt && $remainingAmount > 0 && !$remainingPaidAt))
                                 <td class="px-4 py-3">Rp {{ number_format($detail->price ?? 0, 0, ',', '.') }}</td>
                                 @endif
                                 <td class="px-4 py-3">{{ $detail->quantity ?? 0 }}</td>
-                                @if($isCOD)
+                                @if($isCOD || ($isDP && $dpPaidAt && $remainingAmount > 0 && !$remainingPaidAt))
                                 <td class="px-4 py-3">Rp {{ number_format($detail->subtotal ?? 0, 0, ',', '.') }}</td>
                                 @endif
                             </tr>
@@ -165,7 +221,7 @@
                                 <span class="text-gray-600">Jumlah:</span>
                                 <span class="text-gray-900 font-semibold">{{ $detail->quantity ?? 0 }}</span>
                             </div>
-                            @if($isCOD)
+                            @if($isCOD || ($isDP && $dpPaidAt && $remainingAmount > 0 && !$remainingPaidAt))
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Harga:</span>
                                     <span class="text-gray-900">Rp {{ number_format($detail->price ?? 0, 0, ',', '.') }}</span>

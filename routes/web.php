@@ -29,7 +29,15 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
 
 Route::get('/', function () {
-    return view('welcome');
+    $reviews = \App\Models\ProductReview::with(['user', 'product'])
+        ->approved()
+        ->whereNotNull('comment')
+        ->where('comment', '!=', '')
+        ->orderBy('created_at', 'desc')
+        ->limit(6)
+        ->get();
+    
+    return view('welcome', compact('reviews'));
 });
 
 Route::get('/public/storage/{path}', function (string $path) {
@@ -154,6 +162,7 @@ Route::middleware([LoggedIn::class])->group(function () {
 
     Route::get('/profile', [CustomerController::class, 'viewProfile'])->name('profile');
     Route::post('/profile', [CustomerController::class, 'updateCustomerAction'])->name('profile.update');
+    Route::post('/profile/verify-password', [CustomerController::class, 'verifyPassword'])->name('profile.verify-password');
     Route::get('/profile/hutang', [CustomerController::class, 'detailHutang'])->name('profile.hutang');
     Route::post('/profile/hutang/upload', [CustomerController::class, 'uploadPelunasanHutang'])->name('profile.hutang.upload');
 

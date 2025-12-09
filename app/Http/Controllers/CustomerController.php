@@ -9,6 +9,7 @@ use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 use App\Models\Returns;
 use App\Services\NotificationService;
 use Carbon\Carbon;
@@ -91,7 +92,7 @@ class CustomerController extends Controller
 
         $customer->fill($validated);
         if ($request->filled('password')) {
-            $customer->password = $request->password;
+            $customer->password = Hash::make($request->password);
         }
         if ($request->has('active')) {
             $customer->active = $request->active === 'true' || $request->active === true;
@@ -110,6 +111,55 @@ class CustomerController extends Controller
             return redirect()->route('profile')->with('success', 'Profil berhasil diperbarui!');
         } else {
             return redirect('/admin/customers/detail/' . $id)->with('success', 'Customer berhasil diperbarui!');
+        }
+    }
+
+    public function verifyPassword(Request $request)
+    {
+        $user = Session::get('user');
+        if (!$user || !isset($user['id'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda harus login terlebih dahulu.'
+            ], 401);
+        }
+
+        $customer = Customer::find($user['id']);
+        if (!$customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer tidak ditemukan.'
+            ], 404);
+        }
+
+        $currentPassword = $request->input('current_password');
+        if (!$currentPassword) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password saat ini wajib diisi.'
+            ], 400);
+        }
+
+        // Check if password is hashed or plain text (for backward compatibility)
+        $passwordMatch = false;
+        if (Hash::needsRehash($customer->password) || strlen($customer->password) < 60) {
+            // Plain text password (old data)
+            $passwordMatch = ($currentPassword === $customer->password);
+        } else {
+            // Hashed password
+            $passwordMatch = Hash::check($currentPassword, $customer->password);
+        }
+
+        if ($passwordMatch) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Password berhasil diverifikasi.'
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password saat ini salah.'
+            ], 400);
         }
     }
 

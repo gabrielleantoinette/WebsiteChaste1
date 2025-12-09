@@ -472,13 +472,44 @@ document.addEventListener('DOMContentLoaded', function() {
                         try {
                             errorData = JSON.parse(responseText);
                             console.error('Error data:', errorData);
-                            throw new Error(errorData.message || errorData.error || 'Upload gagal');
+                            
+                            // Extract pesan error yang user-friendly
+                            let errorMessage = 'Gagal mengunggah foto';
+                            
+                            // Cek apakah ada pesan di errors.photo (array)
+                            if (errorData.errors && errorData.errors.photo && Array.isArray(errorData.errors.photo)) {
+                                errorMessage = errorData.errors.photo[0];
+                            } 
+                            // Cek pesan langsung
+                            else if (errorData.message) {
+                                errorMessage = errorData.message;
+                            } 
+                            // Cek error field
+                            else if (errorData.error) {
+                                errorMessage = errorData.error;
+                            }
+                            
+                            throw new Error(errorMessage);
                         } catch (e) {
                             console.error('Error parsing JSON:', e);
-                            throw new Error(`Upload gagal: ${response.status} ${response.statusText}. Response: ${responseText.substring(0, 200)}`);
+                            // Jika error saat parsing, tampilkan pesan umum
+                            if (response.status === 422) {
+                                throw new Error('Format file tidak valid atau ukuran file terlalu besar. Pastikan file adalah gambar (jpeg, png, jpg) dan maksimal 2MB.');
+                            } else if (response.status === 413) {
+                                throw new Error('Ukuran file terlalu besar. Maksimal 2MB per gambar.');
+                            } else {
+                                throw new Error('Gagal mengunggah foto. Silakan coba lagi atau hubungi administrator.');
+                            }
                         }
                     } else {
-                        throw new Error(`Upload gagal: ${response.status} ${response.statusText}. Response: ${responseText ? responseText.substring(0, 200) : 'No response'}`);
+                        // Handle non-JSON response
+                        if (response.status === 413) {
+                            throw new Error('Ukuran file terlalu besar. Maksimal 2MB per gambar.');
+                        } else if (response.status === 422) {
+                            throw new Error('Format file tidak valid. Pastikan file adalah gambar (jpeg, png, jpg).');
+                        } else {
+                            throw new Error('Gagal mengunggah foto. Silakan coba lagi.');
+                        }
                     }
                 }
                 
@@ -496,7 +527,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     if (uploadMessage) {
-                        uploadMessage.innerHTML = '<p class="text-green-500 text-xs">✓ Foto berhasil diupload</p>';
+                        uploadMessage.innerHTML = `
+                            <div class="bg-green-50 border border-green-200 rounded-md p-3 mt-2">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <p class="text-green-700 text-xs font-medium">Foto berhasil diupload</p>
+                                </div>
+                            </div>
+                        `;
                     }
                     
                     const photoDiv = document.createElement('div');
@@ -527,13 +567,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 3000);
                 } else {
                     if (uploadMessage) {
-                        uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${data.message || 'Gagal mengunggah foto'}</p>`;
+                        uploadMessage.innerHTML = `
+                            <div class="bg-red-50 border border-red-200 rounded-md p-3 mt-2">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <p class="text-red-700 text-xs font-medium">${data.message || 'Gagal mengunggah foto'}</p>
+                                        <p class="text-red-600 text-xs mt-1">Pastikan file adalah gambar (jpeg, png, jpg) dan maksimal 2MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     }
                 }
             })
             .catch(error => {
                 if (uploadMessage) {
-                    uploadMessage.innerHTML = `<p class="text-red-500 text-xs">${error.message || 'Terjadi kesalahan saat mengunggah'}</p>`;
+                    // Tampilkan pesan error yang lebih user-friendly dengan styling yang lebih baik
+                    uploadMessage.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 rounded-md p-3 mt-2">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-red-700 text-xs font-medium">${error.message || 'Terjadi kesalahan saat mengunggah foto'}</p>
+                                    <p class="text-red-600 text-xs mt-1">Pastikan file adalah gambar (jpeg, png, jpg) dan maksimal 2MB</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 }
                 console.error('Upload Error:', error);
                 console.error('Error Details:', {

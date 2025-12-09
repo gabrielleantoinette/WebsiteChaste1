@@ -234,51 +234,56 @@
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Testimoni 1 -->
-                <div class="bg-[#D9F2F2] rounded-[16px] p-6 shadow-sm flex flex-col justify-between">
-                    <p class="text-sm text-gray-700 mb-6">
-                        Jorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit
-                        interdum, ac
-                        aliquet odio mattis.
-                        Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.
-                    </p>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <img src="{{ asset('images/avatar1.jpeg') }}" alt="John Doe"
-                                class="w-10 h-10 rounded-full object-cover">
-                            <div class="text-sm">
-                                <p class="font-semibold text-gray-800">John Doe</p>
-                                <p class="text-gray-500 text-xs">YouTuber</p>
+                @forelse($reviews->take(6) as $review)
+                    <div class="bg-[#D9F2F2] rounded-[16px] p-6 shadow-sm flex flex-col justify-between">
+                        <p class="text-sm text-gray-700 mb-6">
+                            "{{ Str::limit($review->comment, 200) }}"
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                @if($review->user && $review->user->profile_picture)
+                                    <img src="{{ asset('storage/photos/' . $review->user->profile_picture) }}" 
+                                         alt="{{ $review->user->name }}"
+                                         class="w-10 h-10 rounded-full object-cover">
+                                @else
+                                    <div class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-semibold">
+                                        {{ strtoupper(substr($review->user->name ?? 'U', 0, 1)) }}
+                                    </div>
+                                @endif
+                                <div class="text-sm">
+                                    <p class="font-semibold text-gray-800">{{ $review->user->name ?? 'Pelanggan' }}</p>
+                                    @if($review->product)
+                                        <p class="text-gray-500 text-xs">{{ $review->product->name }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 text-sm text-gray-700">
+                                <span class="text-xl">⭐</span> {{ number_format($review->rating, 1) }}
                             </div>
                         </div>
-                        <div class="flex items-center gap-1 text-sm text-gray-700">
-                            <span class="text-xl">⭐</span> 4.5
-                        </div>
                     </div>
-                </div>
-
-                <!-- Testimoni 2 -->
-                <div class="bg-[#D9F2F2] rounded-[16px] p-6 shadow-sm flex flex-col justify-between">
-                    <p class="text-sm text-gray-700 mb-6">
-                        Jorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit
-                        interdum, ac
-                        aliquet odio mattis.
-                        Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.
-                    </p>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <img src="{{ asset('images/avatar2.jpeg') }}" alt="John Doe"
-                                class="w-10 h-10 rounded-full object-cover">
-                            <div class="text-sm">
-                                <p class="font-semibold text-gray-800">John Doe</p>
-                                <p class="text-gray-500 text-xs">YouTuber</p>
+                @empty
+                    <!-- Fallback jika belum ada review -->
+                    <div class="bg-[#D9F2F2] rounded-[16px] p-6 shadow-sm flex flex-col justify-between">
+                        <p class="text-sm text-gray-700 mb-6">
+                            Belum ada testimoni dari pelanggan. Jadilah yang pertama memberikan review!
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-semibold">
+                                    ?
+                                </div>
+                                <div class="text-sm">
+                                    <p class="font-semibold text-gray-800">Belum ada review</p>
+                                    <p class="text-gray-500 text-xs">Menunggu review pertama</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 text-sm text-gray-700">
+                                <span class="text-xl">⭐</span> 0.0
                             </div>
                         </div>
-                        <div class="flex items-center gap-1 text-sm text-gray-700">
-                            <span class="text-xl">⭐</span> 4.5
-                        </div>
                     </div>
-                </div>
+                @endforelse
             </div>
         </section>
     </div>

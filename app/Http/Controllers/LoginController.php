@@ -25,7 +25,17 @@ class LoginController extends Controller
     {
         $employee = Employee::where('email', $request->email)->first();
         if ($employee) {
-            if ($employee->password == $request->password) {
+            // Check if password is hashed or plain text (for backward compatibility)
+            $passwordMatch = false;
+            if (Hash::needsRehash($employee->password) || strlen($employee->password) < 60) {
+                // Plain text password (old data)
+                $passwordMatch = ($employee->password == $request->password);
+            } else {
+                // Hashed password
+                $passwordMatch = Hash::check($request->password, $employee->password);
+            }
+            
+            if ($passwordMatch) {
                 Session::put('user', $employee);
                 if ($employee->role === 'gudang') {
                     return redirect('/admin/dashboard-gudang');
@@ -48,7 +58,22 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'Email tidak terdaftar. Silakan periksa kembali email Anda atau daftar akun baru.'])->withInput($request->only('email'));
         }
 
-        if ($credentials['password'] === $customer->password) {
+        // Check if password is hashed or plain text (for backward compatibility)
+        $passwordMatch = false;
+        if (Hash::needsRehash($customer->password) || strlen($customer->password) < 60) {
+            // Plain text password (old data)
+            $passwordMatch = ($credentials['password'] === $customer->password);
+            // Auto-upgrade to hashed password
+            if ($passwordMatch) {
+                $customer->password = Hash::make($credentials['password']);
+                $customer->save();
+            }
+        } else {
+            // Hashed password
+            $passwordMatch = Hash::check($credentials['password'], $customer->password);
+        }
+
+        if ($passwordMatch) {
             session([
                 'user' => [
                     'id' => $customer->id,
@@ -91,7 +116,7 @@ class LoginController extends Controller
         $customer->email = $request->email;
         $customer->name = $request->name;
         $customer->phone = $request->phone;
-        $customer->password = $request->password;
+        $customer->password = Hash::make($request->password);
         $customer->address = $request->address;
         $customer->city = $request->city;
         $customer->province = $request->province;

@@ -115,6 +115,14 @@ class DriverController extends Controller
         }
         
         $invoice->status = 'sampai';
+        // Jika ini pesanan DP, anggap driver menagih sisa saat selesai
+        if ($invoice->is_dp && $invoice->remaining_amount) {
+            $invoice->paid_amount = $invoice->grand_total;
+            $invoice->remaining_amount = 0;
+            $invoice->remaining_paid_at = now();
+            $invoice->remaining_collected_by = $invoice->driver_id;
+            $invoice->is_paid = 1;
+        }
         $invoice->save();
 
         $notificationService = app(NotificationService::class);

@@ -8,8 +8,8 @@ class HInvoice extends Model
 {
     //
     protected $table = 'hinvoice';
-    protected $fillable = ['code', 'customer_id', 'employee_id', 'driver_id', 'accountant_id', 'grand_total', 'status', 'is_paid', 'is_dp', 'dp_amount', 'paid_amount', 'due_date', 'receive_date', 'address', 'gudang_id', 'is_online','delivery_proof_photo',
-    'delivery_signature', 'quality_proof_photo', 'shipping_cost', 'shipping_courier', 'shipping_service', 'tracking_number', 'cancelled_at', 'cancellation_reason'];
+    protected $fillable = ['code', 'customer_id', 'employee_id', 'driver_id', 'accountant_id', 'grand_total', 'status', 'payment_method', 'is_paid', 'is_dp', 'dp_amount', 'dp_paid_at', 'remaining_amount', 'remaining_paid_at', 'remaining_collected_by', 'paid_amount', 'due_date', 'receive_date', 'address', 'gudang_id', 'is_online','delivery_proof_photo',
+    'delivery_signature', 'quality_proof_photo', 'shipping_cost', 'shipping_courier', 'shipping_service', 'tracking_number', 'cancelled_at', 'cancellation_reason', 'midtrans_transaction_id'];
 
     public function customer()
     {

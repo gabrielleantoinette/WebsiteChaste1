@@ -237,6 +237,7 @@ class InvoiceController extends Controller
         $alamat = $request->input('address');
         $invoiceCode = 'INV-' . date('Ymd') . '-' . Str::random(5);
         $isFirstOrder = HInvoice::where('customer_id', $customerId)->count() == 0;
+        $isDpPayment = $paymentMethod === 'dp_midtrans' || ($isFirstOrder && $paymentMethod === 'midtrans');
         
         $isAlamatSurabaya = str_contains(strtolower($alamat ?? ''), 'surabaya');
         if ($isAlamatSurabaya && $shippingMethod === 'expedition') {
@@ -330,6 +331,8 @@ class InvoiceController extends Controller
             $statusInvoice = 'Dikemas'; // Status pesanan tetap Dikemas untuk COD
         } elseif ($paymentMethod == 'transfer') {
             $statusInvoice = 'Menunggu Konfirmasi Pembayaran';
+        } elseif ($isDpPayment) {
+            $statusInvoice = 'Menunggu Pembayaran DP';
         } elseif ($isFirstOrder) {
             $statusInvoice = 'Menunggu Pembayaran';
         } else {
@@ -374,7 +377,10 @@ class InvoiceController extends Controller
         }
         // ⬇️ Ubah ini supaya insert sekaligus ambil ID
         // Untuk COD, is_paid = 0 karena pembayaran dilakukan saat pengiriman
-        $isPaid = ($paymentMethod == 'cod') ? 0 : ($paymentMethod == 'transfer' ? 0 : ($isFirstOrder ? 0 : 1));
+        $unpaidMethods = ['cod', 'transfer', 'midtrans', 'dp_midtrans', 'hutang'];
+        $isPaid = in_array($paymentMethod, $unpaidMethods) ? 0 : ($isFirstOrder ? 0 : 1);
+        $dpAmount = $isDpPayment ? (int) ceil($grandTotal * 0.5) : 0;
+        $remainingAmount = $isDpPayment ? ($grandTotal - $dpAmount) : 0;
         
         $newInvoiceId = DB::table('hinvoice')->insertGetId([
             'code' => $invoiceCode,
@@ -384,8 +390,13 @@ class InvoiceController extends Controller
             'is_online' => 1, // Transaksi dari checkout online
             'status' => $statusInvoice,
             'is_paid' => $isPaid, // Untuk COD, is_paid = 0
-            'is_dp' => $isFirstOrder ? true : false,
-            'dp_amount' => $isFirstOrder ? $grandTotal / 2 : 0,
+            'payment_method' => $paymentMethod,
+            'is_dp' => $isDpPayment ? true : false,
+            'dp_amount' => $isDpPayment ? $dpAmount : 0,
+            'dp_paid_at' => null,
+            'remaining_amount' => $remainingAmount ?: null,
+            'remaining_paid_at' => null,
+            'remaining_collected_by' => null,
             'grand_total' => $grandTotal,
             'shipping_cost' => $shippingCost ?? 0,
             'shipping_courier' => $shippingCourier,
@@ -428,11 +439,20 @@ class InvoiceController extends Controller
 
         // Midtrans
         // Hanya buat midtrans kalau payment_method adalah ewallet.
-        if ($paymentMethod == 'midtrans') {
+        if ($paymentMethod == 'midtrans' || $paymentMethod == 'dp_midtrans') {
             $customer = Customer::find($customerId);
             
             $itemDetails = [];
+            $chargeAmount = $isDpPayment ? $dpAmount : $grandTotal;
             
+            if ($isDpPayment) {
+                $itemDetails[] = [
+                    'id'       => 'dp-' . $newInvoiceId,
+                    'price'    => $chargeAmount,
+                    'quantity' => 1,
+                    'name'     => 'DP 50% Pesanan ' . $invoiceCode,
+                ];
+            } else {
             if (!empty($cartIds)) {
                 $carts = DB::table('cart')->whereIn('id', $cartIds)->get();
                 foreach ($carts as $cart) {
@@ -481,19 +501,20 @@ class InvoiceController extends Controller
             }
             
             $itemsTotal = array_sum(array_column($itemDetails, 'price'));
-            if (abs($itemsTotal - $grandTotal) > 1) { // Allow 1 rupiah difference for rounding
+                if (abs($itemsTotal - $chargeAmount) > 1) { // Allow 1 rupiah difference for rounding
                 if (!empty($itemDetails)) {
-                    $diff = $grandTotal - $itemsTotal;
+                        $diff = $chargeAmount - $itemsTotal;
                     $itemDetails[count($itemDetails) - 1]['price'] += $diff;
+                    }
                 }
             }
             
             $newPayment = new PaymentModel();
             $newPayment->invoice_id = $newInvoiceId;
             $newPayment->method = 'midtrans';
-            $newPayment->type = $isFirstOrder ? 'dp' : 'full';
+            $newPayment->type = $isDpPayment ? 'dp' : 'full';
             $newPayment->is_paid = false;
-            $newPayment->amount = $grandTotal;
+            $newPayment->amount = $chargeAmount;
             $newPayment->save();
             
             $finishRedirectUrl = url('/checkout/midtrans-result?paymentId=' . $newPayment->id . '&status=success');
@@ -503,7 +524,7 @@ class InvoiceController extends Controller
             $payload = [
                 'transaction_details' => [
                     'order_id'      => now() . '-' . $newInvoiceId,
-                    'gross_amount'  => $isFirstOrder ? $grandTotal / 2 : $grandTotal,
+                    'gross_amount'  => $chargeAmount,
                 ],
                 'customer_details' => [
                     'first_name'    => $customer->name,
@@ -665,7 +686,10 @@ class InvoiceController extends Controller
         $customerNotificationMessage = '';
         $customerNotificationTitle = '';
         
-        if ($paymentMethod == 'midtrans') {
+        if ($paymentMethod == 'dp_midtrans') {
+            $customerNotificationTitle = 'Pesanan Berhasil Dibuat';
+            $customerNotificationMessage = "Pesanan Anda dengan kode {$invoiceCode} telah dibuat dengan skema DP 50%. Silakan bayar DP melalui Midtrans, sisa akan ditagihkan oleh driver saat pengiriman.";
+        } elseif ($paymentMethod == 'midtrans') {
             $customerNotificationTitle = 'Pesanan Berhasil Dibuat';
             $customerNotificationMessage = "Pesanan Anda dengan kode {$invoiceCode} telah berhasil dibuat. Silakan lakukan pembayaran melalui Midtrans.";
         } elseif ($paymentMethod == 'transfer') {
@@ -841,8 +865,16 @@ class InvoiceController extends Controller
             }
 
             $invoice->status = 'Dikemas'; // Langsung ubah ke status Dikemas agar masuk ke gudang
+            if ($payment->type === 'dp') {
+                $invoice->dp_paid_at = now();
+                $invoice->paid_amount = $payment->amount;
+                $invoice->remaining_amount = max(($invoice->grand_total - $payment->amount), 0);
+                $invoice->is_paid = $invoice->remaining_amount <= 0 ? 1 : 0;
+            } else {
             $invoice->is_paid = 1;
             $invoice->paid_amount = $payment->amount;
+                $invoice->remaining_amount = 0;
+            }
             $invoice->save();
             
             \Log::info('Midtrans callback: Invoice updated', [
