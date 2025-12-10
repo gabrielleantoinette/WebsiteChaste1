@@ -67,7 +67,7 @@
     <table>
         <thead>
             <tr>
-                <th>ID Customer</th>
+                <th>Nama Customer</th>
                 <th>Jumlah Transaksi</th>
                 <th>Total Belanja</th>
                 <th>Rata-Rata Belanja</th>
@@ -76,7 +76,7 @@
         <tbody>
             @forelse($rataRataPerCustomer as $c)
                 <tr>
-                    <td>{{ $c['customer_id'] }}</td>
+                    <td>{{ $c['customer_name'] ?? 'Customer ID: ' . $c['customer_id'] }}</td>
                     <td>{{ $c['jumlah_transaksi'] }}</td>
                     <td>Rp {{ number_format($c['total_belanja'], 0, ',', '.') }}</td>
                     <td>Rp {{ number_format($c['rata_rata_belanja'], 0, ',', '.') }}</td>

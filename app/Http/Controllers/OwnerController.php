@@ -601,24 +601,28 @@ class OwnerController extends Controller
     public function downloadLaporanNegosiasi(Request $request)
     {
         $periode = ReportDateRange::fromRequest($request, 'bulanan');
-        $start = $periode['start']->copy();
-        $end = $periode['end']->copy();
+        $start = $periode['start']->copy()->startOfDay();
+        $end = $periode['end']->copy()->endOfDay();
 
+        // Map status: 'final' = disetujui (berhasil), 'proses' = pending
+        // Note: Sistem tidak memiliki status 'ditolak' secara eksplisit
+        // Negosiasi yang di-reset/dihapus tidak akan muncul di laporan
+        
         $negosiasiBerhasil = NegotiationTable::with(['customer', 'product'])
             ->whereBetween('created_at', [$start, $end])
-            ->where('status', 'disetujui')
+            ->where('status', 'final')
+            ->where('final_price', '>', 0)
             ->orderBy('created_at')
             ->get();
 
-        $negosiasiGagal = NegotiationTable::with(['customer', 'product'])
-            ->whereBetween('created_at', [$start, $end])
-            ->where('status', 'ditolak')
-            ->orderBy('created_at')
-            ->get();
+        // Untuk negosiasi gagal, kita tidak punya status eksplisit
+        // Bisa diisi dengan negosiasi yang di-reset atau tidak selesai
+        // Untuk sementara, kita skip negosiasi gagal karena tidak ada data yang jelas
+        $negosiasiGagal = collect([]);
 
         $negosiasiPending = NegotiationTable::with(['customer', 'product'])
             ->whereBetween('created_at', [$start, $end])
-            ->where('status', 'pending')
+            ->where('status', 'proses')
             ->orderBy('created_at')
             ->get();
 

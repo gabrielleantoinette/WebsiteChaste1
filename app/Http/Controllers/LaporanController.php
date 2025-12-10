@@ -38,35 +38,58 @@ class LaporanController extends Controller
     public function penjualanPDF(Request $request)
     {
         $periode = ReportDateRange::fromRequest($request, 'bulanan');
-        $start = $periode['start']->copy();
-        $end = $periode['end']->copy();
+        $start = $periode['start']->copy()->startOfDay();
+        $end = $periode['end']->copy()->endOfDay();
 
-        $orderCarts = OrderModel::whereBetween('created_at', [$start, $end])
-            ->orderBy('created_at')
-            ->pluck('cart_ids');
+        // Gunakan HInvoice dan DInvoice untuk data penjualan yang sebenarnya
+        $invoices = HInvoice::where(function ($query) use ($start, $end) {
+                $query->whereBetween('receive_date', [$start, $end])
+                    ->orWhere(function ($sub) use ($start, $end) {
+                        $sub->whereNull('receive_date')
+                            ->whereBetween('created_at', [$start, $end]);
+                    });
+            })
+            ->where('status', '!=', 'Dibatalkan')
+            ->pluck('id');
 
-        $cartIds = $orderCarts->flatMap(function ($json) {
-            return json_decode($json, true) ?? [];
-        })->unique();
-
-        $details = Cart::with('variant.product')
-            ->whereIn('id', $cartIds)
+        $details = DInvoice::with(['product', 'variant'])
+            ->whereIn('hinvoice_id', $invoices)
             ->get();
 
-        $topProducts = $details->groupBy('variant_id')->map(function ($group) {
-            return [
-                'product' => $group->first()->variant->product->name ?? '-',
-                'variant' => $group->first()->variant->variant_name ?? '-',
-                'jumlah_terjual' => $group->sum('quantity'),
-            ];
-        })->sortByDesc('jumlah_terjual')->take(5);
+        // Group by product dan variant
+        $topProducts = $details->groupBy(function ($item) {
+                $productName = $item->product ? $item->product->name : 'Unknown';
+                $variantName = $item->variant ? $item->variant->variant_name : '-';
+                return $productName . '|' . $variantName;
+            })
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'product' => $first->product ? $first->product->name : 'Unknown',
+                    'variant' => $first->variant ? $first->variant->variant_name : '-',
+                    'jumlah_terjual' => $group->sum('quantity'),
+                ];
+            })
+            ->sortByDesc('jumlah_terjual')
+            ->take(5)
+            ->values();
 
-        $topColors = $details->groupBy('variant.color')->map(function ($group, $color) {
-            return [
-                'warna' => $color ?? '-',
-                'jumlah_terjual' => $group->sum('quantity'),
-            ];
-        })->sortByDesc('jumlah_terjual')->take(5);
+        // Group by color dari variant
+        $topColors = $details->filter(function ($item) {
+                return $item->variant && $item->variant->color;
+            })
+            ->groupBy(function ($item) {
+                return $item->variant->color ?? 'Unknown';
+            })
+            ->map(function ($group, $color) {
+                return [
+                    'warna' => $color ?? '-',
+                    'jumlah_terjual' => $group->sum('quantity'),
+                ];
+            })
+            ->sortByDesc('jumlah_terjual')
+            ->take(5)
+            ->values();
 
         $periodeLabel = $periode['label'];
         $periodeStart = $start;
@@ -156,8 +179,8 @@ class LaporanController extends Controller
     public function rataRataPDF(Request $request)
     {
         $periode = ReportDateRange::fromRequest($request, 'bulanan');
-        $start = $periode['start']->copy();
-        $end = $periode['end']->copy();
+        $start = $periode['start']->copy()->startOfDay();
+        $end = $periode['end']->copy()->endOfDay();
 
         $invoiceGroups = HInvoice::selectRaw('customer_id, COUNT(*) as jumlah_transaksi, SUM(grand_total) as total_belanja')
             ->where(function ($query) use ($start, $end) {
@@ -167,17 +190,24 @@ class LaporanController extends Controller
                             ->whereBetween('created_at', [$start, $end]);
                     });
             })
+            ->where('status', '!=', 'Dibatalkan')
             ->groupBy('customer_id')
             ->get();
 
-        $rataRataPerCustomer = $invoiceGroups->map(function ($row) {
+        // Load customer data untuk mendapatkan nama
+        $customerIds = $invoiceGroups->pluck('customer_id')->unique();
+        $customers = Customer::whereIn('id', $customerIds)->get()->keyBy('id');
+
+        $rataRataPerCustomer = $invoiceGroups->map(function ($row) use ($customers) {
+            $customer = $customers->get($row->customer_id);
             return [
                 'customer_id' => $row->customer_id,
+                'customer_name' => $customer ? $customer->name : 'Customer Tidak Dikenal',
                 'jumlah_transaksi' => $row->jumlah_transaksi,
                 'total_belanja' => $row->total_belanja,
                 'rata_rata_belanja' => $row->jumlah_transaksi > 0 ? $row->total_belanja / $row->jumlah_transaksi : 0
             ];
-        });
+        })->sortByDesc('total_belanja');
 
         $rataRataGlobal = $rataRataPerCustomer->avg('rata_rata_belanja');
 
@@ -192,8 +222,8 @@ class LaporanController extends Controller
     public function returPDF(Request $request)
     {
         $periode = ReportDateRange::fromRequest($request, 'bulanan');
-        $start = $periode['start']->copy();
-        $end = $periode['end']->copy();
+        $start = $periode['start']->copy()->startOfDay();
+        $end = $periode['end']->copy()->endOfDay();
 
         $returns = Returns::with(['customer', 'invoice', 'driver'])
             ->whereBetween('created_at', [$start, $end])
