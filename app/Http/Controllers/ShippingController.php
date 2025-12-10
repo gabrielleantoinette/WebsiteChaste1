@@ -20,14 +20,12 @@ class ShippingController extends Controller
      */
     public function getShippingCost(Request $request)
     {
-        // Log untuk debugging - ini harus muncul jika route terpanggil
         \Log::info('=== ShippingController getShippingCost CALLED ===', [
             'request_data' => $request->all(),
             'url' => $request->fullUrl(),
             'method' => $request->method()
         ]);
         
-        // Return response langsung untuk test - ini untuk memastikan route bisa diakses
         if ($request->has('test') || $request->input('test') === '1') {
             return response()->json(['status' => 'ok', 'message' => 'Controller is accessible', 'test' => true]);
         }
@@ -42,7 +40,6 @@ class ShippingController extends Controller
             $originCity = 'Surabaya';
             $destinationCity = $request->destination_city;
             
-            // Cari area untuk Biteship
             $originArea = $this->biteship->searchArea($originCity);
             if (!$originArea) {
                 \Log::error('Origin area (Surabaya) not found in Biteship');
@@ -68,7 +65,7 @@ class ShippingController extends Controller
 
             $destinationAreaId = $destinationArea['id'] ?? null;
             
-            // Validasi area ID - pastikan tidak null dan convert ke string
+            // Validasi area ID
             if (!$destinationAreaId) {
                 \Log::error('Destination area ID is missing', [
                     'destination_area' => $destinationArea,
