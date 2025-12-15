@@ -55,13 +55,13 @@
 
         <div>
           <label class="text-sm font-medium text-gray-700">Ukuran Terpal (meter) <span class="text-red-500">*</span></label>
-          <input type="number" name="panjang_input" placeholder="Panjang" step="0.01" required class="w-full border border-gray-300 rounded-md p-2 text-sm">
-          <input type="number" name="lebar_input" placeholder="Lebar" step="0.01" required class="w-full border border-gray-300 rounded-md p-2 text-sm mt-2">
+          <input type="number" name="panjang_input" placeholder="Panjang Maksimal 90 meter" step="0.01" required class="w-full border border-gray-300 rounded-md p-2 text-sm">
+          <input type="number" name="lebar_input" placeholder="Lebar Maksimal 90 meter" step="0.01" required class="w-full border border-gray-300 rounded-md p-2 text-sm mt-2">
           <div class="flex items-center gap-2 mt-2">
             <input type="checkbox" id="isVolumeCheckbox" onclick="toggleTinggi()">
             <span class="text-sm">Terpal Bervolume</span>
           </div>
-          <input type="number" id="inputTinggi" name="tinggi_input" placeholder="Tinggi" step="0.01" disabled class="w-full border border-gray-300 rounded-md p-2 text-sm bg-gray-200 text-gray-600 mt-2">
+          <input type="number" id="inputTinggi" name="tinggi_input" placeholder="Tinggi Maksimal 5 meter" step="0.01" disabled class="w-full border border-gray-300 rounded-md p-2 text-sm bg-gray-200 text-gray-600 mt-2">
           <p class="text-xs text-gray-500 mt-1">Maks panjang/lebar 90 m, tinggi 5 m.</p>
         </div>
 
