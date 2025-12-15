@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'gudang.role' => \App\Http\Middleware\GudangRole::class,
+            'admin.role' => \App\Http\Middleware\AdminRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

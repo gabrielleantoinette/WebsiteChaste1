@@ -200,7 +200,7 @@ Route::middleware([LoggedIn::class])->group(function () {
 
 
 // Prefix Admin untuk Management
-Route::prefix('admin')->middleware([LoggedIn::class])->group(function () {
+Route::prefix('admin')->middleware([LoggedIn::class, 'admin.role'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
     
     // Dashboard Gudang
@@ -404,14 +404,18 @@ Route::post('/admin/raw-material-stock/{id}/reduce', [App\Http\Controllers\Admin
 });
 
 // Gudang Work Orders Routes (bisa diakses oleh gudang)
-Route::prefix('gudang/work-orders')->middleware([LoggedIn::class])->group(function () {
+Route::prefix('gudang/work-orders')->middleware([LoggedIn::class, 'gudang.role'])->group(function () {
     Route::get('/', [WorkOrderController::class, 'index'])->name('gudang.work-orders.index');
     Route::get('/{id}', [WorkOrderController::class, 'show'])->name('gudang.work-orders.show');
 });
 
 // Barang Rusak Gudang
-Route::get('/gudang/barang-rusak', [App\Http\Controllers\GudangController::class, 'viewBarangRusak'])->name('gudang.barang-rusak');
-Route::post('/gudang/barang-rusak/{id}/perbaiki', [App\Http\Controllers\GudangController::class, 'perbaikiBarangRusak'])->name('gudang.barang-rusak.perbaiki');
+Route::get('/gudang/barang-rusak', [App\Http\Controllers\GudangController::class, 'viewBarangRusak'])
+    ->middleware([LoggedIn::class, 'gudang.role'])
+    ->name('gudang.barang-rusak');
+Route::post('/gudang/barang-rusak/{id}/perbaiki', [App\Http\Controllers\GudangController::class, 'perbaikiBarangRusak'])
+    ->middleware([LoggedIn::class, 'gudang.role'])
+    ->name('gudang.barang-rusak.perbaiki');
 
 // Stok Barang Gudang
 Route::get('/gudang/stok-barang', [App\Http\Controllers\GudangController::class, 'viewStokBarang'])->name('gudang.stok-barang')->middleware([LoggedIn::class, 'gudang.role']);
@@ -419,10 +423,14 @@ Route::get('/gudang/laporan-stok', [App\Http\Controllers\GudangController::class
 Route::get('/gudang/laporan-stok/export-pdf', [App\Http\Controllers\GudangController::class, 'exportLaporanStokPDF'])->name('gudang.laporan-stok.pdf')->middleware([LoggedIn::class, 'gudang.role']);
 
 // Laporan Retur untuk Gudang
-Route::get('/gudang/laporan-retur/export-pdf', [LaporanController::class, 'returPDF'])->name('gudang.laporan.retur.pdf')->middleware([LoggedIn::class]);
+Route::get('/gudang/laporan-retur/export-pdf', [LaporanController::class, 'returPDF'])
+    ->middleware([LoggedIn::class, 'gudang.role'])
+    ->name('gudang.laporan.retur.pdf');
 
 // Upload Foto Bukti Kualitas Barang
-Route::post('/gudang/upload-quality-proof/{id}', [App\Http\Controllers\GudangController::class, 'uploadQualityProof'])->name('gudang.upload-quality-proof');
+Route::post('/gudang/upload-quality-proof/{id}', [App\Http\Controllers\GudangController::class, 'uploadQualityProof'])
+    ->middleware([LoggedIn::class, 'gudang.role'])
+    ->name('gudang.upload-quality-proof');
 
 // Notification routes (AJAX only)
 // unread-count bisa diakses tanpa login (return 0 jika tidak ada user)
