@@ -19,6 +19,9 @@
     <form method="POST" action="{{ route('keranjang.custom.add') }}" class="grid md:grid-cols-2 gap-8">
       @csrf
       <input type="hidden" name="harga_custom" id="hargaCustomInput" value="0">
+      <input type="hidden" name="panjang">
+      <input type="hidden" name="lebar">
+      <input type="hidden" name="tinggi">
       <input type="hidden" name="kebutuhan_custom" id="kebutuhanCustomInput">
       <input type="hidden" name="bahan_custom" id="bahanCustomInput">
       <input type="hidden" name="ukuran_custom" id="ukuranCustomInput">
@@ -44,20 +47,22 @@
           <select name="bahan" id="bahanSelect" required class="w-full border border-gray-300 rounded-md p-2 text-sm">
             <option value="">-- Pilih Bahan --</option>
             @foreach ($materials as $material)
-              <option value="{{ $material->id }}">{{ $material->name }}</option>
+              <option value="{{ $material->id }}" data-stock="{{ $material->stock ?? '' }}">{{ $material->name }}</option>
             @endforeach
           </select>
+          <p class="text-xs text-gray-500 mt-1">Stok akan membatasi quantity pemesanan.</p>
         </div>
 
         <div>
           <label class="text-sm font-medium text-gray-700">Ukuran Terpal (meter) <span class="text-red-500">*</span></label>
-          <input type="number" name="panjang" placeholder="Panjang" required class="w-full border border-gray-300 rounded-md p-2 text-sm">
-          <input type="number" name="lebar" placeholder="Lebar" required class="w-full border border-gray-300 rounded-md p-2 text-sm mt-2">
+          <input type="number" name="panjang_input" placeholder="Panjang" step="0.01" required class="w-full border border-gray-300 rounded-md p-2 text-sm">
+          <input type="number" name="lebar_input" placeholder="Lebar" step="0.01" required class="w-full border border-gray-300 rounded-md p-2 text-sm mt-2">
           <div class="flex items-center gap-2 mt-2">
             <input type="checkbox" id="isVolumeCheckbox" onclick="toggleTinggi()">
             <span class="text-sm">Terpal Bervolume</span>
           </div>
-          <input type="number" id="inputTinggi" name="tinggi" placeholder="Tinggi" disabled class="w-full border border-gray-300 rounded-md p-2 text-sm bg-gray-200 text-gray-600 mt-2">
+          <input type="number" id="inputTinggi" name="tinggi_input" placeholder="Tinggi" step="0.01" disabled class="w-full border border-gray-300 rounded-md p-2 text-sm bg-gray-200 text-gray-600 mt-2">
+          <p class="text-xs text-gray-500 mt-1">Maks panjang/lebar 90 m, tinggi 5 m.</p>
         </div>
 
         <div>
@@ -131,8 +136,8 @@
       </div>
 
       <div class="col-span-2 flex flex-col md:flex-row items-center justify-between mt-8 gap-4">
-        <div class="text-lg font-semibold text-gray-800"></div>
-        <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-6 rounded-md transition">
+        <div class="text-sm text-red-600 font-semibold" id="warningText"></div>
+        <button type="submit" id="submitBtn" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-6 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed">
           Tambah Ke Keranjang
         </button>
       </div>
@@ -168,25 +173,19 @@ function changeQty(amount) {
   calculateTotal();
 }
 
-function changeBarangQty(amount) {
-  const input = document.getElementById('barangQtyInput');
-  let val = parseInt(input.value) + amount;
-  if (val < 1) val = 1;
-  input.value = val;
-}
-
-
 const bahanSelect = document.getElementById('bahanSelect');
 const warnaSelect = document.getElementById('warnaSelect');
 const kebutuhanSelect = document.getElementById('kebutuhanSelect');
 const bahanRekomendasi = document.getElementById('bahanRekomendasi');
 const deskripsiBahan = document.getElementById('deskripsiBahan');
-const panjangInput = document.querySelector('input[name="panjang"]');
-const lebarInput = document.querySelector('input[name="lebar"]');
-const tinggiInput = document.querySelector('input[name="tinggi"]');
+const panjangInput = document.querySelector('input[name="panjang_input"]');
+const lebarInput = document.querySelector('input[name="lebar_input"]');
+const tinggiInput = document.querySelector('input[name="tinggi_input"]');
 const jumlahRingInput = document.getElementById('qtyInput');
 const pakaiTaliInput = document.querySelector('input[name="pakai_tali"]');
 const totalPriceText = document.getElementById('totalPrice');
+const submitBtn = document.getElementById('submitBtn');
+const warningText = document.getElementById('warningText');
 
 bahanSelect.addEventListener('change', function() {
   const materialId = this.value;
@@ -320,6 +319,9 @@ function updateHiddenInputs() {
   document.getElementById('jumlahRingCustomInput').value = jumlahRing;
   document.getElementById('pakaiTaliCustomInput').value = pakaiTali;
   document.getElementById('catatanCustomInput').value = catatan;
+  document.querySelector('input[name="panjang"]').value = panjang;
+  document.querySelector('input[name="lebar"]').value = lebar;
+  document.querySelector('input[name="tinggi"]').value = tinggi;
 }
 
 // Event supaya hidden inputs selalu terupdate
@@ -385,6 +387,49 @@ kebutuhanSelect.addEventListener('change', function () {
     deskripsiBahan.innerHTML = '';
   }
 });
+
+// Validasi batas ukuran & stok
+function getSelectedStock() {
+  const opt = bahanSelect.options[bahanSelect.selectedIndex];
+  const stock = opt ? parseInt(opt.dataset.stock || '') : NaN;
+  return isNaN(stock) ? null : stock;
+}
+
+function validateConstraints() {
+  const panjang = parseFloat(panjangInput.value) || 0;
+  const lebar = parseFloat(lebarInput.value) || 0;
+  const tinggi = parseFloat(tinggiInput.value) || 0;
+  const qty = parseInt(document.getElementById('barangQtyInput').value) || 1;
+  const isVolume = document.getElementById('isVolumeCheckbox').checked;
+  const stock = getSelectedStock();
+
+  const errors = [];
+  if (panjang > 90) errors.push('Panjang maksimal 90 meter.');
+  if (lebar > 90) errors.push('Lebar maksimal 90 meter.');
+  if (isVolume && tinggi > 5) errors.push('Tinggi maksimal 5 meter untuk terpal bervolume.');
+  if (stock !== null && stock > 0 && qty > stock) errors.push(`Qty melebihi stok bahan (${stock}).`);
+
+  if (errors.length > 0) {
+    submitBtn.disabled = true;
+    warningText.innerHTML = errors.join(' ');
+  } else {
+    submitBtn.disabled = false;
+    warningText.innerHTML = '';
+  }
+}
+
+kebutuhanSelect.addEventListener('change', validateConstraints);
+bahanSelect.addEventListener('change', validateConstraints);
+warnaSelect.addEventListener('change', validateConstraints);
+document.getElementById('barangQtyInput').addEventListener('input', validateConstraints);
+panjangInput.addEventListener('input', validateConstraints);
+lebarInput.addEventListener('input', validateConstraints);
+tinggiInput.addEventListener('input', validateConstraints);
+
+// Inisialisasi awal
+validateConstraints();
+updateHiddenInputs();
+calculateTotal();
 </script>
 
 </body>

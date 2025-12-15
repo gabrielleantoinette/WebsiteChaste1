@@ -131,6 +131,7 @@ class CartController extends Controller
         $user = Session::get('user');
 
         $validated = $request->validate([
+            'bahan' => 'required|exists:custom_materials,id',
             'harga_custom' => 'required|numeric',
             'kebutuhan_custom' => 'nullable|string',
             'bahan_custom' => 'nullable|string',
@@ -140,7 +141,19 @@ class CartController extends Controller
             'pakai_tali_custom' => 'nullable|string',
             'catatan_custom' => 'nullable|string',
             'quantity' => 'required|integer|min:1',
+            'panjang' => 'required|numeric|min:0.1|max:90',
+            'lebar' => 'required|numeric|min:0.1|max:90',
+            'tinggi' => 'nullable|numeric|min:0|max:5',
         ]);
+
+        // Cek stok bahan
+        $material = \App\Models\CustomMaterial::find($validated['bahan']);
+        if (!$material) {
+            return back()->with('error', 'Bahan tidak ditemukan.');
+        }
+        if ($material->stock !== null && $material->stock > 0 && $validated['quantity'] > $material->stock) {
+            return back()->with('error', 'Jumlah melebihi stok bahan yang tersedia (stok: ' . $material->stock . ').')->withInput();
+        }
 
         $cart = new Cart();
         $cart->user_id = $user['id'];
