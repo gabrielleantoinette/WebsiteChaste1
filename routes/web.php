@@ -105,6 +105,20 @@ Route::post('login', [LoginController::class, 'loginadmin']);
 
 Route::get('register', [LoginController::class, 'showRegisterForm'])->name('register');
 Route::post('register', [LoginController::class, 'register']);
+
+// 2FA Routes
+Route::get('verify-2fa', [LoginController::class, 'showVerify2FA'])->name('verify-2fa');
+Route::post('verify-2fa', [LoginController::class, 'verify2FA']);
+Route::post('resend-otp', [LoginController::class, 'resendOTP'])->name('resend-otp');
+
+// Password Reset Routes
+Route::get('forgot-password', [LoginController::class, 'showForgotPassword'])->name('password.request');
+Route::post('forgot-password', [LoginController::class, 'sendPasswordReset'])->name('password.email');
+Route::get('verify-reset-password', [LoginController::class, 'showVerifyResetPassword'])->name('password.verify-reset');
+Route::post('verify-reset-password', [LoginController::class, 'verifyResetPasswordOTP'])->name('password.verify-otp');
+Route::post('resend-reset-password-otp', [LoginController::class, 'resendResetPasswordOTP'])->name('password.resend-otp');
+Route::get('reset-password', [LoginController::class, 'showResetPassword'])->name('password.reset');
+Route::post('reset-password', [LoginController::class, 'resetPassword'])->name('password.update');
 Route::get('/api/custom-materials/{id}/colors', [CustomMaterialController::class, 'getColors']);
 
 // Shipping routes - accessible without login (needed for checkout)

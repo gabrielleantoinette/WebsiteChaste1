@@ -64,6 +64,10 @@
                     </button>
                 </form>
 
+                <div class="text-center text-sm mt-3">
+                    <a href="{{ route('password.request') }}" class="text-gray-600 hover:text-gray-800">Lupa password?</a>
+                </div>
+
                 <div class="text-center text-sm mt-4 text-black">
                     Belum punya akun?
                     <a href="{{ url('/register') }}" class="text-red-500 font-medium">Daftar sekarang</a>
